@@ -36,11 +36,10 @@ jobs:
         cd frontend/container
         npm run build
         
-    - name: Deploy to Vercel
-      uses: vercel/action@v1
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_CONTAINER }}
-        working-directory: frontend/container
-        vercel-args: '--prod'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: frontend/container/build
+        destination_dir: container
+        cname: micro-frontend-container.github.io

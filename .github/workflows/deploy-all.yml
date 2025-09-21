@@ -56,14 +56,12 @@ jobs:
         cd frontend/container
         npm run build
         
-    - name: Deploy Container to Vercel
-      uses: vercel/action@v1
+    - name: Deploy Container to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_CONTAINER }}
-        working-directory: frontend/container
-        vercel-args: '--prod'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: frontend/container/build
+        destination_dir: container
         
   deploy-micro-frontends:
     needs: build-and-test
@@ -71,10 +69,10 @@ jobs:
     strategy:
       matrix:
         app: 
-          - { name: 'user-management-app', project-id: 'VERCEL_PROJECT_ID_USER_MGMT' }
-          - { name: 'data-grid-app', project-id: 'VERCEL_PROJECT_ID_DATA_GRID' }
-          - { name: 'analytics-app', project-id: 'VERCEL_PROJECT_ID_ANALYTICS' }
-          - { name: 'settings-app', project-id: 'VERCEL_PROJECT_ID_SETTINGS' }
+          - { name: 'user-management-app', destination: 'user-management' }
+          - { name: 'data-grid-app', destination: 'data-grid' }
+          - { name: 'analytics-app', destination: 'analytics' }
+          - { name: 'settings-app', destination: 'settings' }
     
     steps:
     - name: Checkout code
@@ -97,11 +95,9 @@ jobs:
         cd frontend/${{ matrix.app.name }}
         npm run build
         
-    - name: Deploy to Vercel
-      uses: vercel/action@v1
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets[matrix.app.project-id] }}
-        working-directory: frontend/${{ matrix.app.name }}
-        vercel-args: '--prod'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: frontend/${{ matrix.app.name }}/build
+        destination_dir: ${{ matrix.app.destination }}

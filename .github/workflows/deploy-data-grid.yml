@@ -36,11 +36,9 @@ jobs:
         cd frontend/data-grid-app
         npm run build
         
-    - name: Deploy to Vercel
-      uses: vercel/action@v1
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_DATA_GRID }}
-        working-directory: frontend/data-grid-app
-        vercel-args: '--prod'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: frontend/data-grid-app/build
+        destination_dir: data-grid
