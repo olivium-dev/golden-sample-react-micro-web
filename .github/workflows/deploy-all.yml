@@ -23,13 +23,28 @@ jobs:
       run: npm ci
       
     - name: Install all app dependencies
-      run: npm run install:all
+      run: |
+        cd frontend/container && npm ci
+        cd ../user-management-app && npm ci
+        cd ../data-grid-app && npm ci
+        cd ../analytics-app && npm ci
+        cd ../settings-app && npm ci
       
     - name: Build all applications
-      run: npm run build:all
+      run: |
+        cd frontend/container && npm run build
+        cd ../user-management-app && npm run build
+        cd ../data-grid-app && npm run build
+        cd ../analytics-app && npm run build
+        cd ../settings-app && npm run build
       
     - name: Test all applications
-      run: npm run test:all
+      run: |
+        cd frontend/container && npm test -- --coverage --watchAll=false
+        cd ../user-management-app && npm test -- --coverage --watchAll=false
+        cd ../data-grid-app && npm test -- --coverage --watchAll=false
+        cd ../analytics-app && npm test -- --coverage --watchAll=false
+        cd ../settings-app && npm test -- --coverage --watchAll=false
       
   deploy-container:
     needs: build-and-test
