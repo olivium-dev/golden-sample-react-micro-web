@@ -1,0 +1,172 @@
+# Micro-Frontend Golden Sample - Cursor Rules
+
+## Project Context
+This is a golden sample project demonstrating micro-frontend architecture using React + Webpack Module Federation + Material-UI (MUI). The project consists of:
+
+### Frontend Architecture (React + MUI + Module Federation)
+- Container app (host) - port 3000
+- User Management micro-frontend - port 3001  
+- Data Grid micro-frontend - port 3002
+- Analytics Dashboard micro-frontend - port 3003
+- Settings Panel micro-frontend - port 3004
+- Shared MUI theme and components library
+
+### Backend Architecture (Python Microservices)
+- API Gateway (FastAPI) - port 8000
+- User Service (FastAPI) - port 8001
+- Data Service (FastAPI) - port 8002
+- Analytics Service (FastAPI) - port 8003
+- Settings Service (FastAPI) - port 8004
+
+## Code Standards & Best Practices
+
+### General Guidelines
+- Use TypeScript for all React components and configurations
+- Follow React functional components with hooks pattern
+- Use consistent naming: PascalCase for components, camelCase for functions/variables
+- Always add proper error boundaries for remote app loading
+- Implement Suspense with meaningful loading states
+- Use semantic HTML and accessibility best practices
+
+### Material-UI (MUI) Standards
+- Use MUI v5 with emotion styling engine
+- Implement consistent theme across all micro-frontends
+- Use MUI Data Grid for all tabular data displays
+- Follow MUI design system principles
+- Use MUI icons and components consistently
+- Implement responsive design with MUI breakpoints
+- Use MUI's sx prop for custom styling
+- Maintain theme consistency through shared theme provider
+
+### Module Federation Specific
+- Always use singleton sharing for React and ReactDOM to prevent version conflicts
+- Keep remote entry points simple - expose only necessary components
+- Use lazy loading for all remote components in the container
+- Implement proper error handling for remote module loading failures
+- Document all exposed modules and their contracts
+
+### File Structure Standards
+```
+Frontend Structure:
+/container              # Main host application
+/user-management-app    # User management micro-frontend
+/data-grid-app         # Data grid micro-frontend  
+/analytics-app         # Analytics dashboard micro-frontend
+/settings-app          # Settings panel micro-frontend
+/shared-ui-lib         # Shared MUI theme and components
+
+Each app structure:
+/src
+  /components     # Reusable MUI components
+  /pages         # Page-level components (for remotes)
+  /hooks         # Custom React hooks
+  /utils         # Utility functions
+  /types         # TypeScript type definitions
+  /theme         # MUI theme configuration
+  /services      # API service calls
+
+Backend Structure:
+/gateway-service       # FastAPI gateway (port 8000)
+/user-service         # User management API (port 8001)
+/data-service         # Data management API (port 8002)
+/analytics-service    # Analytics API (port 8003)
+/settings-service     # Settings API (port 8004)
+/shared              # Shared Python utilities
+```
+
+### Webpack Configuration
+- Use development mode for local development
+- Configure proper devServer settings with correct ports
+- Always include shared dependencies configuration
+- Use meaningful names for Module Federation apps
+- Keep webpack configs consistent across all apps
+
+### State Management
+- Keep global state in the container app
+- Pass data to remotes via props or React Context
+- Avoid direct state sharing between remote apps
+- Use event-driven communication when needed
+
+### Performance Guidelines
+- Implement code splitting at route level
+- Optimize bundle sizes by proper dependency sharing
+- Use React.memo for expensive components
+- Implement proper loading states and error boundaries
+
+## Validation Checklist
+
+### Before Each Commit
+- [ ] All TypeScript errors resolved
+- [ ] All apps start without errors
+- [ ] Remote apps load properly in container
+- [ ] Navigation between routes works
+- [ ] Error boundaries handle failures gracefully
+- [ ] No console errors in browser
+- [ ] Responsive design works on mobile/desktop
+
+### Development Workflow
+- [ ] Use `npm run dev:all` to start all frontend apps concurrently
+- [ ] Use `python run_services.py` to start all backend services
+- [ ] Test each remote app independently first
+- [ ] Verify Module Federation remoteEntry.js files are accessible
+- [ ] Check network tab for proper remote loading
+- [ ] Test API gateway routing to microservices
+- [ ] Verify MUI theme consistency across all apps
+- [ ] Test error scenarios (remote app down, service down, network issues)
+
+## Common Issues & Solutions
+
+### Module Federation Issues
+- **Remote not loading**: Check if remote app is running and remoteEntry.js is accessible
+- **React version conflicts**: Ensure singleton sharing is configured properly
+- **CORS errors**: Configure proper CORS headers for remote entries
+- **TypeScript errors**: Add proper type declarations for remote modules
+- **MUI theme conflicts**: Ensure theme provider is properly shared
+
+### Development Issues
+- **Port conflicts**: Ensure each app uses unique ports (Frontend: 3000-3004, Backend: 8000-8004)
+- **Hot reload not working**: Check webpack devServer configuration
+- **Build failures**: Verify all dependencies are installed in each app
+- **API connection issues**: Check gateway service routing and microservice health
+- **MUI styling issues**: Verify emotion cache and theme provider setup
+
+### Backend Issues
+- **Gateway routing errors**: Check FastAPI route configurations
+- **Microservice communication**: Verify service discovery and health checks
+- **CORS issues**: Configure proper CORS settings in FastAPI
+- **Database connections**: Ensure database services are running and accessible
+
+## Prompting Guidelines
+
+### When Creating Components
+- Always specify TypeScript interfaces for props
+- Use MUI components and follow Material Design principles
+- Include proper error handling and loading states
+- Add accessibility attributes (aria-labels, roles)
+- Consider responsive design with MUI breakpoints
+- Use MUI Data Grid for all tabular data
+- Implement consistent theming with MUI theme provider
+
+### When Configuring Webpack
+- Specify exact port numbers and app names
+- Include all necessary shared dependencies
+- Add proper error handling for remote loading
+- Consider production vs development configurations
+
+### When Setting Up Routing
+- Use React Router v6 syntax
+- Implement lazy loading with Suspense
+- Add proper error boundaries
+- Consider nested routing requirements
+
+## Testing Strategy
+- Unit tests for individual components
+- Integration tests for Module Federation loading
+- E2E tests for complete user journeys
+- Performance tests for bundle sizes and loading times
+
+## Documentation Requirements
+- README for each app with setup instructions
+- API documentation for exposed components
+- Deployment guides for each environment
+- Troubleshooting guides for common issues
