@@ -1,0 +1,46 @@
+name: Deploy Analytics App
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/analytics-app/**'
+      - '.github/workflows/deploy-analytics.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'frontend/analytics-app/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/analytics-app/package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd frontend/analytics-app
+        npm ci
+        
+    - name: Build application
+      run: |
+        cd frontend/analytics-app
+        npm run build
+        
+    - name: Deploy to Vercel
+      uses: vercel/action@v1
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_ANALYTICS }}
+        working-directory: frontend/analytics-app
+        vercel-args: '--prod'

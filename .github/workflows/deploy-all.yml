@@ -1,0 +1,107 @@
+name: Deploy All Micro-Frontends
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install root dependencies
+      run: npm ci
+      
+    - name: Install all app dependencies
+      run: npm run install:all
+      
+    - name: Build all applications
+      run: npm run build:all
+      
+    - name: Test all applications
+      run: npm run test:all
+      
+  deploy-container:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/container/package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd frontend/container
+        npm ci
+        
+    - name: Build application
+      run: |
+        cd frontend/container
+        npm run build
+        
+    - name: Deploy Container to Vercel
+      uses: vercel/action@v1
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_CONTAINER }}
+        working-directory: frontend/container
+        vercel-args: '--prod'
+        
+  deploy-micro-frontends:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: 
+          - { name: 'user-management-app', project-id: 'VERCEL_PROJECT_ID_USER_MGMT' }
+          - { name: 'data-grid-app', project-id: 'VERCEL_PROJECT_ID_DATA_GRID' }
+          - { name: 'analytics-app', project-id: 'VERCEL_PROJECT_ID_ANALYTICS' }
+          - { name: 'settings-app', project-id: 'VERCEL_PROJECT_ID_SETTINGS' }
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/${{ matrix.app.name }}/package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd frontend/${{ matrix.app.name }}
+        npm ci
+        
+    - name: Build application
+      run: |
+        cd frontend/${{ matrix.app.name }}
+        npm run build
+        
+    - name: Deploy to Vercel
+      uses: vercel/action@v1
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets[matrix.app.project-id] }}
+        working-directory: frontend/${{ matrix.app.name }}
+        vercel-args: '--prod'

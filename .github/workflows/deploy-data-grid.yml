@@ -1,0 +1,46 @@
+name: Deploy Data Grid App
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/data-grid-app/**'
+      - '.github/workflows/deploy-data-grid.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'frontend/data-grid-app/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/data-grid-app/package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd frontend/data-grid-app
+        npm ci
+        
+    - name: Build application
+      run: |
+        cd frontend/data-grid-app
+        npm run build
+        
+    - name: Deploy to Vercel
+      uses: vercel/action@v1
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_DATA_GRID }}
+        working-directory: frontend/data-grid-app
+        vercel-args: '--prod'
