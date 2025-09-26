@@ -238,10 +238,10 @@ function App() {
               }}>
                 <iframe
                   src={
-                    activeTab === 'users' ? 'https://olivium-dev.github.io/golden-sample-react-micro-web/user-management/' :
-                    activeTab === 'data' ? 'https://olivium-dev.github.io/golden-sample-react-micro-web/data-grid/' :
-                    activeTab === 'analytics' ? 'https://olivium-dev.github.io/golden-sample-react-micro-web/analytics/' :
-                    activeTab === 'settings' ? 'https://olivium-dev.github.io/golden-sample-react-micro-web/settings/' : ''
+                    activeTab === 'users' ? 'http://localhost:3001' :
+                    activeTab === 'data' ? 'http://localhost:3002' :
+                    activeTab === 'analytics' ? 'http://localhost:3003' :
+                    activeTab === 'settings' ? 'http://localhost:3004' : ''
                   }
                   style={{
                     width: '100%',
