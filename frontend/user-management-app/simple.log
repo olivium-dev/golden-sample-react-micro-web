@@ -1,0 +1,26 @@
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: http://localhost:3001/
+<i> [webpack-dev-server] On Your Network (IPv4): http://192.168.2.78:3001/
+<i> [webpack-dev-server] On Your Network (IPv6): http://[fe80::1]:3001/
+<i> [webpack-dev-server] Content not from webpack is served from '/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/public' directory
+<i> [webpack-dev-server] 404s will fallback to '/index.html'
+asset main.js 8.44 MiB [emitted] (name: main)
+asset favicon.ico 3.78 KiB [emitted]
+asset index.html 1.75 KiB [emitted]
+orphan modules 13.5 MiB [orphan] 22220 modules
+runtime modules 27.1 KiB 13 modules
+cacheable modules 5.77 MiB
+  modules by path ./ 3.32 MiB 689 modules
+  modules by path ../shared-ui-lib/ 2.44 MiB 482 modules
+webpack 5.102.1 compiled successfully in 32368 ms
+URIError: Failed to decode param '/%PUBLIC_URL%/manifest.json'
+    at decodeURIComponent (<anonymous>)
+    at decode_param (/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/node_modules/express/lib/router/layer.js:172:12)
+    at Layer.match (/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/node_modules/express/lib/router/layer.js:123:27)
+    at matchLayer (/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/node_modules/express/lib/router/index.js:585:18)
+    at next (/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/node_modules/express/lib/router/index.js:226:15)
+    at expressInit (/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/node_modules/express/lib/middleware/init.js:40:5)
+    at Layer.handle [as handle_request] (/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/node_modules/express/lib/router/index.js:328:13)
+    at /Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/node_modules/express/lib/router/index.js:286:9
+    at router.process_params (/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web/frontend/user-management-app/node_modules/express/lib/router/index.js:346:12)

@@ -1,0 +1,31 @@
+{
+  "js_test": false,
+  "mf_test": true,
+  "app_results": {
+    "User Management": {
+      "running": true,
+      "has_react": true,
+      "has_mui": false,
+      "port": 3001
+    },
+    "Data Grid": {
+      "running": true,
+      "has_react": true,
+      "has_mui": false,
+      "port": 3002
+    },
+    "Analytics": {
+      "running": true,
+      "has_react": true,
+      "has_mui": false,
+      "port": 3003
+    },
+    "Settings": {
+      "running": true,
+      "has_react": true,
+      "has_mui": false,
+      "port": 3004
+    }
+  },
+  "success_rate": 50.0
+}
