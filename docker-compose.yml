@@ -1,0 +1,141 @@
+version: '3.8'
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ./backend/mock-data-service
+      dockerfile: Dockerfile
+    container_name: micro-frontend-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/mock-data-service:/app
+      - backend-cache:/root/.cache
+    networks:
+      - micro-frontend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Container App (Main Host)
+  container-app:
+    build:
+      context: ./frontend/container
+      dockerfile: Dockerfile.dev
+    container_name: micro-frontend-container
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend/container:/app
+      - /app/node_modules
+      - ./frontend/shared-ui-lib:/app/shared-ui-lib
+    networks:
+      - micro-frontend-network
+    depends_on:
+      - user-management-app
+      - data-grid-app
+      - analytics-app
+      - settings-app
+    command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
+
+  # User Management App
+  user-management-app:
+    build:
+      context: ./frontend/user-management-app
+      dockerfile: Dockerfile.dev
+    container_name: micro-frontend-user-management
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - REACT_APP_API_URL=http://backend:8000
+    volumes:
+      - ./frontend/user-management-app:/app
+      - /app/node_modules
+      - ./frontend/shared-ui-lib:/app/shared-ui-lib
+    networks:
+      - micro-frontend-network
+    depends_on:
+      - backend
+    command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
+
+  # Data Grid App
+  data-grid-app:
+    build:
+      context: ./frontend/data-grid-app
+      dockerfile: Dockerfile.dev
+    container_name: micro-frontend-data-grid
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - REACT_APP_API_URL=http://backend:8000
+    volumes:
+      - ./frontend/data-grid-app:/app
+      - /app/node_modules
+      - ./frontend/shared-ui-lib:/app/shared-ui-lib
+    networks:
+      - micro-frontend-network
+    depends_on:
+      - backend
+    command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
+
+  # Analytics App
+  analytics-app:
+    build:
+      context: ./frontend/analytics-app
+      dockerfile: Dockerfile.dev
+    container_name: micro-frontend-analytics
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - REACT_APP_API_URL=http://backend:8000
+    volumes:
+      - ./frontend/analytics-app:/app
+      - /app/node_modules
+      - ./frontend/shared-ui-lib:/app/shared-ui-lib
+    networks:
+      - micro-frontend-network
+    depends_on:
+      - backend
+    command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
+
+  # Settings App
+  settings-app:
+    build:
+      context: ./frontend/settings-app
+      dockerfile: Dockerfile.dev
+    container_name: micro-frontend-settings
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend/settings-app:/app
+      - /app/node_modules
+      - ./frontend/shared-ui-lib:/app/shared-ui-lib
+    networks:
+      - micro-frontend-network
+    command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
+
+networks:
+  micro-frontend-network:
+    driver: bridge
+
+volumes:
+  backend-cache:
+
