@@ -25,6 +25,17 @@ export { default as ErrorPanel } from './components/ErrorPanel';
 export { default as ErrorToast } from './components/ErrorToast';
 export { useErrorMonitor } from './hooks/useErrorMonitor';
 
+// Authentication exports
+export * from './auth/types';
+export { AuthProvider, AuthContext } from './auth/AuthContext';
+export { useAuth } from './auth/useAuth';
+export { ProtectedRoute } from './auth/ProtectedRoute';
+export { authService } from './auth/AuthService';
+export { default as LoginForm } from './components/LoginForm';
+export { default as LoginPage } from './components/LoginPage';
+export { default as UserMenu } from './components/UserMenu';
+export { default as apiClient } from './api/apiClient';
+
 // Re-export commonly used MUI components for convenience
 export {
   Box,

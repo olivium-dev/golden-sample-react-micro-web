@@ -1,17 +1,19 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from models.settings import Settings, SettingsUpdate
+from models.auth import UserAuth
 from mock_data import settings_db
+from auth.dependencies import get_current_user
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
 @router.get("/", response_model=Settings)
-def get_settings():
-    """Get current settings"""
+def get_settings(current_user: UserAuth = Depends(get_current_user)):
+    """Get current settings (requires authentication)"""
     return settings_db
 
 @router.put("/", response_model=Settings)
-def update_settings(settings: SettingsUpdate):
-    """Update settings"""
+def update_settings(settings: SettingsUpdate, current_user: UserAuth = Depends(get_current_user)):
+    """Update settings (requires authentication)"""
     global settings_db
     update_data = settings.dict(exclude_unset=True)
     for key, value in update_data.items():

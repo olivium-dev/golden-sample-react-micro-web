@@ -1,27 +1,29 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from models.user import User, UserCreate, UserUpdate
+from models.auth import UserAuth
 from mock_data import users_db
 from datetime import datetime
+from auth.dependencies import get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/", response_model=List[User])
-def get_users():
-    """Get all users"""
+def get_users(current_user: UserAuth = Depends(get_current_user)):
+    """Get all users (requires authentication)"""
     return users_db
 
 @router.get("/{user_id}", response_model=User)
-def get_user(user_id: int):
-    """Get user by ID"""
+def get_user(user_id: int, current_user: UserAuth = Depends(get_current_user)):
+    """Get user by ID (requires authentication)"""
     user = next((u for u in users_db if u["id"] == user_id), None)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 @router.post("/", response_model=User, status_code=201)
-def create_user(user: UserCreate):
-    """Create a new user"""
+def create_user(user: UserCreate, current_user: UserAuth = Depends(get_current_user)):
+    """Create a new user (requires authentication)"""
     new_id = max([u["id"] for u in users_db], default=0) + 1
     new_user = {
         "id": new_id,
@@ -33,8 +35,8 @@ def create_user(user: UserCreate):
     return new_user
 
 @router.put("/{user_id}", response_model=User)
-def update_user(user_id: int, user: UserUpdate):
-    """Update user"""
+def update_user(user_id: int, user: UserUpdate, current_user: UserAuth = Depends(get_current_user)):
+    """Update user (requires authentication)"""
     existing_user = next((u for u in users_db if u["id"] == user_id), None)
     if not existing_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -47,7 +49,7 @@ def update_user(user_id: int, user: UserUpdate):
     return existing_user
 
 @router.delete("/{user_id}", status_code=204)
-def delete_user(user_id: int):
+def delete_user(user_id: int, current_user: UserAuth = Depends(get_current_user)):
     """Delete user"""
     global users_db
     user = next((u for u in users_db if u["id"] == user_id), None)

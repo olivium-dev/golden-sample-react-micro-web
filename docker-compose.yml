@@ -11,11 +11,19 @@ services:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
+      - JWT_SECRET_KEY_FILE=/run/secrets/jwt_secret_key
+      - JWT_REFRESH_SECRET_KEY_FILE=/run/secrets/jwt_refresh_secret_key
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=15
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
     volumes:
       - ./backend/mock-data-service:/app
       - backend-cache:/root/.cache
     networks:
       - micro-frontend-network
+    secrets:
+      - jwt_secret_key
+      - jwt_refresh_secret_key
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -138,4 +146,10 @@ networks:
 
 volumes:
   backend-cache:
+
+secrets:
+  jwt_secret_key:
+    file: ./secrets/jwt_secret_key.txt
+  jwt_refresh_secret_key:
+    file: ./secrets/jwt_refresh_secret_key.txt
 
