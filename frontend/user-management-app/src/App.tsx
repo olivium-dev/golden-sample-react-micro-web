@@ -115,6 +115,18 @@ function App() {
     severity: 'success',
   });
 
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -197,16 +209,25 @@ function App() {
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await axios.delete(`${API_BASE_URL}/users/${userId}`);
-        showSnackbar('User deleted successfully', 'success');
-        fetchUsers();
-      } catch (error) {
-        ErrorCapture.captureApiError(error, `${API_BASE_URL}/users/${userId}`, 'DELETE');
-        showSnackbar('Error deleting user', 'error');
-      }
+    const user = users.find(u => u.id === userId);
+    setConfirmDialog({
+      open: true,
+      title: 'Delete User',
+      message: `Are you sure you want to delete user "${user?.username || 'Unknown'}"? This action cannot be undone.`,
+      onConfirm: () => performDeleteUser(userId),
+    });
+  };
+
+  const performDeleteUser = async (userId: number) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/users/${userId}`);
+      showSnackbar('User deleted successfully', 'success');
+      fetchUsers();
+    } catch (error) {
+      ErrorCapture.captureApiError(error, `${API_BASE_URL}/users/${userId}`, 'DELETE');
+      showSnackbar('Error deleting user', 'error');
     }
+    setConfirmDialog({ ...confirmDialog, open: false });
   };
 
   const columns: GridColDef[] = [
@@ -422,6 +443,37 @@ function App() {
             }}
           >
             {editingUser ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ color: '#d32f2f', fontWeight: 'bold' }}>
+          {confirmDialog.title}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>{confirmDialog.message}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
+            color="inherit"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDialog.onConfirm}
+            variant="contained"
+            color="error"
+            sx={{ ml: 1 }}
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

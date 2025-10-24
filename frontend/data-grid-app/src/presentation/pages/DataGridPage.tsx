@@ -3,7 +3,7 @@
  * Main page component for Data Grid with MUI X DataGrid
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -19,6 +19,10 @@ import {
   InputAdornment,
   Alert,
   Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import {
@@ -60,6 +64,18 @@ export const DataGridPage: React.FC<DataGridPageProps> = ({ viewModel }) => {
     setSelectedRows,
   } = viewModel;
 
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
   const handleSaveRow = async (formData: any) => {
     if (editingRow) {
       await updateRow(editingRow.id, formData);
@@ -69,9 +85,18 @@ export const DataGridPage: React.FC<DataGridPageProps> = ({ viewModel }) => {
   };
 
   const handleDeleteRow = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this row?')) {
-      await deleteRow(id);
-    }
+    const row = data.find(r => r.id === id);
+    setConfirmDialog({
+      open: true,
+      title: 'Delete Data Row',
+      message: `Are you sure you want to delete "${row?.name || 'Unknown'}"? This action cannot be undone.`,
+      onConfirm: () => performDeleteRow(id),
+    });
+  };
+
+  const performDeleteRow = async (id: number) => {
+    await deleteRow(id);
+    setConfirmDialog({ ...confirmDialog, open: false });
   };
 
   const columns: GridColDef[] = [
@@ -268,6 +293,37 @@ export const DataGridPage: React.FC<DataGridPageProps> = ({ viewModel }) => {
           onSave={handleSaveRow}
           editingRow={editingRow}
         />
+
+        {/* Confirmation Dialog */}
+        <Dialog
+          open={confirmDialog.open}
+          onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle sx={{ color: '#d32f2f', fontWeight: 'bold' }}>
+            {confirmDialog.title}
+          </DialogTitle>
+          <DialogContent>
+            <Typography>{confirmDialog.message}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
+              color="inherit"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDialog.onConfirm}
+              variant="contained"
+              color="error"
+              sx={{ ml: 1 }}
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Error Snackbar */}
         <Snackbar
