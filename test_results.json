@@ -1,0 +1,59 @@
+{
+  "api_results": {
+    "http://localhost:8000/health": {
+      "status": 200,
+      "success": true,
+      "data": "{\"status\":\"healthy\"}"
+    },
+    "http://localhost:8000/api/users": {
+      "status": 200,
+      "success": true,
+      "data": "[{\"id\":1,\"name\":\"John Doe\",\"email\":\"john@example.com\",\"role\":\"admin\",\"is_active\":true},{\"id\":2,\"name"
+    },
+    "http://localhost:8000/api/data": {
+      "status": 200,
+      "success": true,
+      "data": "[{\"id\":1,\"name\":\"Sample Data 1\",\"category\":\"Sales\",\"value\":1000,\"status\":\"active\"},{\"id\":2,\"name\":\"S"
+    },
+    "http://localhost:8000/api/analytics": {
+      "status": 200,
+      "success": true,
+      "data": "{\"metrics\":[{\"title\":\"Total Revenue\",\"value\":\",563\",\"change\":12.5,\"trend\":\"up\"},{\"title\":\"Active Use"
+    },
+    "http://localhost:8000/api/settings": {
+      "status": 200,
+      "success": true,
+      "data": "{\"theme_mode\":\"light\",\"primary_color\":\"#61dafb\",\"secondary_color\":\"#ff6b6b\"}"
+    }
+  },
+  "frontend_results": {
+    "Container": {
+      "status": 200,
+      "success": true,
+      "url": "http://localhost:3000"
+    },
+    "User Management": {
+      "status": 200,
+      "success": true,
+      "url": "http://localhost:3001"
+    },
+    "Data Grid": {
+      "status": 200,
+      "success": true,
+      "url": "http://localhost:3002"
+    },
+    "Analytics": {
+      "status": 200,
+      "success": true,
+      "url": "http://localhost:3003"
+    },
+    "Settings": {
+      "status": 200,
+      "success": true,
+      "url": "http://localhost:3004"
+    }
+  },
+  "success_rate": 100.0,
+  "total_tests": 10,
+  "passed": 10
+}

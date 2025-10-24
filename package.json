@@ -10,9 +10,12 @@
     "dev:data-grid": "cd frontend/data-grid-app && npm start", 
     "dev:analytics": "cd frontend/analytics-app && npm start",
     "dev:settings": "cd frontend/settings-app && npm start",
-    "install:all": "npm install && cd frontend/container && npm install && cd ../user-management-app && npm install && cd ../data-grid-app && npm install && cd ../analytics-app && npm install && cd ../settings-app && npm install",
+    "dev:backend": "cd backend/mock-data-service && python main.py",
+    "install:all": "npm install && cd frontend/shared-ui-lib && npm install && cd ../container && npm install && cd ../user-management-app && npm install && cd ../data-grid-app && npm install && cd ../analytics-app && npm install && cd ../settings-app && npm install",
+    "install:backend": "cd backend/mock-data-service && pip install -r requirements.txt",
     "build:all": "cd frontend/user-management-app && npm run build && cd ../data-grid-app && npm run build && cd ../analytics-app && npm run build && cd ../settings-app && npm run build && cd ../container && npm run build",
-    "test:all": "cd frontend/container && npm test && cd ../user-management-app && npm test && cd ../data-grid-app && npm test && cd ../analytics-app && npm test && cd ../settings-app && npm test"
+    "test:all": "cd frontend/container && npm test && cd ../user-management-app && npm test && cd ../data-grid-app && npm test && cd ../analytics-app && npm test && cd ../settings-app && npm test",
+    "lint:all": "cd frontend/container && npm run lint && cd ../user-management-app && npm run lint && cd ../data-grid-app && npm run lint && cd ../analytics-app && npm run lint && cd ../settings-app && npm run lint"
   },
   "keywords": [
     "micro-frontend",

@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ./backend/mock-data-service
+      dockerfile: Dockerfile
+    container_name: micro-frontend-backend-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Container App (Main Host)
+  container-app:
+    build:
+      context: ./frontend/container
+      dockerfile: Dockerfile
+    container_name: micro-frontend-container-prod
+    ports:
+      - "80:80"
+    networks:
+      - micro-frontend-network
+    depends_on:
+      - user-management-app
+      - data-grid-app
+      - analytics-app
+      - settings-app
+    restart: unless-stopped
+
+  # User Management App
+  user-management-app:
+    build:
+      context: ./frontend/user-management-app
+      dockerfile: Dockerfile
+    container_name: micro-frontend-user-management-prod
+    ports:
+      - "3001:80"
+    environment:
+      - REACT_APP_API_URL=http://backend:8000
+    networks:
+      - micro-frontend-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Data Grid App
+  data-grid-app:
+    build:
+      context: ./frontend/data-grid-app
+      dockerfile: Dockerfile
+    container_name: micro-frontend-data-grid-prod
+    ports:
+      - "3002:80"
+    environment:
+      - REACT_APP_API_URL=http://backend:8000
+    networks:
+      - micro-frontend-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Analytics App
+  analytics-app:
+    build:
+      context: ./frontend/analytics-app
+      dockerfile: Dockerfile
+    container_name: micro-frontend-analytics-prod
+    ports:
+      - "3003:80"
+    environment:
+      - REACT_APP_API_URL=http://backend:8000
+    networks:
+      - micro-frontend-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Settings App
+  settings-app:
+    build:
+      context: ./frontend/settings-app
+      dockerfile: Dockerfile
+    container_name: micro-frontend-settings-prod
+    ports:
+      - "3004:80"
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+
+networks:
+  micro-frontend-network:
+    driver: bridge
+
+
+
+
+
