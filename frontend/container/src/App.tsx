@@ -1,295 +1,545 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState, Suspense, useEffect } from 'react';
+import {
+  Box,
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Avatar,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  CircularProgress,
+  Chip,
+  useMediaQuery,
+  useTheme,
+  Badge,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Home as HomeIcon,
+  People as PeopleIcon,
+  Dashboard as DashboardIcon,
+  Settings as SettingsIcon,
+  Analytics as AnalyticsIcon,
+  BugReport as BugReportIcon,
+} from '@mui/icons-material';
+import { 
+  ErrorBoundary, 
+  ErrorPanel, 
+  ErrorToast, 
+  useErrorMonitor,
+  ErrorCapture 
+} from '../../shared-ui-lib/src';
+import ErrorMonitor from './pages/ErrorMonitor';
+
+// Lazy load remote micro-frontends
+const UserManagement = React.lazy(() => import('userApp/UserManagement'));
+const DataGrid = React.lazy(() => import('dataApp/DataGrid'));
+const Analytics = React.lazy(() => import('analyticsApp/Analytics'));
+const Settings = React.lazy(() => import('settingsApp/Settings'));
+
+interface MenuItem {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  color: string;
+  description: string;
+}
+
+const menuItems: MenuItem[] = [
+  {
+    id: 'home',
+    icon: <HomeIcon />,
+    label: 'Dashboard',
+    color: '#61dafb',
+    description: 'Overview and quick access to all modules',
+  },
+  {
+    id: 'users',
+    icon: <PeopleIcon />,
+    label: 'User Management',
+    color: '#61dafb',
+    description: 'Manage users, roles, and permissions',
+  },
+  {
+    id: 'data',
+    icon: <DashboardIcon />,
+    label: 'Data Grid',
+    color: '#ff6b6b',
+    description: 'View and manage data with advanced filtering',
+  },
+  {
+    id: 'analytics',
+    icon: <AnalyticsIcon />,
+    label: 'Analytics',
+    color: '#4ecdc4',
+    description: 'Real-time analytics and reporting',
+  },
+  {
+    id: 'settings',
+    icon: <SettingsIcon />,
+    label: 'Settings',
+    color: '#ffa726',
+    description: 'System configuration and preferences',
+  },
+  {
+    id: 'error-monitor',
+    icon: <BugReportIcon />,
+    label: 'Error Monitor',
+    color: '#f44336',
+    description: 'Real-time error monitoring and analysis',
+  },
+];
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const [sideMenuOpen, setSideMenuOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [errorPanelOpen, setErrorPanelOpen] = useState(false);
+  const [showErrorToast, setShowErrorToast] = useState<string | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // Error monitoring
+  const { errors, stats, clearErrors } = useErrorMonitor();
 
-  const openMicroFrontend = (tabName: string) => {
-    setActiveTab(tabName);
+  React.useEffect(() => {
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
+  }, [isMobile]);
+
+  // Keyboard shortcuts for error panel
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey) {
+        switch (event.key) {
+          case 'E':
+            event.preventDefault();
+            setErrorPanelOpen(!errorPanelOpen);
+            break;
+          case 'C':
+            event.preventDefault();
+            clearErrors();
+            break;
+          case 'M':
+            event.preventDefault();
+            setActiveTab('error-monitor');
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [errorPanelOpen, clearErrors]);
+
+  // Show toast for new errors
+  useEffect(() => {
+    if (errors.length > 0) {
+      const latestError = errors[0];
+      const fiveSecondsAgo = Date.now() - 5000;
+      
+      if (latestError.timestamp > fiveSecondsAgo && latestError.id !== showErrorToast) {
+        setShowErrorToast(latestError.id);
+      }
+    }
+  }, [errors, showErrorToast]);
+
+  const handleDrawerToggle = () => {
+    setDrawerOpen(!drawerOpen);
   };
 
-  const menuItems = [
-    { id: 'home', icon: '🏠', label: 'Dashboard', color: '#61dafb' },
-    { id: 'users', icon: '🧑‍💼', label: 'User Management', color: '#61dafb' },
-    { id: 'data', icon: '📊', label: 'Data Grid', color: '#ff6b6b' },
-    { id: 'analytics', icon: '📈', label: 'Analytics', color: '#4ecdc4' },
-    { id: 'settings', icon: '⚙️', label: 'Settings', color: '#ffa726' }
-  ];
+  const handleMenuItemClick = (tabId: string) => {
+    setActiveTab(tabId);
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
+  };
 
-  return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100vh', 
-      backgroundColor: '#f5f5f5',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      
-      {/* Header */}
-      <header style={{
-        backgroundColor: '#282c34',
-        color: '#ffffff',
-        padding: '1rem 2rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        zIndex: 1000
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <button
-            onClick={() => setSideMenuOpen(!sideMenuOpen)}
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: '#61dafb',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              marginRight: '1rem',
-              padding: '0.5rem'
-            }}
-          >
-            ☰
-          </button>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#61dafb' }}>
-            🏠 Micro-Frontend Platform
-          </h1>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span style={{ fontSize: '0.9rem', color: '#cccccc' }}>Welcome, Admin</span>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            backgroundColor: '#61dafb',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#000',
-            fontWeight: 'bold'
-          }}>
-            A
-          </div>
-        </div>
-      </header>
+  const renderRemoteApp = () => {
+    const LoadingFallback = (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '400px',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        
-        {/* Side Menu */}
-        <aside style={{
-          width: sideMenuOpen ? '250px' : '60px',
-          backgroundColor: '#1a1a1a',
-          color: '#ffffff',
-          transition: 'width 0.3s ease',
-          overflow: 'hidden',
-          boxShadow: '2px 0 4px rgba(0,0,0,0.1)'
-        }}>
-          <nav style={{ padding: '1rem 0' }}>
-            {menuItems.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => openMicroFrontend(item.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '1rem',
-                  cursor: 'pointer',
-                  backgroundColor: activeTab === item.id ? 'rgba(97, 218, 251, 0.2)' : 'transparent',
-                  borderLeft: activeTab === item.id ? `4px solid ${item.color}` : '4px solid transparent',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== item.id) {
-                    (e.target as HTMLElement).style.backgroundColor = 'rgba(97, 218, 251, 0.1)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== item.id) {
-                    (e.target as HTMLElement).style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                <span style={{ fontSize: '1.5rem', marginRight: sideMenuOpen ? '1rem' : '0' }}>
-                  {item.icon}
-                </span>
-                {sideMenuOpen && (
-                  <span style={{ 
-                    fontSize: '1rem', 
-                    color: activeTab === item.id ? item.color : '#ffffff',
-                    fontWeight: activeTab === item.id ? 'bold' : 'normal'
-                  }}>
-                    {item.label}
-                  </span>
-                )}
-              </div>
-            ))}
-          </nav>
-        </aside>
+    const ErrorFallback = (error: Error, errorInfo: React.ErrorInfo, retry: () => void) => (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography variant="h6" color="error" gutterBottom>
+          Failed to load micro-frontend
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          The remote application could not be loaded. This might be due to a network issue or the service being unavailable.
+        </Typography>
+        <Button variant="contained" onClick={retry}>
+          Retry Loading
+        </Button>
+      </Box>
+    );
 
-        {/* Main Content Area */}
-        <main style={{
-          flex: 1,
-          padding: '2rem',
-          backgroundColor: '#ffffff',
-          overflow: 'auto'
-        }}>
-          {activeTab === 'home' ? (
-            <div>
-              <div style={{ marginBottom: '2rem' }}>
-                <h2 style={{ color: '#282c34', marginBottom: '0.5rem' }}>
-                  Dashboard Overview
-                </h2>
-                <p style={{ color: '#666666', margin: 0 }}>
-                  Welcome to the Micro-Frontend Platform. Select a module from the side menu to get started.
-                </p>
-              </div>
-              
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-                gap: '1.5rem',
-                marginBottom: '2rem'
-              }}>
-                {menuItems.slice(1).map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => openMicroFrontend(item.id)}
-                    style={{
-                      backgroundColor: '#ffffff',
-                      padding: '2rem',
-                      borderRadius: '12px',
-                      border: `2px solid ${item.color}`,
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.target as HTMLElement).style.transform = 'translateY(-5px)';
-                      (e.target as HTMLElement).style.boxShadow = '0 8px 12px rgba(0,0,0,0.15)';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.target as HTMLElement).style.transform = 'translateY(0)';
-                      (e.target as HTMLElement).style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+    const SuspenseFallback = (
+      <Suspense 
+        fallback={
+          <Box sx={{ p: 3 }}>
+            {LoadingFallback}
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 2 }}>
+              Loading micro-frontend...
+            </Typography>
+          </Box>
+        }
+      >
+        {(() => {
+          try {
+            switch (activeTab) {
+              case 'users':
+                return (
+                  <ErrorBoundary 
+                    componentName="User Management App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('userApp/UserManagement', error);
                     }}
                   >
-                    <div style={{ 
-                      fontSize: '3rem', 
-                      marginBottom: '1rem',
-                      textAlign: 'center'
-                    }}>
+                    <UserManagement />
+                  </ErrorBoundary>
+                );
+              case 'data':
+                return (
+                  <ErrorBoundary 
+                    componentName="Data Grid App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('dataApp/DataGrid', error);
+                    }}
+                  >
+                    <DataGrid />
+                  </ErrorBoundary>
+                );
+              case 'analytics':
+                return (
+                  <ErrorBoundary 
+                    componentName="Analytics App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('analyticsApp/Analytics', error);
+                    }}
+                  >
+                    <Analytics />
+                  </ErrorBoundary>
+                );
+              case 'settings':
+                return (
+                  <ErrorBoundary 
+                    componentName="Settings App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('settingsApp/Settings', error);
+                    }}
+                  >
+                    <Settings />
+                  </ErrorBoundary>
+                );
+              default:
+                return null;
+            }
+          } catch (error) {
+            ErrorCapture.captureModuleFederationError(activeTab, error);
+            return ErrorFallback(error as Error, {}, () => window.location.reload());
+          }
+        })()}
+      </Suspense>
+    );
+
+    return SuspenseFallback;
+  };
+
+  const drawerWidth = 260;
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      {/* Header */}
+      <AppBar
+        position="fixed"
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        backgroundColor: '#282c34',
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, color: '#61dafb' }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <HomeIcon sx={{ mr: 1, color: '#61dafb' }} />
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ flexGrow: 1, color: '#61dafb' }}
+          >
+            Micro-Frontend Platform
+          </Typography>
+          <Typography variant="body2" sx={{ mr: 2, color: '#cccccc' }}>
+            Welcome, Admin
+          </Typography>
+          <Avatar sx={{ bgcolor: '#61dafb', color: '#000' }}>A</Avatar>
+        </Toolbar>
+      </AppBar>
+
+      <Box sx={{ display: 'flex', flex: 1, mt: '64px' }}>
+        {/* Sidebar Drawer */}
+        <Drawer
+          variant={isMobile ? 'temporary' : 'persistent'}
+          open={drawerOpen}
+          onClose={handleDrawerToggle}
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+          backgroundColor: '#1a1a1a',
+          color: '#ffffff',
+              top: '64px',
+              height: 'calc(100% - 64px)',
+            },
+          }}
+        >
+          <List>
+            {menuItems.map((item) => (
+              <ListItemButton
+                key={item.id}
+                selected={activeTab === item.id}
+                onClick={() => handleMenuItemClick(item.id)}
+                sx={{
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(97, 218, 251, 0.2)',
+                    borderLeft: `4px solid ${item.color}`,
+                  },
+                  '&:hover': {
+                    backgroundColor: 'rgba(97, 218, 251, 0.1)',
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ color: item.color, minWidth: 40 }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  sx={{
+                    '& .MuiListItemText-primary': {
+                    color: activeTab === item.id ? item.color : '#ffffff',
+                      fontWeight: activeTab === item.id ? 'bold' : 'normal',
+                    },
+                  }}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        </Drawer>
+
+        {/* Main Content */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: 3,
+          backgroundColor: '#ffffff',
+            overflow: 'auto',
+            transition: theme.transitions.create(['margin'], {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.leavingScreen,
+            }),
+            ...(drawerOpen &&
+              !isMobile && {
+                marginLeft: 0,
+              }),
+          }}
+        >
+          {activeTab === 'home' ? (
+            <Box>
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h4" gutterBottom sx={{ color: '#282c34' }}>
+                  Dashboard Overview
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Welcome to the Micro-Frontend Platform. Select a module from
+                  the side menu to get started.
+                </Typography>
+              </Box>
+
+              <Grid container spacing={3}>
+                {menuItems.slice(1).map((item) => (
+                  <Grid item xs={12} sm={6} md={4} key={item.id}>
+                    <Card
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      border: `2px solid ${item.color}`,
+                        transition: 'all 0.3s ease',
+                      cursor: 'pointer',
+                        '&:hover': {
+                          transform: 'translateY(-5px)',
+                          boxShadow: (theme) => theme.shadows[8],
+                        },
+                      }}
+                      onClick={() => handleMenuItemClick(item.id)}
+                    >
+                      <CardContent sx={{ flexGrow: 1, textAlign: 'center' }}>
+                        <Box
+                          sx={{
+                            fontSize: '3rem',
+                            mb: 2,
+                            color: item.color,
+                          }}
+                        >
                       {item.icon}
-                    </div>
-                    <h3 style={{ 
-                      color: item.color, 
-                      margin: '0 0 1rem 0',
-                      textAlign: 'center',
-                      fontSize: '1.3rem'
-                    }}>
+                        </Box>
+                        <Typography
+                          variant="h5"
+                          component="div"
+                          gutterBottom
+                          sx={{ color: item.color }}
+                        >
                       {item.label}
-                    </h3>
-                    <p style={{ 
-                      color: '#666666', 
-                      textAlign: 'center',
-                      margin: '0 0 1rem 0',
-                      fontSize: '0.9rem'
-                    }}>
-                      {item.id === 'users' && 'Manage users, roles, and permissions'}
-                      {item.id === 'data' && 'View and manage data with advanced filtering'}
-                      {item.id === 'analytics' && 'Real-time analytics and reporting'}
-                      {item.id === 'settings' && 'System configuration and preferences'}
-                    </p>
-                    <div style={{
-                      textAlign: 'center',
-                      padding: '0.5rem 1rem',
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {item.description}
+                        </Typography>
+                      </CardContent>
+                      <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
+                        <Button
+                          variant="contained"
+                          sx={{
                       backgroundColor: item.color,
                       color: '#ffffff',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem',
-                      fontWeight: 'bold'
-                    }}>
+                            '&:hover': {
+                              backgroundColor: item.color,
+                              opacity: 0.9,
+                            },
+                          }}
+                        >
                       Open Module →
-                    </div>
-                  </div>
+                        </Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
                 ))}
-              </div>
-            </div>
+              </Grid>
+            </Box>
+          ) : activeTab === 'error-monitor' ? (
+            <ErrorMonitor />
           ) : (
-            <div>
-              <div style={{ marginBottom: '1rem' }}>
-                <h2 style={{ 
-                  color: menuItems.find(item => item.id === activeTab)?.color || '#282c34',
-                  margin: '0 0 0.5rem 0'
-                }}>
-                  {menuItems.find(item => item.id === activeTab)?.icon} {' '}
-                  {menuItems.find(item => item.id === activeTab)?.label}
-                </h2>
-                <p style={{ color: '#666666', margin: 0 }}>
-                  Micro-frontend deployed on GitHub Pages
-                </p>
-              </div>
-              
-              <div style={{
-                border: '2px solid #e9ecef',
-                borderRadius: '10px',
-                overflow: 'hidden',
-                height: 'calc(100vh - 200px)'
-              }}>
-                <iframe
-                  src={
-                    activeTab === 'users' ? 'https://olivium-dev.github.io/golden-sample-react-micro-web/user-management/' :
-                    activeTab === 'data' ? 'https://olivium-dev.github.io/golden-sample-react-micro-web/data-grid/' :
-                    activeTab === 'analytics' ? 'https://olivium-dev.github.io/golden-sample-react-micro-web/analytics/' :
-                    activeTab === 'settings' ? 'https://olivium-dev.github.io/golden-sample-react-micro-web/settings/' : ''
-                  }
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none'
+            <Box>
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="h4"
+                  gutterBottom
+                  sx={{
+                    color:
+                      menuItems.find((item) => item.id === activeTab)?.color ||
+                      '#282c34',
                   }}
-                  title={`${activeTab} micro-frontend`}
-                />
-              </div>
-            </div>
+                >
+                  {menuItems.find((item) => item.id === activeTab)?.icon}{' '}
+                  {menuItems.find((item) => item.id === activeTab)?.label}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Micro-frontend loaded via Module Federation
+                </Typography>
+              </Box>
+              {renderRemoteApp()}
+            </Box>
           )}
-        </main>
-      </div>
+        </Box>
+      </Box>
 
       {/* Footer */}
-      <footer style={{
+      <AppBar
+        position="static"
+        sx={{
+          top: 'auto',
+          bottom: 0,
         backgroundColor: '#282c34',
-        color: '#ffffff',
-        padding: '1rem 2rem',
-        textAlign: 'center',
-        borderTop: '1px solid #444444'
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          maxWidth: '1200px',
-          margin: '0 auto'
-        }}>
-          <div>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: '#cccccc' }}>
-              © 2025 Micro-Frontend Platform. Built with React + GitHub Pages.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '2rem' }}>
-            <span style={{ fontSize: '0.8rem', color: '#888888' }}>
-              🚀 All Services Running
-            </span>
-            <span style={{ fontSize: '0.8rem', color: '#888888' }}>
-              ⚡ Live Reload Active
-            </span>
-            <span style={{ fontSize: '0.8rem', color: '#888888' }}>
-              🔧 Development Mode
-            </span>
-          </div>
-        </div>
-      </footer>
-    </div>
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <Typography variant="body2" color="#cccccc">
+            © 2025 Micro-Frontend Platform. Built with React + MUI.
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Chip
+              label="🚀 All Services Running"
+              size="small"
+              sx={{ color: '#888888', borderColor: '#888888' }}
+              variant="outlined"
+            />
+            <Chip
+              label="⚡ Live Reload Active"
+              size="small"
+              sx={{ color: '#888888', borderColor: '#888888' }}
+              variant="outlined"
+            />
+            <Chip
+              label="🔧 Development Mode"
+              size="small"
+              sx={{ color: '#888888', borderColor: '#888888' }}
+              variant="outlined"
+            />
+            <Badge badgeContent={stats.total} color="error" max={99}>
+              <Chip
+                icon={<BugReportIcon />}
+                label={`Errors: ${stats.total}`}
+                size="small"
+                color={stats.total > 0 ? 'error' : 'default'}
+                variant="outlined"
+                onClick={() => setErrorPanelOpen(true)}
+                sx={{ 
+                  cursor: 'pointer',
+                  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+                }}
+              />
+            </Badge>
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      {/* Error Panel */}
+      <ErrorPanel
+        isOpen={errorPanelOpen}
+        onClose={() => setErrorPanelOpen(false)}
+      />
+
+      {/* Error Toast */}
+      {showErrorToast && errors.length > 0 && errors.find(e => e.id === showErrorToast) && (
+        <ErrorToast
+          error={errors.find(e => e.id === showErrorToast)!}
+          onDismiss={() => setShowErrorToast(null)}
+          autoHideDuration={6000}
+        />
+      )}
+    </Box>
   );
 }
 
