@@ -30,13 +30,16 @@ import {
   Settings as SettingsIcon,
   Analytics as AnalyticsIcon,
   BugReport as BugReportIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { 
   ErrorBoundary, 
   ErrorPanel, 
   ErrorToast, 
   useErrorMonitor,
-  ErrorCapture 
+  ErrorCapture,
+  useAuth,
+  LoginPage 
 } from '../../shared-ui-lib/src';
 import ErrorMonitor from './pages/ErrorMonitor';
 
@@ -107,9 +110,15 @@ function App() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
+  // Authentication
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
+  
   // Error monitoring
   const { errors, stats, clearErrors } = useErrorMonitor();
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // This is required by the Rules of Hooks
+  
   React.useEffect(() => {
     if (isMobile) {
       setDrawerOpen(false);
@@ -152,6 +161,33 @@ function App() {
       }
     }
   }, [errors, showErrorToast]);
+
+  // NOW we can do conditional returns after all hooks have been called
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+      >
+        <CircularProgress size={60} />
+        <Typography variant="h6" color="text.secondary">
+          Loading...
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -299,9 +335,19 @@ function App() {
             Micro-Frontend Platform
           </Typography>
           <Typography variant="body2" sx={{ mr: 2, color: '#cccccc' }}>
-            Welcome, Admin
+            Welcome, {user?.name || user?.email || 'User'}
           </Typography>
-          <Avatar sx={{ bgcolor: '#61dafb', color: '#000' }}>A</Avatar>
+          <Avatar sx={{ bgcolor: '#61dafb', color: '#000', mr: 1 }}>
+            {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+          </Avatar>
+          <IconButton
+            color="inherit"
+            onClick={logout}
+            title="Logout"
+            sx={{ color: '#cccccc' }}
+          >
+            <LogoutIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
 

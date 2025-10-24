@@ -3,6 +3,7 @@ import { ErrorEntry, ErrorType, ErrorStats, ErrorFilter, ErrorLoggerConfig, AppE
 class ErrorLoggerService {
   private errors: ErrorEntry[] = [];
   private listeners: ((error: ErrorEntry) => void)[] = [];
+  private isLogging = false; // Flag to prevent recursive calls
   private config: ErrorLoggerConfig = {
     maxErrors: 100,
     enableConsoleLog: true,
@@ -30,21 +31,35 @@ class ErrorLoggerService {
     appName: string = this.getAppName(),
     additionalData?: Record<string, any>
   ): string {
-    const errorEntry: ErrorEntry = {
-      id: this.generateId(),
-      timestamp: Date.now(),
-      type,
-      message,
-      stack: error?.stack || new Error().stack,
-      appName,
-      url: window.location.href,
-      userAgent: navigator.userAgent,
-      severity: this.determineSeverity(type, message),
-      ...additionalData,
-    };
+    // Prevent recursive calls
+    if (this.isLogging) {
+      console.warn('ErrorLogger: Recursive call detected, skipping to prevent infinite loop');
+      return 'recursive-call-prevented';
+    }
 
-    this.addError(errorEntry);
-    return errorEntry.id;
+    this.isLogging = true;
+    try {
+      const errorEntry: ErrorEntry = {
+        id: this.generateId(),
+        timestamp: Date.now(),
+        type,
+        message,
+        stack: error?.stack || new Error().stack,
+        appName,
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        severity: this.determineSeverity(type, message),
+        ...additionalData,
+      };
+
+      this.addError(errorEntry);
+      return errorEntry.id;
+    } catch (e) {
+      console.warn('ErrorLogger: Failed to log error:', e);
+      return 'error-logging-failed';
+    } finally {
+      this.isLogging = false;
+    }
   }
 
   public logAppError(appError: AppError): string {
@@ -144,23 +159,40 @@ class ErrorLoggerService {
       this.errors = this.errors.slice(0, this.config.maxErrors);
     }
 
-    // Console logging
+    // Safe console logging with recursion protection
     if (this.config.enableConsoleLog) {
-      console.group(`🚨 ${error.type.toUpperCase()} Error in ${error.appName}`);
-      console.error(error.message);
-      if (error.stack) {
-        console.error(error.stack);
+      try {
+        // Use original console methods if available to avoid interception
+        const originalConsole = (window as any).__originalConsole;
+        if (originalConsole && originalConsole.group) {
+          originalConsole.group(`🚨 ${error.type.toUpperCase()} Error in ${error.appName}`);
+          originalConsole.error(error.message);
+          if (error.stack) {
+            originalConsole.error(error.stack);
+          }
+          originalConsole.log('Error Details:', error);
+          originalConsole.groupEnd();
+        } else {
+          // Fallback to simple logging to avoid recursion
+          console.log(`[ErrorLogger] ${error.type.toUpperCase()} in ${error.appName}: ${error.message}`);
+        }
+      } catch (e) {
+        // If console logging fails, just skip it to avoid loops
+        // Don't log this error to avoid potential recursion
       }
-      console.log('Error Details:', error);
-      console.groupEnd();
     }
 
-    // Notify listeners
+    // Notify listeners with recursion protection
     this.listeners.forEach(listener => {
       try {
         listener(error);
       } catch (e) {
-        console.error('Error in error listener:', e);
+        // Use original console to avoid recursive calls
+        const originalConsole = (window as any).__originalConsole;
+        if (originalConsole && originalConsole.error) {
+          originalConsole.error('Error in error listener:', e);
+        }
+        // Don't use ErrorLogger here to avoid potential recursion
       }
     });
 

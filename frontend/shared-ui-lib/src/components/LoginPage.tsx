@@ -13,19 +13,18 @@ import {
   Stack,
 } from '@mui/material';
 import { LockOutlined, Info } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { LoginForm } from './LoginForm';
 import { LoginCredentials } from '../auth/types';
 
 export const LoginPage: React.FC = () => {
   const { login, error, isLoading } = useAuth();
-  const navigate = useNavigate();
 
   const handleLogin = async (credentials: LoginCredentials): Promise<void> => {
     try {
       await login(credentials);
-      navigate('/'); // Redirect to home after successful login
+      // No navigation needed - the App component will automatically show the main app
+      // when isAuthenticated becomes true
     } catch (error) {
       // Error is handled by the auth context
       console.error('Login failed:', error);

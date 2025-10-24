@@ -9,6 +9,15 @@ export class ErrorCapture {
       return;
     }
 
+    // Store original console methods before intercepting them
+    (window as any).__originalConsole = {
+      error: console.error,
+      warn: console.warn,
+      log: console.log,
+      group: console.group,
+      groupEnd: console.groupEnd,
+    };
+
     this.setupNetworkErrorCapture();
     this.setupModuleFederationErrorCapture();
     this.setupConsoleErrorCapture();
@@ -147,42 +156,99 @@ export class ErrorCapture {
   }
 
   private static setupConsoleErrorCapture(): void {
-    // Capture console.error calls (but avoid infinite loops)
+    // SAFE console error capture - prevents infinite loops
     const originalConsoleError = console.error;
+    const originalConsoleWarn = console.warn;
+    
+    // Global flag to prevent any recursive calls across the entire system
+    if (!(window as any).__errorCaptureDisabled) {
+      (window as any).__errorCaptureDisabled = false;
+    }
+    
     console.error = function(...args) {
-      // Only log to ErrorLogger if it's not already an ErrorLogger message
-      const message = args.join(' ');
-      if (!message.includes('🚨') && !message.includes('ErrorLogger')) {
-        ErrorLogger.logError(
-          `Console Error: ${message}`,
-          'unknown',
-          new Error(message)
-        );
+      // Immediately check and set the global flag to prevent recursion
+      if ((window as any).__errorCaptureDisabled) {
+        return originalConsoleError.apply(console, args);
+      }
+      
+      try {
+        const message = args.join(' ');
+        
+        // Filter out known problematic messages that cause loops
+        const shouldSkip = message.includes('🚨') || 
+                          message.includes('ErrorLogger') || 
+                          message.includes('Maximum call stack') ||
+                          message.includes('Error in error listener') ||
+                          message.includes('[ErrorLogger]') ||
+                          message.includes('recursive call detected');
+        
+        if (!shouldSkip) {
+          // Set flag to prevent recursion during this call
+          (window as any).__errorCaptureDisabled = true;
+          
+          // Use a timeout to ensure the flag is reset even if something goes wrong
+          setTimeout(() => {
+            (window as any).__errorCaptureDisabled = false;
+          }, 100);
+          
+          ErrorLogger.logError(
+            `Console Error: ${message}`,
+            'unknown',
+            new Error(message)
+          );
+        }
+      } catch (e) {
+        // If anything goes wrong, just use the original console
+        originalConsoleError.call(console, 'ErrorCapture failed:', e);
+      } finally {
+        // Always reset the flag
+        (window as any).__errorCaptureDisabled = false;
       }
       
       return originalConsoleError.apply(console, args);
     };
 
-    // Capture console.warn for potential issues
-    const originalConsoleWarn = console.warn;
     console.warn = function(...args) {
-      const message = args.join(' ');
+      // Same protection for warnings
+      if ((window as any).__errorCaptureDisabled) {
+        return originalConsoleWarn.apply(console, args);
+      }
       
-      // Log certain warnings as errors
-      if (message.toLowerCase().includes('failed') || 
-          message.toLowerCase().includes('error') ||
-          message.toLowerCase().includes('module federation')) {
-        ErrorLogger.logError(
-          `Console Warning: ${message}`,
-          'unknown',
-          new Error(message),
-          undefined,
-          { severity: 'low' }
-        );
+      try {
+        const message = args.join(' ');
+        
+        // Only capture specific warnings that indicate real problems
+        const shouldCapture = !message.includes('ErrorLogger') &&
+                             !message.includes('Failed to save errors') &&
+                             !message.includes('Failed to send error') &&
+                             (message.toLowerCase().includes('module federation') ||
+                              message.toLowerCase().includes('chunk load'));
+        
+        if (shouldCapture) {
+          (window as any).__errorCaptureDisabled = true;
+          
+          setTimeout(() => {
+            (window as any).__errorCaptureDisabled = false;
+          }, 100);
+          
+          ErrorLogger.logError(
+            `Console Warning: ${message}`,
+            'unknown',
+            new Error(message),
+            undefined,
+            { severity: 'low' }
+          );
+        }
+      } catch (e) {
+        originalConsoleWarn.call(console, 'ErrorCapture failed:', e);
+      } finally {
+        (window as any).__errorCaptureDisabled = false;
       }
       
       return originalConsoleWarn.apply(console, args);
     };
+    
+    console.log('🔧 Safe console error capture enabled');
   }
 
   public static captureApiError(error: any, endpoint: string, method: string = 'GET'): void {

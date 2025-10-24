@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { ModuleFederationPlugin } = require('webpack').container;
+const webpack = require('webpack');
 const path = require('path');
 
 module.exports = {
@@ -47,6 +48,12 @@ module.exports = {
     ],
   },
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
+        REACT_APP_API_URL: JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000'),
+      },
+    }),
     new ModuleFederationPlugin({
       name: 'container',
       filename: 'remoteEntry.js',
@@ -64,41 +71,48 @@ module.exports = {
           singleton: true,
           requiredVersion: "18.2.0",
           strictVersion: false,
-          eager: true,
+          eager: false,
         },
         'react-dom': {
           singleton: true,
           requiredVersion: "18.2.0",
           strictVersion: false,
-          eager: true,
+          eager: false,
         },
         'react-router-dom': {
           singleton: true,
           requiredVersion: '^6.21.0',
+          eager: false,
         },
         '@mui/material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: false,
         },
         '@mui/icons-material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: false,
         },
         '@mui/x-data-grid': {
           singleton: true,
           requiredVersion: '^6.18.0',
+          eager: false,
         },
         '@mui/x-charts': {
           singleton: true,
           requiredVersion: '^6.18.0',
+          eager: false,
         },
         '@emotion/react': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: false,
         },
         '@emotion/styled': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: false,
         },
       },
     }),

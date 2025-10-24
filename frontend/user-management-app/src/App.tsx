@@ -29,10 +29,9 @@ import {
   Search as SearchIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import axios from 'axios';
-import { ErrorCapture } from '../../shared-ui-lib/src';
+import { ErrorCapture, apiClient } from '../../shared-ui-lib/src';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+// No need for API_BASE_URL - apiClient already has it configured
 
 interface User {
   id: number;
@@ -76,10 +75,10 @@ function App() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/users`);
+      const response = await apiClient.get('/users');
       setUsers(response.data);
     } catch (error) {
-      ErrorCapture.captureApiError(error, `${API_BASE_URL}/users`, 'GET');
+      ErrorCapture.captureApiError(error, '/users', 'GET');
       showSnackbar('Error fetching users', 'error');
     } finally {
       setLoading(false);
@@ -128,16 +127,16 @@ function App() {
   const handleSaveUser = async () => {
     try {
       if (editingUser) {
-        await axios.put(`${API_BASE_URL}/users/${editingUser.id}`, formData);
+        await apiClient.put(`/users/${editingUser.id}`, formData);
         showSnackbar('User updated successfully', 'success');
       } else {
-        await axios.post(`${API_BASE_URL}/users`, formData);
+        await apiClient.post('/users', formData);
         showSnackbar('User created successfully', 'success');
       }
       fetchUsers();
       handleCloseDialog();
     } catch (error) {
-      ErrorCapture.captureApiError(error, `${API_BASE_URL}/users`, editingUser ? 'PUT' : 'POST');
+      ErrorCapture.captureApiError(error, '/users', editingUser ? 'PUT' : 'POST');
       showSnackbar('Error saving user', 'error');
     }
   };
@@ -145,11 +144,11 @@ function App() {
   const handleDeleteUser = async (userId: number) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await axios.delete(`${API_BASE_URL}/users/${userId}`);
+        await apiClient.delete(`/users/${userId}`);
         showSnackbar('User deleted successfully', 'success');
         fetchUsers();
       } catch (error) {
-        ErrorCapture.captureApiError(error, `${API_BASE_URL}/users/${userId}`, 'DELETE');
+        ErrorCapture.captureApiError(error, `/users/${userId}`, 'DELETE');
         showSnackbar('Error deleting user', 'error');
       }
     }
