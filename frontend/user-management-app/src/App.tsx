@@ -34,6 +34,60 @@ import { ErrorCapture } from '../../shared-ui-lib/src';
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
+// Auto-login and token refresh
+const autoLogin = async () => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+      email: "admin@example.com",
+      password: "admin123"
+    });
+    const token = response.data.access_token;
+    localStorage.setItem('access_token', token);
+    return token;
+  } catch (error) {
+    console.error('Auto-login failed:', error);
+    return null;
+  }
+};
+
+// Add auth token to requests with auto-refresh
+axios.interceptors.request.use(async (config) => {
+  // Skip auth for login requests to prevent loops
+  if (config.url?.includes('/auth/login')) {
+    return config;
+  }
+  
+  let token = localStorage.getItem('access_token');
+  if (!token) {
+    token = await autoLogin();
+  }
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle 401 errors with auto-refresh
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // Skip retry for login requests to prevent loops
+    if (error.config?.url?.includes('/auth/login') || error.config?._retry) {
+      return Promise.reject(error);
+    }
+    
+    if (error.response?.status === 401) {
+      error.config._retry = true; // Mark as retried
+      const token = await autoLogin();
+      if (token) {
+        error.config.headers.Authorization = `Bearer ${token}`;
+        return axios.request(error.config);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 interface User {
   id: number;
   email: string;
@@ -79,7 +133,7 @@ function App() {
       const response = await axios.get(`${API_BASE_URL}/users`);
       setUsers(response.data);
     } catch (error) {
-      ErrorCapture.captureApiError(error, `${API_BASE_URL}/users`, 'GET');
+      ErrorCapture.captureApiError(error, '/users', 'GET');
       showSnackbar('Error fetching users', 'error');
     } finally {
       setLoading(false);

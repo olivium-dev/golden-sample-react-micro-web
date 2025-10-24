@@ -102,8 +102,8 @@ export const DataRowDialog: React.FC<DataRowDialogProps> = ({
             fullWidth
             label="Value"
             type="number"
-            value={formData.value}
-            onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) })}
+            value={formData.value || ''}
+            onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
             required
           />
 

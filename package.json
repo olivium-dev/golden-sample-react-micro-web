@@ -5,11 +5,17 @@
   "private": true,
   "scripts": {
     "dev:all": "concurrently --names \"CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS\" --prefix-colors \"blue,green,red,yellow,magenta\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\"",
+    "dev:minimal": "concurrently --names \"BACKEND,CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS\" --prefix-colors \"cyan,blue,green,red,yellow,magenta\" \"npm run dev:backend\" \"npm run dev:container-minimal\" \"npm run dev:user-management-minimal\" \"npm run dev:data-grid-minimal\" \"npm run dev:analytics-minimal\" \"npm run dev:settings-minimal\"",
     "dev:container": "cd frontend/container && npm start",
+    "dev:container-minimal": "cd frontend/container && npx webpack serve --config webpack.minimal.js --port 3000",
     "dev:user-management": "cd frontend/user-management-app && npm start",
-    "dev:data-grid": "cd frontend/data-grid-app && npm start", 
+    "dev:user-management-minimal": "cd frontend/user-management-app && npx webpack serve --config webpack.minimal.js --port 3001",
+    "dev:data-grid": "cd frontend/data-grid-app && npm start",
+    "dev:data-grid-minimal": "cd frontend/data-grid-app && npx webpack serve --config webpack.minimal.js --port 3002",
     "dev:analytics": "cd frontend/analytics-app && npm start",
+    "dev:analytics-minimal": "cd frontend/analytics-app && npx webpack serve --config webpack.minimal.js --port 3003",
     "dev:settings": "cd frontend/settings-app && npm start",
+    "dev:settings-minimal": "cd frontend/settings-app && npx webpack serve --config webpack.minimal.js --port 3004",
     "dev:backend": "cd backend/mock-data-service && python main.py",
     "install:all": "npm install && cd frontend/shared-ui-lib && npm install && cd ../container && npm install && cd ../user-management-app && npm install && cd ../data-grid-app && npm install && cd ../analytics-app && npm install && cd ../settings-app && npm install",
     "install:backend": "cd backend/mock-data-service && pip install -r requirements.txt",
@@ -29,6 +35,8 @@
   "author": "Micro-Frontend Team",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.0"
+    "buffer": "^6.0.3",
+    "concurrently": "^8.2.0",
+    "process": "^0.11.10"
   }
 }

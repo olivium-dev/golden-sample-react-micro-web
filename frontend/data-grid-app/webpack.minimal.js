@@ -50,9 +50,13 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/index.html',
       favicon: './public/favicon.ico',
+      templateParameters: {
+        PUBLIC_URL: '',
+      },
     }),
     new webpack.DefinePlugin({
       'process.env': JSON.stringify(process.env),
+      'process': JSON.stringify({}),
     }),
   ],
 };
