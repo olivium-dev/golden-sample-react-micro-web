@@ -13,3 +13,7 @@ EXPOSE 3003
 
 CMD ["npx", "webpack", "serve", "--config", "webpack.minimal.js", "--host", "0.0.0.0"]
 
+
+
+
+

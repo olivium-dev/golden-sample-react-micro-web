@@ -102,3 +102,7 @@ networks:
   micro-frontend-network:
     driver: bridge
 
+
+
+
+

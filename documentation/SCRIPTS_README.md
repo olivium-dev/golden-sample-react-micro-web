@@ -260,3 +260,7 @@ grep -i error backend/mock-data-service/backend.log frontend/*//*.log
 - Use `./stop.sh` to cleanly shut down all services
 - Log files accumulate over time - consider clearing them periodically
 
+
+
+
+

@@ -20,3 +20,7 @@ declare module 'settingsApp/Settings' {
   export default Settings;
 }
 
+
+
+
+

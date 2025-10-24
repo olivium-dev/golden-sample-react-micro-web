@@ -89,3 +89,5 @@ export const updateCSSVariable = (
   document.documentElement.style.setProperty(variableName, value);
 };
 
+
+

@@ -69,3 +69,7 @@ def delete_data_row(data_id: int):
     data_rows_db = [d for d in data_rows_db if d["id"] != data_id]
     return None
 
+
+
+
+

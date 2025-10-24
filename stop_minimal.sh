@@ -26,3 +26,7 @@ echo "🚀 To restart, run:"
 echo "  ./run_minimal.sh"
 echo ""
 
+
+
+
+

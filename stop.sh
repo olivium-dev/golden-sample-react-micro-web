@@ -35,3 +35,7 @@ echo "✅ All services stopped successfully!"
 echo ""
 echo "🚀 To restart all services, run:"
 echo "./run.sh"
+
+
+
+

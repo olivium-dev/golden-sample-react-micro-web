@@ -116,3 +116,32 @@ pids
 tmp/
 temp/
 
+# Additional build artifacts
+*.tsbuildinfo
+.turbo/
+.swc/
+.webpack-cache/
+remoteEntry.js
+*.hot-update.*
+
+# Test results and reports
+test_results.json
+browser_test_results.json
+*.test-results/
+playwright-report/
+test-results/
+
+# Additional Python artifacts
+*.egg
+*.egg-info
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+

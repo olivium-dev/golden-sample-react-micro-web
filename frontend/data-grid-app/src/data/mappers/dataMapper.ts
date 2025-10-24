@@ -56,3 +56,7 @@ export const mapEntityToDTO = (entity: Partial<DataRow>): Partial<DataRowDTO> =>
   return dto;
 };
 
+
+
+
+

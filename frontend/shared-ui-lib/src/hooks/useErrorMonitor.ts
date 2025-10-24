@@ -119,3 +119,7 @@ function matchesFilter(error: ErrorEntry, filter: ErrorFilter): boolean {
 }
 
 export default useErrorMonitor;
+
+
+
+

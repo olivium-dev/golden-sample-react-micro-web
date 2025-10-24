@@ -43,3 +43,7 @@ class ErrorStatsResponse(BaseModel):
     recent: int  # errors in last 5 minutes
     resolved: int
     unresolved: int
+
+
+
+
