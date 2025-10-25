@@ -18,15 +18,15 @@ class Settings:
     
     # API Configuration
     API_HOST: str = "0.0.0.0"
-    API_PORT: int = 8000
+    API_PORT: int = 30001
     
     # CORS Origins
     CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:3002",
-        "http://localhost:3003",
-        "http://localhost:3004",
+        "http://localhost:30002",
+        "http://localhost:30003",
+        "http://localhost:30004",
+        "http://localhost:30005",
+        "http://localhost:30006",
     ]
     
     def __init__(self):

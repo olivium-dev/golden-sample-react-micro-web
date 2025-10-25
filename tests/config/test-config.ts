@@ -79,7 +79,7 @@ export const testConfig: TestConfig = {
   services: {
     backend: {
       name: 'Backend API',
-      port: 8000,
+      port: 30001,
       path: 'backend/mock-data-service',
       startCommand: 'python3 main.py',
       healthPath: '/api/health',
@@ -89,7 +89,7 @@ export const testConfig: TestConfig = {
     
     container: {
       name: 'Container App',
-      port: 3000,
+      port: 30002,
       path: 'frontend/container',
       startCommand: 'npm start',
       healthPath: '/',
@@ -111,8 +111,8 @@ export const testConfig: TestConfig = {
     
     userManagement: {
       name: 'User Management',
-      port: 3101, // Standalone port
-      mfPort: 3001, // Module Federation port
+      port: 30103, // Standalone port
+      mfPort: 30003, // Module Federation port
       path: 'frontend/user-management-app',
       startCommand: 'npm run start:isolated',
       healthPath: '/',
@@ -135,8 +135,8 @@ export const testConfig: TestConfig = {
     
     dataGrid: {
       name: 'Data Grid',
-      port: 3102,
-      mfPort: 3002,
+      port: 30104,
+      mfPort: 30004,
       path: 'frontend/data-grid-app',
       startCommand: 'npm run start:isolated',
       healthPath: '/',
@@ -156,8 +156,8 @@ export const testConfig: TestConfig = {
     
     analytics: {
       name: 'Analytics Dashboard',
-      port: 3103,
-      mfPort: 3003,
+      port: 30105,
+      mfPort: 30005,
       path: 'frontend/analytics-app',
       startCommand: 'npm run start:isolated',
       healthPath: '/',
@@ -177,8 +177,8 @@ export const testConfig: TestConfig = {
     
     settings: {
       name: 'Settings Panel',
-      port: 3104,
-      mfPort: 3004,
+      port: 30106,
+      mfPort: 30006,
       path: 'frontend/settings-app',
       startCommand: 'npm run start:isolated',
       healthPath: '/',
@@ -206,19 +206,19 @@ export const testConfig: TestConfig = {
   },
   
   urls: {
-    backend: 'http://localhost:8000',
-    container: 'http://localhost:3000',
+    backend: 'http://localhost:30001',
+    container: 'http://localhost:30002',
     standalone: {
-      userManagement: 'http://localhost:3101',
-      dataGrid: 'http://localhost:3102',
-      analytics: 'http://localhost:3103',
-      settings: 'http://localhost:3104',
+      userManagement: 'http://localhost:30103',
+      dataGrid: 'http://localhost:30104',
+      analytics: 'http://localhost:30105',
+      settings: 'http://localhost:30106',
     },
     moduleFederation: {
-      userManagement: 'http://localhost:3001',
-      dataGrid: 'http://localhost:3002',
-      analytics: 'http://localhost:3003',
-      settings: 'http://localhost:3004',
+      userManagement: 'http://localhost:30003',
+      dataGrid: 'http://localhost:30004',
+      analytics: 'http://localhost:30005',
+      settings: 'http://localhost:30006',
     },
   },
   

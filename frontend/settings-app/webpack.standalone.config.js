@@ -8,7 +8,7 @@ module.exports = {
   entry: './src/index.standalone.tsx',
   
   devServer: {
-    port: 3104, // Use different port for standalone (e.g., 3101 instead of 3001)
+    port: 30106, // Use different port for standalone (e.g., 30106 instead of 30006)
     hot: true,
     open: false,
     historyApiFallback: true,
@@ -51,7 +51,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
-        REACT_APP_API_URL: JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000'),
+        REACT_APP_API_URL: JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:30001'),
       },
     }),
     new HtmlWebpackPlugin({

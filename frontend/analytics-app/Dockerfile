@@ -1,29 +1,50 @@
-# Multi-stage build
+# Analytics App Dockerfile
 FROM node:18-alpine AS builder
 
-WORKDIR /app
+# Set working directory
+WORKDIR /build
 
-# Copy package files
+# Copy root package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --legacy-peer-deps
+# Copy shared-ui-lib
+COPY frontend/shared-ui-lib ./frontend/shared-ui-lib
 
-# Copy application code
-COPY . .
+# Copy analytics app
+COPY frontend/analytics-app ./frontend/analytics-app
+
+# Install all dependencies
+RUN cd frontend/shared-ui-lib && npm ci
+RUN cd frontend/analytics-app && npm ci
+
+# Build arguments
+ARG REACT_APP_API_URL=http://localhost:30001
+
+# Set environment variables
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV NODE_ENV=production
 
 # Build the application
-RUN npx webpack --config webpack.minimal.js --mode production
+RUN cd frontend/analytics-app && npm run build
 
 # Production stage
 FROM nginx:alpine
 
-# Copy built assets
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Copy built application
+COPY --from=builder /build/frontend/analytics-app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/analytics-app/nginx.conf /etc/nginx/conf.d/default.conf
 
+# Expose port
 EXPOSE 80
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:80/ || exit 1
+
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

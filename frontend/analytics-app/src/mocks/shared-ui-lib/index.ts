@@ -61,7 +61,7 @@ export const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
 // Mock apiClient
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:30001';
 
 export const apiClient = axios.create({
   baseURL: `${API_URL}/api`,

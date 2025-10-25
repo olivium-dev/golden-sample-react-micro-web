@@ -7,7 +7,7 @@ module.exports = {
   entry: './src/index.tsx',
   mode: 'development',
   devServer: {
-    port: 3000,
+    port: 30002,
     historyApiFallback: true,
     hot: true,
     headers: {
@@ -51,7 +51,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
-        REACT_APP_API_URL: JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000'),
+        REACT_APP_API_URL: JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:30001'),
       },
     }),
     new ModuleFederationPlugin({
@@ -61,10 +61,10 @@ module.exports = {
         './sharedUI': '../shared-ui-lib/src/index.ts',
       },
       remotes: {
-        userApp: 'userApp@http://localhost:3001/remoteEntry.js',
-        dataApp: 'dataApp@http://localhost:3002/remoteEntry.js',
-        analyticsApp: 'analyticsApp@http://localhost:3003/remoteEntry.js',
-        settingsApp: 'settingsApp@http://localhost:3004/remoteEntry.js',
+        userApp: 'userApp@http://localhost:30003/remoteEntry.js',
+        dataApp: 'dataApp@http://localhost:30004/remoteEntry.js',
+        analyticsApp: 'analyticsApp@http://localhost:30005/remoteEntry.js',
+        settingsApp: 'settingsApp@http://localhost:30006/remoteEntry.js',
       },
       shared: {
         react: {
