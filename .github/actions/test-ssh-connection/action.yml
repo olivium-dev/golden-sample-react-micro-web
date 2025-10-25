@@ -1,0 +1,131 @@
+name: 'Test SSH Connection'
+description: 'Tests SSH connection with comprehensive debugging'
+
+inputs:
+  ssh-private-key:
+    description: 'SSH private key for server access'
+    required: true
+  server-hostname:
+    description: 'Server hostname'
+    required: true
+  server-user:
+    description: 'SSH user for server'
+    required: true
+    default: 'ec2-user'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup SSH for testing
+      shell: bash
+      run: |
+        set -e
+        
+        echo "🔧 Setting up SSH for testing..."
+        
+        # Create SSH directory
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        
+        # Add SSH private key with proper formatting
+        echo "${{ inputs.ssh-private-key }}" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        
+        # Validate SSH key format
+        echo "🔍 Validating SSH key format..."
+        if ssh-keygen -l -f ~/.ssh/id_rsa; then
+          echo "✅ SSH key format is valid"
+        else
+          echo "❌ SSH key format is invalid. Attempting to fix..."
+          # Remove any extra whitespace and ensure proper line endings
+          sed 's/[[:space:]]*$//' ~/.ssh/id_rsa > ~/.ssh/id_rsa.tmp
+          mv ~/.ssh/id_rsa.tmp ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          if ssh-keygen -l -f ~/.ssh/id_rsa; then
+            echo "✅ SSH key format fixed"
+          else
+            echo "❌ Unable to fix SSH key format"
+            echo "Key content (first and last lines):"
+            head -1 ~/.ssh/id_rsa
+            tail -1 ~/.ssh/id_rsa
+            exit 1
+          fi
+        fi
+        
+        # Add server to known hosts
+        echo "🔍 Adding server to known hosts..."
+        ssh-keyscan -H ${{ inputs.server-hostname }} >> ~/.ssh/known_hosts 2>/dev/null || {
+          echo "⚠️  Warning: Could not add server to known hosts"
+        }
+        chmod 644 ~/.ssh/known_hosts
+        
+        # Show SSH key fingerprint
+        echo "🔑 SSH key fingerprint:"
+        ssh-keygen -l -f ~/.ssh/id_rsa
+        
+        # Test network connectivity to server
+        echo "🌐 Testing network connectivity to server..."
+        if ping -c 3 ${{ inputs.server-hostname }}; then
+          echo "✅ Server is reachable via ping"
+        else
+          echo "⚠️  Warning: Server is not reachable via ping (may be normal if ICMP is blocked)"
+        fi
+        
+        # Test SSH port connectivity
+        echo "🔌 Testing SSH port connectivity..."
+        if timeout 10 bash -c "</dev/tcp/${{ inputs.server-hostname }}/22"; then
+          echo "✅ SSH port 22 is open"
+        else
+          echo "❌ SSH port 22 is not accessible"
+          exit 1
+        fi
+        
+        # Test SSH connection with verbose output
+        echo "🔐 Testing SSH connection..."
+        ssh -v -o ConnectTimeout=30 -o BatchMode=yes -o StrictHostKeyChecking=no ${{ inputs.server-user }}@${{ inputs.server-hostname }} "echo 'SSH connection successful'" 2>&1 || {
+          echo "❌ SSH connection failed"
+          echo ""
+          echo "🔍 Troubleshooting information:"
+          echo "1. Server hostname: ${{ inputs.server-hostname }}"
+          echo "2. SSH user: ${{ inputs.server-user }}"
+          echo "3. SSH key fingerprint: $(ssh-keygen -l -f ~/.ssh/id_rsa)"
+          echo ""
+          echo "📋 Common issues and solutions:"
+          echo "• SSH key doesn't match the public key on the server"
+          echo "• SSH user doesn't exist or doesn't have proper permissions"
+          echo "• Server firewall is blocking SSH connections"
+          echo "• SSH service is not running on the server"
+          echo "• Wrong hostname or server is not accessible"
+          echo ""
+          exit 1
+        }
+        
+        echo "✅ SSH connection test completed successfully!"
+
+    - name: Test basic server commands
+      shell: bash
+      run: |
+        echo "🧪 Testing basic server commands..."
+        
+        # Test whoami
+        echo "Current user:"
+        ssh -o ConnectTimeout=30 -o BatchMode=yes -o StrictHostKeyChecking=no ${{ inputs.server-user }}@${{ inputs.server-hostname }} "whoami"
+        
+        # Test system info
+        echo "System information:"
+        ssh -o ConnectTimeout=30 -o BatchMode=yes -o StrictHostKeyChecking=no ${{ inputs.server-user }}@${{ inputs.server-hostname }} "uname -a"
+        
+        # Test Docker availability
+        echo "Docker version:"
+        ssh -o ConnectTimeout=30 -o BatchMode=yes -o StrictHostKeyChecking=no ${{ inputs.server-user }}@${{ inputs.server-hostname }} "docker --version" || {
+          echo "⚠️  Docker is not installed or not accessible"
+        }
+        
+        # Test Docker Compose availability
+        echo "Docker Compose version:"
+        ssh -o ConnectTimeout=30 -o BatchMode=yes -o StrictHostKeyChecking=no ${{ inputs.server-user }}@${{ inputs.server-hostname }} "docker-compose --version" || {
+          echo "⚠️  Docker Compose is not installed or not accessible"
+        }
+        
+        echo "✅ Basic server commands test completed!"

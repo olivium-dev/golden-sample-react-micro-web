@@ -281,20 +281,33 @@ jobs:
 
       - name: Deploy to VPS
         run: |
+          set -e
+          
+          echo "🚀 Starting deployment to VPS..."
+          
+          # Test SSH connection first
+          echo "Testing SSH connection..."
+          ssh -o ConnectTimeout=30 -o BatchMode=yes fds-server "echo 'SSH connection verified'"
+          
           # Create deployment directory on server
-          ssh fds-server "mkdir -p /opt/${{ env.PROJECT_NAME }}"
+          echo "Creating deployment directory..."
+          ssh fds-server "sudo mkdir -p /opt/${{ env.PROJECT_NAME }} && sudo chown ${{ inputs.ssh_option }}:${{ inputs.ssh_option }} /opt/${{ env.PROJECT_NAME }}"
           
           # Copy deployment files to server
-          scp .env.production fds-server:/opt/${{ env.PROJECT_NAME }}/.env
-          scp docker-compose.deploy.yml fds-server:/opt/${{ env.PROJECT_NAME }}/docker-compose.yml
+          echo "Copying deployment files..."
+          scp -o ConnectTimeout=30 .env.production fds-server:/opt/${{ env.PROJECT_NAME }}/.env
+          scp -o ConnectTimeout=30 docker-compose.deploy.yml fds-server:/opt/${{ env.PROJECT_NAME }}/docker-compose.yml
           
           # Login to registry on remote server
+          echo "Logging into Docker registry on remote server..."
           ssh fds-server "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin"
           
           # Pull latest images
+          echo "Pulling latest Docker images..."
           ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose pull"
           
           # Stop existing containers
+          echo "Stopping existing containers..."
           ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose down --remove-orphans || true"
           
           # Start new deployment

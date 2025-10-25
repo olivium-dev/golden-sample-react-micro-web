@@ -44,12 +44,22 @@ runs:
         mkdir -p ~/.ssh
         chmod 700 ~/.ssh
         
-        # Add SSH private key
-        echo "${{ inputs.ssh-private-key }}" > ~/.ssh/id_rsa
+        # Add SSH private key with proper formatting
+        echo "${{ inputs.ssh-private-key }}" | tr -d '\r' > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
+        
+        # Validate SSH key format
+        ssh-keygen -l -f ~/.ssh/id_rsa || {
+          echo "Invalid SSH key format. Trying to fix..."
+          # Remove any extra whitespace and ensure proper line endings
+          sed 's/[[:space:]]*$//' ~/.ssh/id_rsa > ~/.ssh/id_rsa.tmp
+          mv ~/.ssh/id_rsa.tmp ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+        }
         
         # Add server to known hosts
         ssh-keyscan -H ${{ inputs.server-hostname }} >> ~/.ssh/known_hosts 2>/dev/null || true
+        chmod 644 ~/.ssh/known_hosts
 
     - name: Setup Cloudflare tunnel
       shell: bash
@@ -61,10 +71,9 @@ runs:
         if [ -n "${{ inputs.cloudflare-service-token-id }}" ] && [ -n "${{ inputs.cloudflare-service-token-secret }}" ]; then
           export CF_API_TOKEN="${{ inputs.cloudflare-service-token-secret }}"
           echo "Using Cloudflare service token authentication"
-        fi
-        
-        # Create SSH config for Cloudflare tunnel
-        cat >> ~/.ssh/config << EOF
+          
+          # Create SSH config for Cloudflare tunnel with service token
+          cat >> ~/.ssh/config << EOF
         Host ${{ inputs.host-alias }}
           HostName ${{ inputs.server-hostname }}
           User ${{ inputs.server-user }}
@@ -72,11 +81,49 @@ runs:
           ProxyCommand cloudflared access ssh --hostname %h --service-token-id ${{ inputs.cloudflare-service-token-id }} --service-token-secret ${{ inputs.cloudflare-service-token-secret }}
           StrictHostKeyChecking no
           UserKnownHostsFile /dev/null
+          LogLevel ERROR
         EOF
+        else
+          echo "No Cloudflare service tokens provided, using direct SSH connection"
+          # Create SSH config for direct connection
+          cat >> ~/.ssh/config << EOF
+        Host ${{ inputs.host-alias }}
+          HostName ${{ inputs.server-hostname }}
+          User ${{ inputs.server-user }}
+          IdentityFile ~/.ssh/id_rsa
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+          LogLevel ERROR
+        EOF
+        fi
         
-        # Test SSH connection
+        # Set proper permissions for SSH config
+        chmod 600 ~/.ssh/config
+        
+        # Debug: Show SSH config
+        echo "SSH configuration:"
+        cat ~/.ssh/config
+        
+        # Debug: Test SSH key
+        echo "Testing SSH key fingerprint:"
+        ssh-keygen -l -f ~/.ssh/id_rsa
+        
+        # Test SSH connection with verbose output for debugging
         echo "Testing SSH connection..."
-        ssh -o ConnectTimeout=30 ${{ inputs.host-alias }} "echo 'SSH connection successful'"
+        ssh -v -o ConnectTimeout=30 -o BatchMode=yes ${{ inputs.host-alias }} "echo 'SSH connection successful'" 2>&1 || {
+          echo "SSH connection failed. Trying alternative connection methods..."
+          
+          # Try direct connection without proxy
+          echo "Trying direct SSH connection..."
+          ssh -v -o ConnectTimeout=30 -o BatchMode=yes ${{ inputs.server-user }}@${{ inputs.server-hostname }} "echo 'Direct SSH connection successful'" 2>&1 || {
+            echo "Direct SSH also failed. Please check:"
+            echo "1. SSH private key is correct and matches the public key on the server"
+            echo "2. Server hostname is accessible"
+            echo "3. SSH user has proper permissions"
+            echo "4. Cloudflare tunnel is properly configured (if using)"
+            exit 1
+          }
+        }
 
     - name: Verify Docker on remote server
       shell: bash
