@@ -27,7 +27,7 @@ export const defaultConfig: AnalyticsConfig = {
   api: {
     services: {
       analytics: {
-        baseUrl: 'http://localhost:8000/api',
+        baseUrl: 'http://localhost:30001/api',
         timeout: 10000,
         routes: {
           summary: '/analytics',

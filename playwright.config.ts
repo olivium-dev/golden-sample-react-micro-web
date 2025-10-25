@@ -94,7 +94,7 @@ export default defineConfig({
       testDir: './tests/e2e',
       use: {
         ...devices['Desktop Chrome'],
-        baseURL: 'http://localhost:3000', // Container app
+        baseURL: 'http://localhost:30002', // Container app
       },
       // Run setup to start all services
       dependencies: [],

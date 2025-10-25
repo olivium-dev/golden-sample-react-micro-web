@@ -1,0 +1,327 @@
+name: Deploy Micro-Frontend Sample to VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: 'Docker registry URL'
+        required: true
+        default: 'ghcr.io'
+      project_name:
+        description: 'Project name for deployment'
+        required: true
+        default: 'micro-frontend-sample'
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      server:
+        description: 'Server address for SSH (hostname only)'
+        required: true
+        default: 'vps-73.fds-1.com'
+      ssh_option:
+        description: 'Choose SSH user option'
+        required: true
+        default: 'ec2-user'
+        type: choice
+        options:
+          - ec2-user
+          - root
+      domain:
+        description: 'Domain name for the application'
+        required: true
+        default: 'fds-1.com'
+
+env:
+  REGISTRY: ${{ inputs.registry }}
+  PROJECT_NAME: ${{ inputs.project_name }}
+  IMAGE_TAG: ${{ github.run_id }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Connection via Cloudflare
+        uses: ./.github/actions/cloudflare-ssh
+        with:
+          ssh-private-key: ${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}
+          server-hostname: ${{ inputs.server }}
+          server-user: ${{ inputs.ssh_option }}
+          host-alias: 'fds-server'
+          cloudflare-service-token-id: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_ID }}
+          cloudflare-service-token-secret: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_SECRET }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate deployment configuration
+        run: |
+          # Create production environment file
+          cat > .env.production <<EOF
+          # Environment Configuration
+          ENVIRONMENT=${{ inputs.environment }}
+          DOMAIN=${{ inputs.domain }}
+          
+          # Docker Registry
+          REGISTRY=${{ env.REGISTRY }}
+          PROJECT_NAME=${{ env.PROJECT_NAME }}
+          IMAGE_TAG=${{ env.IMAGE_TAG }}
+          
+          # API Configuration
+          REACT_APP_API_URL=http://${{ inputs.domain }}:30001
+          
+          # Security
+          JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+          JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY }}
+          
+          # CORS Origins
+          CORS_ORIGINS=http://localhost:30002,https://${{ inputs.domain }},http://${{ inputs.domain }}
+          EOF
+
+      - name: Build and Push Docker Images
+        run: |
+          # Build and push backend
+          echo "Building backend service..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-backend:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-backend:latest \
+            ./backend/mock-data-service
+
+          # Build and push container app
+          echo "Building container app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:latest \
+            ./frontend/container
+
+          # Build and push user management app
+          echo "Building user management app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:latest \
+            ./frontend/user-management-app
+
+          # Build and push data grid app
+          echo "Building data grid app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:latest \
+            ./frontend/data-grid-app
+
+          # Build and push analytics app
+          echo "Building analytics app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:latest \
+            ./frontend/analytics-app
+
+          # Build and push settings app
+          echo "Building settings app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:latest \
+            ./frontend/settings-app
+
+          # Build and push nginx
+          echo "Building nginx reverse proxy..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-nginx:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-nginx:latest \
+            ./nginx
+
+      - name: Create deployment docker-compose file
+        run: |
+          # Create production docker-compose file with registry images
+          cat > docker-compose.deploy.yml <<EOF
+          version: '3.8'
+
+          services:
+            backend:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-backend:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-backend
+              ports:
+                - "30001:30001"
+              environment:
+                - API_HOST=0.0.0.0
+                - API_PORT=30001
+                - JWT_SECRET_KEY=\${JWT_SECRET_KEY}
+                - JWT_REFRESH_SECRET_KEY=\${JWT_REFRESH_SECRET_KEY}
+                - CORS_ORIGINS=\${CORS_ORIGINS}
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:30001/health"]
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 40s
+
+            container:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-container
+              ports:
+                - "30002:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            user-management:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-user-management
+              ports:
+                - "30003:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            data-grid:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-data-grid
+              ports:
+                - "30004:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            analytics:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-analytics
+              ports:
+                - "30005:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            settings:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-settings
+              ports:
+                - "30006:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            nginx:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-nginx:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-nginx
+              ports:
+                - "80:80"
+                - "443:443"
+              depends_on:
+                - container
+                - user-management
+                - data-grid
+                - analytics
+                - settings
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+          networks:
+            micro-frontend-network:
+              driver: bridge
+          EOF
+
+      - name: Deploy to VPS
+        run: |
+          # Create deployment directory on server
+          ssh fds-server "mkdir -p /opt/${{ env.PROJECT_NAME }}"
+          
+          # Copy deployment files to server
+          scp .env.production fds-server:/opt/${{ env.PROJECT_NAME }}/.env
+          scp docker-compose.deploy.yml fds-server:/opt/${{ env.PROJECT_NAME }}/docker-compose.yml
+          
+          # Login to registry on remote server
+          ssh fds-server "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin"
+          
+          # Pull latest images
+          ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose pull"
+          
+          # Stop existing containers
+          ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose down --remove-orphans || true"
+          
+          # Start new deployment
+          ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose up -d"
+          
+          # Wait for services to be healthy
+          echo "Waiting for services to start..."
+          sleep 30
+          
+          # Check service health
+          ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose ps"
+
+      - name: Verify Deployment
+        run: |
+          echo "Verifying deployment..."
+          
+          # Check if services are running
+          ssh fds-server "docker ps --filter 'name=${{ env.PROJECT_NAME }}' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+          
+          # Test API health endpoint
+          ssh fds-server "curl -f http://localhost:30001/health || exit 1"
+          
+          # Test main application
+          ssh fds-server "curl -f http://localhost:30002/ || exit 1"
+          
+          echo "✅ Deployment successful!"
+          echo "🌐 Application URL: http://${{ inputs.domain }}"
+          echo "📊 API Documentation: http://${{ inputs.domain }}:30001/docs"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Logout from registry on remote server
+          ssh fds-server "docker logout ${{ env.REGISTRY }}" || true
+          
+          # Clean up old images (keep last 3 versions)
+          ssh fds-server "docker image prune -f" || true

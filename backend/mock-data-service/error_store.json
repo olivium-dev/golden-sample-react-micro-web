@@ -6748,5 +6748,35 @@
     "id": "error_1761397525_8977a4f5",
     "created_at": "2025-10-25T15:05:25.733230",
     "resolved": false
+  },
+  {
+    "timestamp": 1761422732794,
+    "type": "network",
+    "message": "XMLHttpRequest HTTP error: 401 Unauthorized",
+    "stack": "Error: HTTP 401\n    at xhr.onload (webpack://container/../shared-ui-lib/src/errors/ErrorCapture.ts?:144:173)",
+    "appName": "container",
+    "url": "http://localhost:8000/api/auth/me",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "componentStack": null,
+    "props": null,
+    "severity": "medium",
+    "id": "error_1761422732_97d67e55",
+    "created_at": "2025-10-25T22:05:32.883091",
+    "resolved": false
+  },
+  {
+    "timestamp": 1761422732799,
+    "type": "network",
+    "message": "XMLHttpRequest HTTP error: 401 Unauthorized",
+    "stack": "Error: HTTP 401\n    at xhr.onload (webpack://container/../shared-ui-lib/src/errors/ErrorCapture.ts?:144:173)",
+    "appName": "container",
+    "url": "http://localhost:8000/api/auth/me",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "componentStack": null,
+    "props": null,
+    "severity": "medium",
+    "id": "error_1761422732_d2623f0e",
+    "created_at": "2025-10-25T22:05:32.905790",
+    "resolved": false
   }
 ]
