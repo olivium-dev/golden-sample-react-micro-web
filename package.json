@@ -7,15 +7,31 @@
     "dev:all": "concurrently --names \"CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS\" --prefix-colors \"blue,green,red,yellow,magenta\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\"",
     "dev:container": "cd frontend/container && npm start",
     "dev:user-management": "cd frontend/user-management-app && npm start",
-    "dev:data-grid": "cd frontend/data-grid-app && npm start", 
+    "dev:data-grid": "cd frontend/data-grid-app && npm start",
     "dev:analytics": "cd frontend/analytics-app && npm start",
     "dev:settings": "cd frontend/settings-app && npm start",
-    "dev:backend": "cd backend/mock-data-service && python main.py",
+    "dev:backend": "cd backend/mock-data-service && python3 main.py",
     "install:all": "npm install && cd frontend/shared-ui-lib && npm install && cd ../container && npm install && cd ../user-management-app && npm install && cd ../data-grid-app && npm install && cd ../analytics-app && npm install && cd ../settings-app && npm install",
     "install:backend": "cd backend/mock-data-service && pip install -r requirements.txt",
     "build:all": "cd frontend/user-management-app && npm run build && cd ../data-grid-app && npm run build && cd ../analytics-app && npm run build && cd ../settings-app && npm run build && cd ../container && npm run build",
     "test:all": "cd frontend/container && npm test && cd ../user-management-app && npm test && cd ../data-grid-app && npm test && cd ../analytics-app && npm test && cd ../settings-app && npm test",
-    "lint:all": "cd frontend/container && npm run lint && cd ../user-management-app && npm run lint && cd ../data-grid-app && npm run lint && cd ../analytics-app && npm run lint && cd ../settings-app && npm run lint"
+    "lint:all": "cd frontend/container && npm run lint && cd ../user-management-app && npm run lint && cd ../data-grid-app && npm run lint && cd ../analytics-app && npm run lint && cd ../settings-app && npm run lint",
+    "test:playwright": "playwright test",
+    "test:standalone": "playwright test --project=standalone-real",
+    "test:standalone:mock": "playwright test --project=standalone-mock",
+    "test:e2e": "playwright test --project=e2e-real",
+    "test:report": "playwright show-report",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:all-summary": "node run-all-tests-with-summary.js",
+    "test:summary": "./run-tests-summary.sh",
+    "test:summary:standalone": "./run-tests-summary.sh --standalone-only",
+    "test:summary:e2e": "./run-tests-summary.sh --e2e-only",
+    "test:analyze": "node parse-test-results.js",
+    "test:run-and-analyze": "npm run test:playwright && npm run test:analyze",
+    "start:full": "concurrently --names \"BACKEND,CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS\" --prefix-colors \"red,blue,green,yellow,magenta,cyan\" \"npm run dev:backend\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\"",
+    "test:full": "echo '🚀 Starting comprehensive test execution...' && npm run test:playwright --reporter=json --output-file=test-results/all-results.json && echo '📊 Generating detailed summary...' && npm run test:analyze && npm run test:summary"
   },
   "keywords": [
     "micro-frontend",
@@ -29,6 +45,14 @@
   "author": "Micro-Frontend Team",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "concurrently": "^8.2.0"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.17.20",
+    "lodash": "^4.17.21",
+    "msw": "^2.11.6",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.24.6"
   }
 }

@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0",
+  "charts": {
+    "enabled": true,
+    "types": ["line", "bar", "pie"]
+  },
+  "metrics": {
+    "cards": ["users", "revenue", "conversion", "pageViews"]
+  },
+  "refreshIntervalMs": 60000,
+  "autoRefresh": true,
+  "dateRange": {
+    "default": "7d",
+    "options": ["24h", "7d", "30d", "90d"]
+  },
+  "api": {
+    "services": {
+      "analytics": {
+        "baseUrl": "http://localhost:8000/api",
+        "timeout": 10000,
+        "routes": {
+          "summary": "/analytics",
+          "chartData": "/analytics/chart"
+        }
+      }
+    }
+  },
+  "theme": {
+    "chartColors": ["#1976d2", "#dc004e", "#388e3c", "#f57c00", "#7b1fa2"]
+  },
+  "mock": {
+    "enabled": true,
+    "apiDelay": 500,
+    "authBypass": true
+  }
+}
+

@@ -4,7 +4,7 @@
 
 export const appConfig = {
   api: {
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
+    baseURL: (process.env.REACT_APP_API_URL || 'http://localhost:8000') + '/api',
     timeout: 10000,
   },
   pagination: {

@@ -1,0 +1,143 @@
+{
+  "User Management": {
+    "name": "User Management",
+    "url": "http://localhost:3101",
+    "loaded": true,
+    "status_code": 200,
+    "content_length": 163,
+    "expected_content_found": [
+      "User Management",
+      "Add User",
+      "Username",
+      "Email",
+      "Role"
+    ],
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Access to XMLHttpRequest at 'http://localhost:8000/api/users' from origin 'http://localhost:3101' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Failed to load resource: net::ERR_FAILED",
+      "Access to XMLHttpRequest at 'http://localhost:8000/api/users' from origin 'http://localhost:3101' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Failed to load resource: net::ERR_FAILED"
+    ],
+    "console_warnings": [
+      "\ud83d\udd0d API Error (Isolated Mode): {error: Network Error, endpoint: /users, method: GET}",
+      "\ud83d\udd0d API Error (Isolated Mode): {error: Network Error, endpoint: /users, method: GET}"
+    ],
+    "console_logs": [
+      "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+      "[HMR] Waiting for update signal from WDS...",
+      "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "[User Management] Config loaded from /config.default.json",
+      "[User Management] Config validated successfully: {version: 1.0.0, table: Object, roles: Object, features: Object, api: Object}",
+      "\u2705 User Management started in standalone mode",
+      "Configuration: {version: 1.0.0, table: Object, roles: Object, features: Object, api: Object}"
+    ],
+    "page_errors": [],
+    "config_loaded": true,
+    "msw_initialized": false,
+    "msw_working": false,
+    "typescript_errors": 0,
+    "runtime_errors": 5,
+    "expected": [
+      "User Management",
+      "Add User",
+      "Username",
+      "Email",
+      "Role"
+    ]
+  },
+  "Analytics Dashboard": {
+    "name": "Analytics Dashboard",
+    "url": "http://localhost:3103",
+    "loaded": true,
+    "status_code": 200,
+    "content_length": 369,
+    "expected_content_found": [
+      "Analytics",
+      "Dashboard",
+      "Standalone Mode",
+      "Chart"
+    ],
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "console_warnings": [],
+    "console_logs": [
+      "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+      "[HMR] Waiting for update signal from WDS...",
+      "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "[Analytics] Config loaded from /config.default.json",
+      "[Analytics] Config validated successfully: {version: 1.0.0, charts: Object, metrics: Object, refreshIntervalMs: 60000, autoRefresh: true}",
+      "[MSW] Starting mock service worker for Analytics...",
+      "%c[MSW] Mocking enabled. color:orangered;font-weight:bold;",
+      "%cDocumentation: %chttps://mswjs.io/docs font-weight:bold font-weight:normal",
+      "Found an issue? https://github.com/mswjs/msw/issues",
+      "Worker script URL: http://localhost:3103/mockServiceWorker.js",
+      "Worker scope: http://localhost:3103/",
+      "Client ID: %s (%s) ef749fd9-714f-41fd-afb1-98828747bae4 top-level",
+      "console.groupEnd",
+      "[MSW] Mock service worker started successfully",
+      "[MSW] Auth bypass: ENABLED",
+      "\u2705 Analytics started in standalone mode"
+    ],
+    "page_errors": [],
+    "config_loaded": true,
+    "msw_initialized": true,
+    "msw_working": true,
+    "typescript_errors": 0,
+    "runtime_errors": 1,
+    "expected": [
+      "Analytics",
+      "Dashboard",
+      "Standalone Mode",
+      "Chart"
+    ]
+  },
+  "Settings Panel": {
+    "name": "Settings Panel",
+    "url": "http://localhost:3104",
+    "loaded": true,
+    "status_code": 200,
+    "content_length": 670,
+    "expected_content_found": [
+      "Settings",
+      "Appearance",
+      "Notifications",
+      "Language"
+    ],
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "console_warnings": [],
+    "console_logs": [
+      "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+      "[HMR] Waiting for update signal from WDS...",
+      "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "[Settings] Config loaded from /config.default.json",
+      "[Settings] Config validated successfully: {version: 1.0.0, sections: Object, theme: Object, notifications: Object, language: Object}",
+      "[MSW] Starting mock service worker for Settings...",
+      "%c[MSW] Mocking enabled. color:orangered;font-weight:bold;",
+      "%cDocumentation: %chttps://mswjs.io/docs font-weight:bold font-weight:normal",
+      "Found an issue? https://github.com/mswjs/msw/issues",
+      "Worker script URL: http://localhost:3104/mockServiceWorker.js",
+      "Worker scope: http://localhost:3104/",
+      "Client ID: %s (%s) 7683a19a-f987-4e04-b7b3-cb4f74293323 top-level",
+      "console.groupEnd",
+      "[MSW] Mock service worker started successfully",
+      "[MSW] Auth bypass: ENABLED",
+      "\u2705 Settings started in standalone mode"
+    ],
+    "page_errors": [],
+    "config_loaded": true,
+    "msw_initialized": true,
+    "msw_working": true,
+    "typescript_errors": 0,
+    "runtime_errors": 1,
+    "expected": [
+      "Settings",
+      "Appearance",
+      "Notifications",
+      "Language"
+    ]
+  }
+}

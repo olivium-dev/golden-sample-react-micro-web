@@ -1,0 +1,275 @@
+{
+  "timestamp": "2025-10-25T00:28:32.080947",
+  "tests": [
+    {
+      "app_name": "Container App (Main)",
+      "url": "http://localhost:3000",
+      "timestamp": "2025-10-25T00:28:39.456928",
+      "page_loaded": true,
+      "has_content": true,
+      "console_errors": [],
+      "console_warnings": [],
+      "console_logs": [
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:28:41.515683"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:28:41.517743"
+        },
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:28:41.586205"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:28:41.590287"
+        },
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:28:41.659902"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:28:41.661295"
+        },
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:28:41.854818"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:28:41.856661"
+        },
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:28:41.905344"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:28:41.912302"
+        },
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:28:41.956668"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:28:41.958258"
+        },
+        {
+          "type": "info",
+          "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+          "timestamp": "2025-10-25T00:28:43.379088"
+        },
+        {
+          "type": "log",
+          "text": "\ud83d\udd27 Safe console error capture enabled",
+          "timestamp": "2025-10-25T00:28:45.006683"
+        },
+        {
+          "type": "log",
+          "text": "\ud83d\udd0d ErrorCapture initialized",
+          "timestamp": "2025-10-25T00:28:45.006920"
+        }
+      ],
+      "network_errors": [],
+      "elements_found": [
+        "input[type=\"password\"]",
+        "button[type=\"submit\"]"
+      ],
+      "screenshot_path": "/tmp/container_app_(main)_screenshot.png",
+      "login_test": {
+        "success": true,
+        "steps_completed": [
+          "Found login form elements",
+          "Filled email",
+          "Filled password",
+          "Clicked login button",
+          "Found success indicator: text=\"Dashboard\""
+        ],
+        "errors": []
+      }
+    },
+    {
+      "app_name": "User Management",
+      "url": "http://localhost:3001",
+      "timestamp": "2025-10-25T00:28:58.342394",
+      "page_loaded": true,
+      "has_content": false,
+      "console_errors": [
+        {
+          "message": "Shared module is not available for eager consumption: webpack/sharing/consume/default/react/react?2186",
+          "timestamp": "2025-10-25T00:28:59.585272"
+        }
+      ],
+      "console_warnings": [],
+      "console_logs": [
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:28:59.495124"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:28:59.496580"
+        },
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:28:59.585722"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:28:59.586045"
+        }
+      ],
+      "network_errors": [],
+      "elements_found": [],
+      "screenshot_path": "/tmp/user_management_screenshot.png",
+      "login_test": null
+    },
+    {
+      "app_name": "Data Grid",
+      "url": "http://localhost:3002",
+      "timestamp": "2025-10-25T00:29:06.233604",
+      "page_loaded": true,
+      "has_content": false,
+      "console_errors": [
+        {
+          "message": "Shared module is not available for eager consumption: webpack/sharing/consume/default/react/react?2186",
+          "timestamp": "2025-10-25T00:29:06.781071"
+        }
+      ],
+      "console_warnings": [],
+      "console_logs": [
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:29:06.680110"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:29:06.682074"
+        },
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:29:06.781316"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:29:06.781544"
+        }
+      ],
+      "network_errors": [],
+      "elements_found": [],
+      "screenshot_path": "/tmp/data_grid_screenshot.png",
+      "login_test": null
+    },
+    {
+      "app_name": "Analytics Dashboard",
+      "url": "http://localhost:3003",
+      "timestamp": "2025-10-25T00:29:13.452720",
+      "page_loaded": true,
+      "has_content": false,
+      "console_errors": [
+        {
+          "message": "Shared module is not available for eager consumption: webpack/sharing/consume/default/react/react?2186",
+          "timestamp": "2025-10-25T00:29:14.769249"
+        }
+      ],
+      "console_warnings": [],
+      "console_logs": [
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:29:14.676979"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:29:14.678276"
+        },
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:29:14.769514"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:29:14.769710"
+        }
+      ],
+      "network_errors": [],
+      "elements_found": [],
+      "screenshot_path": "/tmp/analytics_dashboard_screenshot.png",
+      "login_test": null
+    },
+    {
+      "app_name": "Settings Panel",
+      "url": "http://localhost:3004",
+      "timestamp": "2025-10-25T00:29:21.419074",
+      "page_loaded": true,
+      "has_content": false,
+      "console_errors": [
+        {
+          "message": "Shared module is not available for eager consumption: webpack/sharing/consume/default/react/react?2186",
+          "timestamp": "2025-10-25T00:29:22.107574"
+        }
+      ],
+      "console_warnings": [],
+      "console_logs": [
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:29:22.015772"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:29:22.017187"
+        },
+        {
+          "type": "info",
+          "text": "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+          "timestamp": "2025-10-25T00:29:22.107790"
+        },
+        {
+          "type": "log",
+          "text": "[HMR] Waiting for update signal from WDS...",
+          "timestamp": "2025-10-25T00:29:22.108089"
+        }
+      ],
+      "network_errors": [],
+      "elements_found": [],
+      "screenshot_path": "/tmp/settings_panel_screenshot.png",
+      "login_test": null
+    }
+  ],
+  "summary": {
+    "total_apps_tested": 5,
+    "successful_loads": 5,
+    "console_errors": 4,
+    "console_warnings": 0,
+    "network_errors": 0
+  }
+}

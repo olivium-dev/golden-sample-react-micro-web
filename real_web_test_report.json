@@ -1,0 +1,73 @@
+{
+  "User Management": {
+    "name": "User Management",
+    "url": "http://localhost:3101",
+    "loaded": true,
+    "status_code": 200,
+    "content_length": 163,
+    "console_errors": [
+      "Access to XMLHttpRequest at 'http://localhost:8000/api/users' from origin 'http://localhost:3101' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Failed to load resource: net::ERR_FAILED",
+      "Access to XMLHttpRequest at 'http://localhost:8000/api/users' from origin 'http://localhost:3101' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Failed to load resource: net::ERR_FAILED"
+    ],
+    "console_warnings": [
+      "\ud83d\udd0d API Error (Isolated Mode): {error: Network Error, endpoint: /users, method: GET}",
+      "\ud83d\udd0d API Error (Isolated Mode): {error: Network Error, endpoint: /users, method: GET}"
+    ],
+    "console_logs": [
+      "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+      "[HMR] Waiting for update signal from WDS...",
+      "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    ],
+    "page_errors": [],
+    "network_errors": [],
+    "dom_content": "\ud83d\udc65 User Management\n\nManage users, roles, and permissions\n\nADD USER\n\u200b\n\u200b\nREFRESH\nID\nUsername\nFull Name\nEmail\nRole\nStatus\nActions\nNo rows\n\nRows per page:\n\n25\n\n0\u20130 of 0",
+    "screenshot_path": "/tmp/user_management_real_test.png",
+    "has_expected_content": true,
+    "typescript_compilation_errors": [],
+    "webpack_errors": []
+  },
+  "Analytics Dashboard": {
+    "name": "Analytics Dashboard",
+    "url": "http://localhost:3103",
+    "loaded": true,
+    "status_code": 200,
+    "content_length": 441,
+    "console_errors": [],
+    "console_warnings": [],
+    "console_logs": [
+      "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+      "[HMR] Waiting for update signal from WDS...",
+      "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    ],
+    "page_errors": [],
+    "network_errors": [],
+    "dom_content": "\ud83d\udcca Analytics Dashboard\n\u2705 Micro-Frontend Architecture is Working!\nStandalone Mode\n1,234\n\nTotal Users\n\n+12%\n$45,678\n\nRevenue\n\n+8%\n3.2%\n\nConversion Rate\n\n-2%\n98,765\n\nPage Views\n\n+15%\n\ud83d\udcc8 Performance Chart\n\nChart visualization would go here\n\nData: [{\"name\":\"Jan\",\"value\":400},{\"name\":\"Feb\",\"value\":300},{\"name\":\"Mar\",\"value\":600},{\"name\":\"Apr\",\"value\":800},{\"name\":\"May\",\"value\":500}]\n\n\ud83c\udf89 Analytics Dashboard - Standalone Mode Working!\n\nREFRESH DATA",
+    "screenshot_path": "/tmp/analytics_dashboard_real_test.png",
+    "has_expected_content": true,
+    "typescript_compilation_errors": [],
+    "webpack_errors": []
+  },
+  "Settings Panel": {
+    "name": "Settings Panel",
+    "url": "http://localhost:3104",
+    "loaded": true,
+    "status_code": 200,
+    "content_length": 606,
+    "console_errors": [],
+    "console_warnings": [],
+    "console_logs": [
+      "[webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay enabled.",
+      "[HMR] Waiting for update signal from WDS...",
+      "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    ],
+    "page_errors": [],
+    "network_errors": [],
+    "dom_content": "\u2699\ufe0f Settings Panel\n\u2705 Micro-Frontend Architecture is Working!\nStandalone Mode\nAppearance\nTheme Mode\nLight\nTheme Mode\nPrimary Color\nBlue\nPrimary Color\nCompact Mode\nNotifications\nEnable Notifications\nEmail Notifications\nPush Notifications\nAuto Save\nLanguage & Region\nLanguage\nEnglish\nLanguage\nCurrent Configuration\n{\n  \"theme_mode\": \"light\",\n  \"primary_color\": \"#1976d2\",\n  \"language\": \"en\",\n  \"notifications_enabled\": true,\n  \"email_notifications\": true,\n  \"push_notifications\": false,\n  \"auto_save\": true,\n  \"compact_mode\": false\n}\nSAVE SETTINGS\nRESET TO DEFAULTS\n\n\ud83c\udf89 Settings Panel - Standalone Mode Working!",
+    "screenshot_path": "/tmp/settings_panel_real_test.png",
+    "has_expected_content": true,
+    "typescript_compilation_errors": [],
+    "webpack_errors": []
+  }
+}

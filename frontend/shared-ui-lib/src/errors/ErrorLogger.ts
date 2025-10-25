@@ -209,19 +209,33 @@ class ErrorLoggerService {
 
   private async sendToRemote(error: ErrorEntry): Promise<void> {
     try {
+      // Get auth token from localStorage
+      const token = localStorage.getItem('access_token');
+      
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add auth header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch(this.config.remoteEndpoint!, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(error),
       });
 
       if (!response.ok) {
-        console.warn('Failed to send error to remote endpoint:', response.statusText);
+        // Don't log 401/403 errors to prevent infinite loop
+        if (response.status !== 401 && response.status !== 403) {
+          console.warn('Failed to send error to remote endpoint:', response.statusText);
+        }
       }
     } catch (e) {
-      console.warn('Failed to send error to remote endpoint:', e);
+      // Silently fail to prevent infinite loop
+      // Don't use console.warn as it might trigger more error capturing
     }
   }
 

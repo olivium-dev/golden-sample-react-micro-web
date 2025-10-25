@@ -33,9 +33,7 @@ import {
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000/api';
+import { apiClient } from '../../shared-ui-lib/src';
 
 interface Settings {
   id: number;
@@ -93,7 +91,7 @@ function App() {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/settings`);
+      const response = await apiClient.get('/settings');
       setSettings(response.data);
     } catch (error) {
       showSnackbar('Error fetching settings', 'error');
@@ -112,7 +110,7 @@ function App() {
   const handleSaveSettings = async () => {
     if (!settings) return;
     try {
-      await axios.put(`${API_BASE_URL}/settings`, settings);
+      await apiClient.put('/settings', settings);
       showSnackbar('Settings saved successfully', 'success');
     } catch (error) {
       showSnackbar('Error saving settings', 'error');
@@ -122,7 +120,7 @@ function App() {
   const handleResetSettings = async () => {
     if (window.confirm('Are you sure you want to reset all settings to defaults?')) {
       try {
-        const response = await axios.post(`${API_BASE_URL}/settings/reset`);
+        const response = await apiClient.post('/settings/reset');
         setSettings(response.data);
         showSnackbar('Settings reset to defaults', 'success');
       } catch (error) {

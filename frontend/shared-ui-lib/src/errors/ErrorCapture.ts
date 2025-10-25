@@ -252,6 +252,13 @@ export class ErrorCapture {
   }
 
   public static captureApiError(error: any, endpoint: string, method: string = 'GET'): void {
+    // Don't capture auth errors (401/403) to prevent infinite loops
+    const status = error.status || error.response?.status;
+    if (status === 401 || status === 403) {
+      console.warn(`API ${status} Error: ${method} ${endpoint} (not logged to prevent loop)`);
+      return;
+    }
+    
     ErrorLogger.logError(
       `API Error: ${method} ${endpoint} - ${error.message || error}`,
       'api',
@@ -260,7 +267,7 @@ export class ErrorCapture {
       {
         endpoint,
         method,
-        status: error.status || error.response?.status,
+        status,
         statusText: error.statusText || error.response?.statusText,
       }
     );

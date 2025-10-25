@@ -29,9 +29,9 @@ import {
   Search as SearchIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { ErrorCapture, apiClient } from '../../shared-ui-lib/src';
+// Import shared apiClient and ErrorCapture from shared-ui-lib
+import { apiClient, ErrorCapture } from '../../shared-ui-lib/src';
 
-// No need for API_BASE_URL - apiClient already has it configured
 
 interface User {
   id: number;

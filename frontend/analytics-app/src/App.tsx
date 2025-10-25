@@ -32,9 +32,7 @@ import {
   People,
   Schedule,
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000/api';
+import { apiClient } from '../../shared-ui-lib/src';
 
 interface MetricCard {
   title: string;
@@ -84,7 +82,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${API_BASE_URL}/analytics`);
+      const response = await apiClient.get('/analytics');
       setAnalyticsData(response.data);
     } catch (err) {
       setError('Error fetching analytics data');

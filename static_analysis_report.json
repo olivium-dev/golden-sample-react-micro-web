@@ -1,0 +1,324 @@
+{
+  "timestamp": "2025-10-25 00:25:53.028347",
+  "issues": [],
+  "warnings": [
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/analytics-app/src/App.tsx",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 84,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/src/presentation/components/DataRowDialog.tsx",
+      "type": "CONSOLE_ERROR",
+      "line": 69,
+      "message": "Console statement: console.error('Save failed:', error)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/container/src/pages/ErrorMonitor.tsx",
+      "type": "DIRECT_AXIOS_IMPORT",
+      "message": "Using direct axios import instead of shared apiClient"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/container/src/pages/ErrorMonitor.tsx",
+      "type": "CONSOLE_ERROR",
+      "line": 87,
+      "message": "Console statement: console.error('Failed to fetch backend error stats:', error)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/container/src/pages/ErrorMonitor.tsx",
+      "type": "HARDCODED_API_URL",
+      "line": 50,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/container/src/pages/ErrorMonitor.tsx",
+      "type": "HARDCODED_API_URL",
+      "line": 50,
+      "message": "Hardcoded API URL: API_BASE_URL = 'http"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/auth/AuthContext.tsx",
+      "type": "CONSOLE_ERROR",
+      "line": 51,
+      "message": "Console statement: console.error('Auth check failed:', error)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/auth/AuthContext.tsx",
+      "type": "CONSOLE_ERROR",
+      "line": 97,
+      "message": "Console statement: console.error('Logout error:', error)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/auth/AuthContext.tsx",
+      "type": "CONSOLE_ERROR",
+      "line": 115,
+      "message": "Console statement: console.error('Token refresh error:', error)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/components/LoginPage.tsx",
+      "type": "CONSOLE_ERROR",
+      "line": 30,
+      "message": "Console statement: console.error('Login failed:', error)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/components/UserMenu.tsx",
+      "type": "CONSOLE_LOG",
+      "line": 49,
+      "message": "Console statement: console.log('Navigate to profile')"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/components/ErrorBoundary.tsx",
+      "type": "CONSOLE_LOG",
+      "line": 78,
+      "message": "Console statement: console.log('Error details copied to clipboard')"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/components/ErrorBoundary.tsx",
+      "type": "CONSOLE_LOG",
+      "line": 80,
+      "message": "Console statement: console.log('Failed to copy error details')"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/settings-app/src/App.tsx",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 93,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/settings-app/src/App.tsx",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 112,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/settings-app/src/App.tsx",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 122,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/src/infra/config/appConfig.ts",
+      "type": "HARDCODED_API_URL",
+      "line": 7,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/src/data/api/dataClient.ts",
+      "type": "DIRECT_AXIOS_IMPORT",
+      "message": "Using direct axios import instead of shared apiClient"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/src/data/api/dataClient.ts",
+      "type": "CONSOLE_ERROR",
+      "line": 40,
+      "message": "Console statement: console.error('Unauthorized access')"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/src/data/api/dataClient.ts",
+      "type": "HARDCODED_API_URL",
+      "line": 8,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/src/domain/usecases/CreateData.ts",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 24,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/src/domain/usecases/DeleteData.ts",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 16,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/src/domain/usecases/UpdateData.ts",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 24,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/src/domain/usecases/GetAllData.ts",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 13,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/auth/AuthService.ts",
+      "type": "CONSOLE_ERROR",
+      "line": 90,
+      "message": "Console statement: console.error('Logout error:', error)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/auth/AuthService.ts",
+      "type": "CONSOLE_ERROR",
+      "line": 180,
+      "message": "Console statement: console.error('Auto token refresh failed:', error)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/auth/AuthService.ts",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 104,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/auth/AuthService.ts",
+      "type": "HARDCODED_API_URL",
+      "line": 7,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/hooks/useErrorMonitor.ts",
+      "type": "CONSOLE_ERROR",
+      "line": 41,
+      "message": "Console statement: console.error('Failed to refresh errors:', error)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/api/apiClient.ts",
+      "type": "HARDCODED_API_URL",
+      "line": 6,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "CONSOLE_WARN",
+      "line": 36,
+      "message": "Console statement: console.warn('ErrorLogger: Recursive call detected, skipping to prevent infinite loop')"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "CONSOLE_WARN",
+      "line": 58,
+      "message": "Console statement: console.warn('ErrorLogger: Failed to log error:', e)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "CONSOLE_WARN",
+      "line": 221,
+      "message": "Console statement: console.warn('Failed to send error to remote endpoint:', response.statusText)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "CONSOLE_WARN",
+      "line": 224,
+      "message": "Console statement: console.warn('Failed to send error to remote endpoint:', e)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "CONSOLE_WARN",
+      "line": 232,
+      "message": "Console statement: console.warn('Failed to save errors to localStorage:', e)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "CONSOLE_WARN",
+      "line": 243,
+      "message": "Console statement: console.warn('Failed to load errors from localStorage:', e)"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "CONSOLE_LOG",
+      "line": 177,
+      "message": "Console statement: console.log(`[ErrorLogger] ${error.type.toUpperCase()"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 187,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "SILENT_ERROR_HANDLING",
+      "line": 229,
+      "message": "Try-catch block without proper error logging"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorLogger.ts",
+      "type": "HARDCODED_API_URL",
+      "line": 11,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorCapture.ts",
+      "type": "CONSOLE_LOG",
+      "line": 26,
+      "message": "Console statement: console.log('\ud83d\udd0d ErrorCapture initialized')"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/shared-ui-lib/src/errors/ErrorCapture.ts",
+      "type": "CONSOLE_LOG",
+      "line": 251,
+      "message": "Console statement: console.log('\ud83d\udd27 Safe console error capture enabled')"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/analytics-app/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/user-management-app/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/container/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/settings-app/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/analytics-app/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/user-management-app/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/data-grid-app/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/container/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    },
+    {
+      "file": "/Users/oudaykhaled/Desktop/cremat-cms/golden-sample-react-micro-web/frontend/settings-app/webpack.config.js",
+      "type": "HARDCODED_API_URL",
+      "line": 54,
+      "message": "Hardcoded API URL: http://localhost:8000"
+    }
+  ],
+  "summary": {
+    "SILENT_ERROR_HANDLING": 11,
+    "CONSOLE_ERROR": 10,
+    "DIRECT_AXIOS_IMPORT": 2,
+    "HARDCODED_API_URL": 17,
+    "CONSOLE_LOG": 6,
+    "CONSOLE_WARN": 6
+  }
+}

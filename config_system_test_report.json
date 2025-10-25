@@ -1,0 +1,26 @@
+{
+  "Analytics Dashboard": {
+    "name": "Analytics Dashboard",
+    "url": "http://localhost:3103",
+    "loaded": true,
+    "has_content": true,
+    "config_loaded": true,
+    "msw_initialized": true,
+    "mock_enabled": false,
+    "ts_errors": 0,
+    "runtime_errors": 2,
+    "content_length": 369
+  },
+  "Settings Panel": {
+    "name": "Settings Panel",
+    "url": "http://localhost:3104",
+    "loaded": true,
+    "has_content": true,
+    "config_loaded": true,
+    "msw_initialized": true,
+    "mock_enabled": false,
+    "ts_errors": 0,
+    "runtime_errors": 2,
+    "content_length": 670
+  }
+}
