@@ -35,6 +35,7 @@ export { default as LoginForm } from './components/LoginForm';
 export { default as LoginPage } from './components/LoginPage';
 export { default as UserMenu } from './components/UserMenu';
 export { default as apiClient } from './api/apiClient';
+export { authBroadcast } from './auth/broadcast';
 
 // Re-export commonly used MUI components for convenience
 export {

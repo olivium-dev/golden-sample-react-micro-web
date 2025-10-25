@@ -79,6 +79,11 @@ module.exports = {
           strictVersion: false,
           eager: false,
         },
+        '@tanstack/react-query': {
+          singleton: true,
+          requiredVersion: '^5.0.0',
+          eager: false,
+        },
         'react-router-dom': {
           singleton: true,
           requiredVersion: '^6.21.0',

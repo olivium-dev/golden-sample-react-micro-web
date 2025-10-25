@@ -1,7 +1,7 @@
 /**
  * Authentication Context and Provider
  */
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { AuthContextType, AuthState, LoginCredentials, User } from './types';
 import authService from './AuthService';
 
@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   /**
    * Check if user is authenticated and fetch user info
    */
-  const checkAuth = async (): Promise<void> => {
+  const checkAuth = useCallback(async (): Promise<void> => {
     if (!authService.isAuthenticated()) {
       setAuthState({
         user: null,
@@ -56,12 +56,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         error: error.message || 'Authentication check failed',
       });
     }
-  };
+  }, []);
 
   /**
    * Login user
    */
-  const login = async (credentials: LoginCredentials): Promise<void> => {
+  const login = useCallback(async (credentials: LoginCredentials): Promise<void> => {
     setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -83,12 +83,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       throw error;
     }
-  };
+  }, []);
 
   /**
    * Logout user
    */
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async (): Promise<void> => {
     setAuthState((prev) => ({ ...prev, isLoading: true }));
 
     try {
@@ -103,12 +103,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         error: null,
       });
     }
-  };
+  }, []);
 
   /**
    * Refresh access token
    */
-  const refreshToken = async (): Promise<void> => {
+  const refreshToken = useCallback(async (): Promise<void> => {
     try {
       await authService.refreshToken();
     } catch (error: any) {
@@ -120,22 +120,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         error: error.message || 'Token refresh failed',
       });
     }
-  };
+  }, []);
 
   /**
    * Clear error
    */
-  const clearError = (): void => {
+  const clearError = useCallback((): void => {
     setAuthState((prev) => ({ ...prev, error: null }));
-  };
+  }, []);
 
-  const value: AuthContextType = {
+  const value: AuthContextType = useMemo(() => ({
     ...authState,
     login,
     logout,
     refreshToken,
     clearError,
-  };
+  }), [authState, login, logout, refreshToken, clearError]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
