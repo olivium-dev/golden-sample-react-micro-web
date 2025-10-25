@@ -27,8 +27,8 @@ services:
   # Container App (Main Host)
   container:
     build:
-      context: ./frontend/container
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/container/Dockerfile
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-container
@@ -47,8 +47,8 @@ services:
   # User Management Micro-Frontend
   user-management:
     build:
-      context: ./frontend/user-management-app
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/user-management-app/Dockerfile
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-user-management
@@ -67,8 +67,8 @@ services:
   # Data Grid Micro-Frontend
   data-grid:
     build:
-      context: ./frontend/data-grid-app
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/data-grid-app/Dockerfile
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-data-grid
@@ -87,8 +87,8 @@ services:
   # Analytics Micro-Frontend
   analytics:
     build:
-      context: ./frontend/analytics-app
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/analytics-app/Dockerfile
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-analytics
@@ -107,8 +107,8 @@ services:
   # Settings Micro-Frontend
   settings:
     build:
-      context: ./frontend/settings-app
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/settings-app/Dockerfile
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-settings

@@ -2,26 +2,20 @@
 FROM node:18-alpine AS builder
 
 # Set working directory
-WORKDIR /app
+WORKDIR /build
 
-# Copy package files
+# Copy root package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Copy shared-ui-lib
+COPY frontend/shared-ui-lib ./frontend/shared-ui-lib
 
-# Copy shared-ui-lib first
-COPY ../shared-ui-lib ../shared-ui-lib
+# Copy analytics app
+COPY frontend/analytics-app ./frontend/analytics-app
 
-# Install shared-ui-lib dependencies
-WORKDIR /app/../shared-ui-lib
-RUN npm ci --only=production
-
-# Back to analytics app
-WORKDIR /app
-
-# Copy source code
-COPY . .
+# Install all dependencies
+RUN cd frontend/shared-ui-lib && npm ci
+RUN cd frontend/analytics-app && npm ci
 
 # Build arguments
 ARG REACT_APP_API_URL=http://localhost:30001
@@ -31,7 +25,7 @@ ENV REACT_APP_API_URL=$REACT_APP_API_URL
 ENV NODE_ENV=production
 
 # Build the application
-RUN npm run build
+RUN cd frontend/analytics-app && npm run build
 
 # Production stage
 FROM nginx:alpine
@@ -40,10 +34,10 @@ FROM nginx:alpine
 RUN apk add --no-cache curl
 
 # Copy built application
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /build/frontend/analytics-app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/analytics-app/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
 EXPOSE 80

@@ -42,7 +42,7 @@ env:
   IMAGE_TAG: ${{ github.run_id }}
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -53,16 +53,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup SSH Connection via Cloudflare
-        uses: ./.github/actions/cloudflare-ssh
-        with:
-          ssh-private-key: ${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}
-          server-hostname: ${{ inputs.server }}
-          server-user: ${{ inputs.ssh_option }}
-          host-alias: 'fds-server'
-          cloudflare-service-token-id: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_ID }}
-          cloudflare-service-token-secret: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_SECRET }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -72,6 +62,16 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup SSH Connection via Cloudflare
+        uses: ./.github/actions/cloudflare-ssh
+        with:
+          ssh-private-key: ${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}
+          server-hostname: ${{ inputs.server }}
+          server-user: ${{ inputs.ssh_option }}
+          host-alias: 'fds-server'
+          cloudflare-service-token-id: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_ID }}
+          cloudflare-service-token-secret: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_SECRET }}
 
       - name: Generate deployment configuration
         run: |
@@ -100,72 +100,79 @@ jobs:
       - name: Build and Push Docker Images
         run: |
           # Build and push backend
-          echo "Building backend service..."
+          echo "🐳 Building backend service..."
           docker buildx build \
             --platform linux/amd64 \
             --push \
+            --file backend/mock-data-service/Dockerfile \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-backend:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-backend:latest \
-            ./backend/mock-data-service
+            backend/mock-data-service
 
           # Build and push container app
-          echo "Building container app..."
+          echo "🐳 Building container app..."
           docker buildx build \
             --platform linux/amd64 \
             --push \
+            --file frontend/container/Dockerfile \
             --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:latest \
-            ./frontend/container
+            .
 
           # Build and push user management app
-          echo "Building user management app..."
+          echo "🐳 Building user management app..."
           docker buildx build \
             --platform linux/amd64 \
             --push \
+            --file frontend/user-management-app/Dockerfile \
             --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:latest \
-            ./frontend/user-management-app
+            .
 
           # Build and push data grid app
-          echo "Building data grid app..."
+          echo "🐳 Building data grid app..."
           docker buildx build \
             --platform linux/amd64 \
             --push \
+            --file frontend/data-grid-app/Dockerfile \
             --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:latest \
-            ./frontend/data-grid-app
+            .
 
           # Build and push analytics app
-          echo "Building analytics app..."
+          echo "🐳 Building analytics app..."
           docker buildx build \
             --platform linux/amd64 \
             --push \
+            --file frontend/analytics-app/Dockerfile \
             --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:latest \
-            ./frontend/analytics-app
+            .
 
           # Build and push settings app
-          echo "Building settings app..."
+          echo "🐳 Building settings app..."
           docker buildx build \
             --platform linux/amd64 \
             --push \
+            --file frontend/settings-app/Dockerfile \
             --build-arg REACT_APP_API_URL=http://${{ inputs.domain }}:30001 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:latest \
-            ./frontend/settings-app
+            .
 
           # Build and push nginx
-          echo "Building nginx reverse proxy..."
+          echo "🐳 Building nginx reverse proxy..."
           docker buildx build \
             --platform linux/amd64 \
             --push \
+            --file nginx/Dockerfile \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-nginx:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-nginx:latest \
-            ./nginx
+            nginx
 
       - name: Create deployment docker-compose file
         run: |
