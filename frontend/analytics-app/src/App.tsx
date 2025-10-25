@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -33,6 +33,7 @@ import {
   Schedule,
 } from '@mui/icons-material';
 import { apiClient } from '../../shared-ui-lib/src';
+import { useQuery } from '@tanstack/react-query';
 
 interface MetricCard {
   title: string;
@@ -70,26 +71,13 @@ interface AnalyticsData {
 const COLORS = ['#61dafb', '#ff6b6b', '#4ecdc4', '#ffa726', '#9c27b0'];
 
 function App() {
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchAnalyticsData();
-  }, []);
-
-  const fetchAnalyticsData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get('/analytics');
-      setAnalyticsData(response.data);
-    } catch (err) {
-      setError('Error fetching analytics data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: analyticsData, isLoading: loading, error } = useQuery({
+    queryKey: ['analytics'],
+    queryFn: async () => {
+      const response = await apiClient.get<AnalyticsData>('/analytics');
+      return response.data;
+    },
+  });
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -125,7 +113,9 @@ function App() {
     return (
       <Container maxWidth="xl">
         <Box sx={{ py: 4 }}>
-          <Alert severity="error">{error || 'No data available'}</Alert>
+          <Alert severity="error">
+            {error instanceof Error ? error.message : 'Error fetching analytics data'}
+          </Alert>
         </Box>
       </Container>
     );

@@ -34,6 +34,7 @@ import {
   DarkMode as DarkModeIcon,
 } from '@mui/icons-material';
 import { apiClient } from '../../shared-ui-lib/src';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Settings {
   id: number;
@@ -72,8 +73,7 @@ function TabPanel(props: TabPanelProps) {
 
 function App() {
   const [tabValue, setTabValue] = useState(0);
-  const [settings, setSettings] = useState<Settings | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [localSettings, setLocalSettings] = useState<Settings | null>(null);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -84,21 +84,51 @@ function App() {
     severity: 'success',
   });
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+  const queryClient = useQueryClient();
 
-  const fetchSettings = async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get('/settings');
-      setSettings(response.data);
-    } catch (error) {
-      showSnackbar('Error fetching settings', 'error');
-    } finally {
-      setLoading(false);
+  const { data: settings, isLoading: loading } = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const response = await apiClient.get<Settings>('/settings');
+      return response.data;
+    },
+  });
+
+  // Sync settings to local state when data changes
+  React.useEffect(() => {
+    if (settings) {
+      setLocalSettings(settings);
     }
-  };
+  }, [settings]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (settings: Settings) => {
+      try {
+        await apiClient.put('/settings', settings);
+        queryClient.invalidateQueries({ queryKey: ['settings'] });
+        showSnackbar('Settings saved successfully', 'success');
+      } catch (error) {
+        showSnackbar('Error saving settings', 'error');
+        throw error;
+      }
+    },
+  });
+
+  const resetMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        const response = await apiClient.post<Settings>('/settings/reset');
+        const data = response.data;
+        setLocalSettings(data);
+        queryClient.setQueryData(['settings'], data);
+        showSnackbar('Settings reset to defaults', 'success');
+        return data;
+      } catch (error) {
+        showSnackbar('Error resetting settings', 'error');
+        throw error;
+      }
+    },
+  });
 
   const showSnackbar = (
     message: string,
@@ -107,35 +137,24 @@ function App() {
     setSnackbar({ open: true, message, severity });
   };
 
-  const handleSaveSettings = async () => {
-    if (!settings) return;
-    try {
-      await apiClient.put('/settings', settings);
-      showSnackbar('Settings saved successfully', 'success');
-    } catch (error) {
-      showSnackbar('Error saving settings', 'error');
-    }
+  const handleSaveSettings = () => {
+    if (!localSettings) return;
+    saveMutation.mutate(localSettings);
   };
 
-  const handleResetSettings = async () => {
+  const handleResetSettings = () => {
     if (window.confirm('Are you sure you want to reset all settings to defaults?')) {
-      try {
-        const response = await apiClient.post('/settings/reset');
-        setSettings(response.data);
-        showSnackbar('Settings reset to defaults', 'success');
-      } catch (error) {
-        showSnackbar('Error resetting settings', 'error');
-      }
+      resetMutation.mutate();
     }
   };
 
   const handleUpdateSetting = (key: keyof Settings, value: any) => {
-    if (settings) {
-      setSettings({ ...settings, [key]: value });
+    if (localSettings) {
+      setLocalSettings({ ...localSettings, [key]: value });
     }
   };
 
-  if (loading || !settings) {
+  if (loading || !localSettings) {
     return (
       <Container maxWidth="lg">
         <Box sx={{ py: 4 }}>
@@ -178,7 +197,7 @@ function App() {
                       Theme Mode
                     </Typography>
                     <ToggleButtonGroup
-                      value={settings.theme_mode}
+                      value={localSettings.theme_mode}
                       exclusive
                       onChange={(e, newMode) => {
                         if (newMode) handleUpdateSetting('theme_mode', newMode);
@@ -207,7 +226,7 @@ function App() {
                     <TextField
                       fullWidth
                       type="color"
-                      value={settings.primary_color}
+                      value={localSettings.primary_color}
                       onChange={(e) =>
                         handleUpdateSetting('primary_color', e.target.value)
                       }
@@ -228,7 +247,7 @@ function App() {
                     <TextField
                       fullWidth
                       type="color"
-                      value={settings.secondary_color}
+                      value={localSettings.secondary_color}
                       onChange={(e) =>
                         handleUpdateSetting('secondary_color', e.target.value)
                       }
@@ -246,7 +265,7 @@ function App() {
                     <FormControlLabel
                       control={
                         <Switch
-                          checked={settings.compact_mode}
+                          checked={localSettings.compact_mode}
                           onChange={(e) =>
                             handleUpdateSetting('compact_mode', e.target.checked)
                           }
@@ -274,7 +293,7 @@ function App() {
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={settings.notifications_enabled}
+                        checked={localSettings.notifications_enabled}
                         onChange={(e) =>
                           handleUpdateSetting('notifications_enabled', e.target.checked)
                         }
@@ -286,11 +305,11 @@ function App() {
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={settings.email_notifications}
+                        checked={localSettings.email_notifications}
                         onChange={(e) =>
                           handleUpdateSetting('email_notifications', e.target.checked)
                         }
-                        disabled={!settings.notifications_enabled}
+                        disabled={!localSettings.notifications_enabled}
                       />
                     }
                     label="Email Notifications"
@@ -302,11 +321,11 @@ function App() {
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={settings.push_notifications}
+                        checked={localSettings.push_notifications}
                         onChange={(e) =>
                           handleUpdateSetting('push_notifications', e.target.checked)
                         }
-                        disabled={!settings.notifications_enabled}
+                        disabled={!localSettings.notifications_enabled}
                       />
                     }
                     label="Push Notifications"
@@ -325,7 +344,7 @@ function App() {
               <FormControl fullWidth>
                 <InputLabel>Language</InputLabel>
                 <Select
-                  value={settings.language}
+                  value={localSettings.language}
                   label="Language"
                   onChange={(e) => handleUpdateSetting('language', e.target.value)}
                 >
@@ -340,7 +359,7 @@ function App() {
               <FormControl fullWidth>
                 <InputLabel>Timezone</InputLabel>
                 <Select
-                  value={settings.timezone}
+                  value={localSettings.timezone}
                   label="Timezone"
                   onChange={(e) => handleUpdateSetting('timezone', e.target.value)}
                 >
@@ -358,7 +377,7 @@ function App() {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={settings.auto_save}
+                    checked={localSettings.auto_save}
                     onChange={(e) =>
                       handleUpdateSetting('auto_save', e.target.checked)
                     }

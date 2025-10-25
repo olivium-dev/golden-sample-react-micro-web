@@ -28,6 +28,9 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Single-flight refresh promise to avoid concurrent refresh calls
+let refreshPromise: Promise<string> | null = null;
+
 // Response interceptor - handle 401 and token refresh
 apiClient.interceptors.response.use(
   (response) => response,
@@ -40,30 +43,38 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        
+
         if (!refreshToken) {
           // No refresh token, redirect to login
           window.dispatchEvent(new CustomEvent('auth:logout'));
           return Promise.reject(error);
         }
 
-        // Try to refresh the token
-        const response = await axios.post(`${API_URL}/api/auth/refresh`, {
-          refresh_token: refreshToken,
-        });
+        // Ensure only one refresh request is in-flight
+        if (!refreshPromise) {
+          refreshPromise = axios
+            .post(`${API_URL}/api/auth/refresh`, {
+              refresh_token: refreshToken,
+            })
+            .then((response) => {
+              const { access_token, refresh_token: new_refresh_token } = response.data as any;
+              localStorage.setItem('access_token', access_token);
+              localStorage.setItem('refresh_token', new_refresh_token);
+              // Broadcast token update
+              window.dispatchEvent(new CustomEvent('auth:token-refreshed'));
+              return access_token as string;
+            })
+            .finally(() => {
+              // Allow new refresh after current finishes
+              refreshPromise = null;
+            });
+        }
 
-        const { access_token, refresh_token: new_refresh_token } = response.data;
+        const newAccessToken = await refreshPromise;
 
-        // Store new tokens
-        localStorage.setItem('access_token', access_token);
-        localStorage.setItem('refresh_token', new_refresh_token);
-
-        // Broadcast token update
-        window.dispatchEvent(new CustomEvent('auth:token-refreshed'));
-
-        // Retry the original request with new token
+        // Retry the original request with the new token
         if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         }
         return apiClient(originalRequest);
       } catch (refreshError) {

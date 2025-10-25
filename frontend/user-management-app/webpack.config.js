@@ -58,7 +58,7 @@ module.exports = {
       name: 'userApp',
       filename: 'remoteEntry.js',
       exposes: {
-        './UserManagement': './src/App.tsx',
+        './UserManagement': './src/bootstrap.tsx',
       },
       remotes: {
         sharedUI: 'container@http://localhost:3000/remoteEntry.js',
@@ -74,6 +74,11 @@ module.exports = {
           singleton: true,
           requiredVersion: "18.2.0",
           strictVersion: false,
+          eager: false,
+        },
+        '@tanstack/react-query': {
+          singleton: true,
+          requiredVersion: '^5.0.0',
           eager: false,
         },
         '@mui/material': {

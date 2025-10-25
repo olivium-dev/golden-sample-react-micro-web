@@ -2,6 +2,7 @@
  * Authentication Service - Singleton for managing authentication state
  */
 import apiClient from '../api/apiClient';
+import { authBroadcast } from './broadcast';
 import { User, LoginCredentials, TokenResponse } from './types';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -67,6 +68,7 @@ class AuthService {
 
       // Broadcast login to other tabs
       this.broadcastMessage({ type: 'LOGIN', tokens });
+      authBroadcast.post('LOGIN', tokens);
 
       return tokens;
     } catch (error: any) {
@@ -94,6 +96,7 @@ class AuthService {
 
       // Broadcast logout to other tabs
       this.broadcastMessage({ type: 'LOGOUT' });
+      authBroadcast.post('LOGOUT');
     }
   }
 
@@ -127,6 +130,7 @@ class AuthService {
       const tokens = response.data;
       this.storeTokens(tokens);
       this.scheduleTokenRefresh();
+      authBroadcast.post('TOKEN_REFRESHED');
     } catch (error: any) {
       this.clearTokens();
       throw new Error(error.response?.data?.detail || 'Token refresh failed');

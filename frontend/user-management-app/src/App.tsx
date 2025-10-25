@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 // Import shared apiClient and ErrorCapture from shared-ui-lib
 import { apiClient, ErrorCapture } from '../../shared-ui-lib/src';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 
 interface User {
@@ -45,8 +46,6 @@ interface User {
 }
 
 function App() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,22 +67,71 @@ function App() {
     is_active: true,
   });
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const queryClient = useQueryClient();
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get('/users');
-      setUsers(response.data);
-    } catch (error) {
-      ErrorCapture.captureApiError(error, '/users', 'GET');
+  // Fetch users with React Query
+  const { data: users = [], isLoading: loading, refetch, error: fetchError } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const response = await apiClient.get<User[]>('/users');
+      return response.data;
+    },
+  });
+
+  // Handle fetch errors
+  React.useEffect(() => {
+    if (fetchError) {
+      ErrorCapture.captureApiError(fetchError, '/users', 'GET');
       showSnackbar('Error fetching users', 'error');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [fetchError]);
+
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData: typeof formData) => {
+      try {
+        await apiClient.post('/users', userData);
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+        showSnackbar('User created successfully', 'success');
+        handleCloseDialog();
+      } catch (error) {
+        ErrorCapture.captureApiError(error, '/users', 'POST');
+        showSnackbar('Error creating user', 'error');
+        throw error;
+      }
+    },
+  });
+
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, userData }: { id: number; userData: typeof formData }) => {
+      try {
+        await apiClient.put(`/users/${id}`, userData);
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+        showSnackbar('User updated successfully', 'success');
+        handleCloseDialog();
+      } catch (error) {
+        ErrorCapture.captureApiError(error, '/users', 'PUT');
+        showSnackbar('Error updating user', 'error');
+        throw error;
+      }
+    },
+  });
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      try {
+        await apiClient.delete(`/users/${userId}`);
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+        showSnackbar('User deleted successfully', 'success');
+      } catch (error) {
+        ErrorCapture.captureApiError(error, `/users/${userId}`, 'DELETE');
+        showSnackbar('Error deleting user', 'error');
+        throw error;
+      }
+    },
+  });
 
   const showSnackbar = (
     message: string,
@@ -124,33 +172,17 @@ function App() {
     setEditingUser(null);
   };
 
-  const handleSaveUser = async () => {
-    try {
-      if (editingUser) {
-        await apiClient.put(`/users/${editingUser.id}`, formData);
-        showSnackbar('User updated successfully', 'success');
-      } else {
-        await apiClient.post('/users', formData);
-        showSnackbar('User created successfully', 'success');
-      }
-      fetchUsers();
-      handleCloseDialog();
-    } catch (error) {
-      ErrorCapture.captureApiError(error, '/users', editingUser ? 'PUT' : 'POST');
-      showSnackbar('Error saving user', 'error');
+  const handleSaveUser = () => {
+    if (editingUser) {
+      updateUserMutation.mutate({ id: editingUser.id, userData: formData });
+    } else {
+      createUserMutation.mutate(formData);
     }
   };
 
-  const handleDeleteUser = async (userId: number) => {
+  const handleDeleteUser = (userId: number) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await apiClient.delete(`/users/${userId}`);
-        showSnackbar('User deleted successfully', 'success');
-        fetchUsers();
-      } catch (error) {
-        ErrorCapture.captureApiError(error, `/users/${userId}`, 'DELETE');
-        showSnackbar('Error deleting user', 'error');
-      }
+      deleteUserMutation.mutate(userId);
     }
   };
 
@@ -266,7 +298,7 @@ function App() {
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
-            onClick={fetchUsers}
+            onClick={() => refetch()}
           >
             Refresh
           </Button>
