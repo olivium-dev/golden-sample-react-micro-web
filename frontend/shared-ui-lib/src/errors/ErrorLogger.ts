@@ -8,7 +8,7 @@ class ErrorLoggerService {
     maxErrors: 100,
     enableConsoleLog: true,
     enableRemoteLogging: true,
-    remoteEndpoint: 'http://localhost:8000/api/errors',
+    remoteEndpoint: 'http://localhost:30001/api/errors',
     enableToasts: true,
     enableLocalStorage: true,
   };

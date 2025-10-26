@@ -28,15 +28,23 @@ RUN cd frontend/container && \
     ls -la && \
     npm install --production=false
 
-# Build arguments
+# Build arguments - MUST be before ENV
 ARG REACT_APP_API_URL=http://localhost:30001
 
 # Set environment variables
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 ENV NODE_ENV=production
 
+# Debug: Show what API URL will be used
+RUN echo "🔍 Building with REACT_APP_API_URL=$REACT_APP_API_URL"
+
 # Build the application
 RUN cd frontend/container && npm run build
+
+# Debug: Verify API URL in built files
+RUN echo "🔍 Checking built files for API URL..." && \
+    grep -r "192.168.2.73" frontend/container/dist/ || echo "⚠️ Server IP not found in bundle" && \
+    grep -r "localhost:8000" frontend/container/dist/ || echo "✅ No localhost:8000 found"
 
 # Production stage
 FROM nginx:alpine

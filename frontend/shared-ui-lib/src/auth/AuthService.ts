@@ -5,7 +5,7 @@ import apiClient from '../api/apiClient';
 import { authBroadcast } from './broadcast';
 import { User, LoginCredentials, TokenResponse } from './types';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:30001';
 
 class AuthService {
   private static instance: AuthService;

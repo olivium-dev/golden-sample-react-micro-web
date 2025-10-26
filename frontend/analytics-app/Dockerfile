@@ -24,6 +24,9 @@ ARG REACT_APP_API_URL=http://localhost:30001
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 ENV NODE_ENV=production
 
+# Debug: Show what API URL will be used
+RUN echo "🔍 Building with REACT_APP_API_URL=$REACT_APP_API_URL"
+
 # Build the application
 RUN cd frontend/analytics-app && npm run build
 
