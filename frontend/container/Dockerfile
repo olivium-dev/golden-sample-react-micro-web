@@ -4,18 +4,29 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /build
 
-# Copy root package files
+# Copy root package files (if they exist)
 COPY package*.json ./
 
-# Copy shared-ui-lib
+# Copy shared-ui-lib with package files
+COPY frontend/shared-ui-lib/package*.json ./frontend/shared-ui-lib/
 COPY frontend/shared-ui-lib ./frontend/shared-ui-lib
 
-# Copy container app
+# Copy container app with package files
+COPY frontend/container/package*.json ./frontend/container/
 COPY frontend/container ./frontend/container
 
-# Install all dependencies
-RUN cd frontend/shared-ui-lib && npm ci
-RUN cd frontend/container && npm ci
+# Install dependencies (use npm install instead of npm install --production=false for better compatibility)
+RUN cd frontend/shared-ui-lib && \
+    echo "Installing shared-ui-lib dependencies..." && \
+    npm --version && \
+    ls -la && \
+    npm install --production=false
+
+RUN cd frontend/container && \
+    echo "Installing container app dependencies..." && \
+    npm --version && \
+    ls -la && \
+    npm install --production=false
 
 # Build arguments
 ARG REACT_APP_API_URL=http://localhost:30001

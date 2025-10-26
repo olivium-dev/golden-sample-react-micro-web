@@ -14,8 +14,8 @@ COPY frontend/shared-ui-lib ./frontend/shared-ui-lib
 COPY frontend/analytics-app ./frontend/analytics-app
 
 # Install all dependencies
-RUN cd frontend/shared-ui-lib && npm ci
-RUN cd frontend/analytics-app && npm ci
+RUN cd frontend/shared-ui-lib && echo "Installing shared-ui-lib dependencies..." && npm --version && ls -la && npm install --production=false
+RUN cd frontend/analytics-app && npm install --production=false
 
 # Build arguments
 ARG REACT_APP_API_URL=http://localhost:30001

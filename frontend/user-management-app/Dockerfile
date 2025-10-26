@@ -13,9 +13,21 @@ COPY frontend/shared-ui-lib ./frontend/shared-ui-lib
 # Copy user management app
 COPY frontend/user-management-app ./frontend/user-management-app
 
-# Install all dependencies
-RUN cd frontend/shared-ui-lib && npm ci
-RUN cd frontend/user-management-app && npm ci
+# Copy shared-ui-lib package files first
+COPY frontend/shared-ui-lib/package*.json ./frontend/shared-ui-lib/
+
+# Install dependencies with error handling
+RUN cd frontend/shared-ui-lib && \
+    echo "Installing shared-ui-lib dependencies..." && \
+    npm --version && \
+    ls -la && \
+    npm install --production=false
+
+RUN cd frontend/user-management-app && \
+    echo "Installing user-management-app dependencies..." && \
+    npm --version && \
+    ls -la && \
+    npm install --production=false
 
 # Build arguments
 ARG REACT_APP_API_URL=http://localhost:30001
