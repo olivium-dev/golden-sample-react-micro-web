@@ -185,6 +185,7 @@ jobs:
             --push \
             --file frontend/container/Dockerfile \
             --build-arg REACT_APP_API_URL=http://192.168.2.73:30001 \
+            --build-arg REACT_APP_REMOTE_HOST=http://192.168.2.73 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:latest \
             .
