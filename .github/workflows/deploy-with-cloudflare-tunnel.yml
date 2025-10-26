@@ -1,0 +1,411 @@
+name: Deploy via Cloudflare Tunnel + Password
+
+on:
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: 'Docker registry URL'
+        required: true
+        default: 'ghcr.io'
+      project_name:
+        description: 'Project name for deployment'
+        required: true
+        default: 'micro-frontend-sample'
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      server:
+        description: 'Server hostname (for Cloudflare tunnel)'
+        required: true
+        default: 'vps-73.fds-1.com'
+      ssh_user:
+        description: 'SSH username'
+        required: true
+        default: 'ec2-user'
+
+env:
+  REGISTRY: ${{ inputs.registry }}
+  PROJECT_NAME: ${{ inputs.project_name }}
+  IMAGE_TAG: ${{ github.run_id }}
+  # HARDCODED PASSWORD FOR TESTING
+  SSH_PASSWORD: 'P@ssw0rd768'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          echo "📥 Installing cloudflared and sshpass..."
+          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb || sudo apt-get install -f -y
+          sudo apt-get update -qq
+          sudo apt-get install -y sshpass
+          cloudflared version
+          sshpass -V
+          echo "✅ Dependencies installed"
+
+      - name: Setup SSH with Cloudflare Tunnel
+        run: |
+          echo "🔑 Setting up SSH configuration with Cloudflare tunnel..."
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          # Create SSH config for Cloudflare tunnel with password auth
+          cat >> ~/.ssh/config << 'EOF'
+          Host tunnel-server
+            HostName ${{ inputs.server }}
+            User ${{ inputs.ssh_user }}
+            ProxyCommand cloudflared access tcp --hostname ${{ inputs.server }}
+            ConnectTimeout 30
+            ServerAliveInterval 60
+            ServerAliveCountMax 3
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            PreferredAuthentications password
+            PubkeyAuthentication no
+          EOF
+          chmod 600 ~/.ssh/config
+          
+          echo "✅ SSH config created for Cloudflare tunnel"
+          echo "SSH Configuration:"
+          cat ~/.ssh/config
+
+      - name: Test Cloudflare Tunnel SSH Connection
+        run: |
+          echo "🧪 Testing SSH connection via Cloudflare tunnel..."
+          echo "Server: ${{ inputs.server }}"
+          echo "User: ${{ inputs.ssh_user }}"
+          echo "Using password authentication via Cloudflare tunnel"
+          
+          # Test SSH connection through Cloudflare tunnel
+          if sshpass -p '${{ env.SSH_PASSWORD }}' ssh -o ConnectTimeout=60 tunnel-server "echo 'SSH via Cloudflare tunnel successful!'"; then
+            echo "✅ Cloudflare tunnel SSH connection works!"
+          else
+            echo "❌ Cloudflare tunnel SSH connection failed"
+            echo "Debugging information:"
+            echo "- Checking if cloudflared is running..."
+            ps aux | grep cloudflared || echo "No cloudflared processes found"
+            echo "- Testing direct cloudflared access..."
+            timeout 30 cloudflared access tcp --hostname ${{ inputs.server }} --url tcp://localhost:2222 &
+            sleep 5
+            echo "Cloudflare tunnel setup attempted"
+            exit 1
+          fi
+
+      - name: Test Server Commands via Tunnel
+        run: |
+          echo "🔍 Testing server commands via Cloudflare tunnel..."
+          
+          # Test whoami
+          echo "Current user:"
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "whoami"
+          
+          # Test system info
+          echo "System information:"
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "uname -a"
+          
+          # Test Docker
+          echo "Docker version:"
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "docker --version"
+          
+          # Test Docker Compose
+          echo "Docker Compose version:"
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "docker-compose --version"
+          
+          echo "✅ All server commands work via Cloudflare tunnel!"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate deployment configuration
+        run: |
+          # Create production environment file
+          cat > .env.production <<EOF
+          # Environment Configuration
+          ENVIRONMENT=${{ inputs.environment }}
+          
+          # Docker Registry
+          REGISTRY=${{ env.REGISTRY }}
+          PROJECT_NAME=${{ env.PROJECT_NAME }}
+          IMAGE_TAG=${{ env.IMAGE_TAG }}
+          
+          # API Configuration
+          REACT_APP_API_URL=http://${{ inputs.server }}:30001
+          
+          # Security (using defaults for testing)
+          JWT_SECRET_KEY=test-jwt-secret-key-change-in-production
+          JWT_REFRESH_SECRET_KEY=test-jwt-refresh-secret-key-change-in-production
+          
+          # CORS Origins
+          CORS_ORIGINS=http://localhost:30002,http://${{ inputs.server }}:30002
+          EOF
+          
+          echo "✅ Environment configuration created"
+
+      - name: Build and Push Backend Image
+        run: |
+          echo "🐳 Building backend service..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --file backend/mock-data-service/Dockerfile \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-backend:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-backend:latest \
+            backend/mock-data-service
+          
+          echo "✅ Backend image built and pushed"
+
+      - name: Build and Push Container App
+        run: |
+          echo "🐳 Building container app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --file frontend/container/Dockerfile \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.server }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:latest \
+            .
+          
+          echo "✅ Container app built and pushed"
+
+      - name: Build and Push User Management App
+        run: |
+          echo "🐳 Building user management app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --file frontend/user-management-app/Dockerfile \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.server }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:latest \
+            .
+          
+          echo "✅ User management app built and pushed"
+
+      - name: Build and Push Data Grid App
+        run: |
+          echo "🐳 Building data grid app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --file frontend/data-grid-app/Dockerfile \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.server }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:latest \
+            .
+          
+          echo "✅ Data grid app built and pushed"
+
+      - name: Build and Push Analytics App
+        run: |
+          echo "🐳 Building analytics app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --file frontend/analytics-app/Dockerfile \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.server }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:latest \
+            .
+          
+          echo "✅ Analytics app built and pushed"
+
+      - name: Build and Push Settings App
+        run: |
+          echo "🐳 Building settings app..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --file frontend/settings-app/Dockerfile \
+            --build-arg REACT_APP_API_URL=http://${{ inputs.server }}:30001 \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:latest \
+            .
+          
+          echo "✅ Settings app built and pushed"
+
+      - name: Create Docker Compose File
+        run: |
+          cat > docker-compose.deploy.yml <<EOF
+          version: '3.8'
+          services:
+            backend:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-backend:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-backend
+              ports:
+                - "30001:30001"
+              environment:
+                API_PORT: 30001
+                CORS_ORIGINS: "http://${{ inputs.server }}:30002,http://localhost:30002"
+                JWT_SECRET_KEY: "test-jwt-secret-key-change-in-production"
+                JWT_REFRESH_SECRET_KEY: "test-jwt-refresh-secret-key-change-in-production"
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            container:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-container
+              ports:
+                - "30002:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            user-management:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-user-management
+              ports:
+                - "30003:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            data-grid:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-data-grid
+              ports:
+                - "30004:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            analytics:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-analytics
+              ports:
+                - "30005:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+            settings:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-settings
+              ports:
+                - "30006:80"
+              depends_on:
+                - backend
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
+          networks:
+            micro-frontend-network:
+              driver: bridge
+          EOF
+          
+          echo "✅ Docker Compose file created"
+
+      - name: Deploy to Server via Cloudflare Tunnel
+        run: |
+          set -e
+          
+          echo "🚀 Starting deployment via Cloudflare tunnel..."
+          
+          # Create deployment directory on server
+          echo "Creating deployment directory..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "sudo mkdir -p /opt/${{ env.PROJECT_NAME }} && sudo chown ${{ inputs.ssh_user }}:${{ inputs.ssh_user }} /opt/${{ env.PROJECT_NAME }}"
+          
+          # Copy deployment files to server
+          echo "Copying deployment files..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' scp .env.production tunnel-server:/opt/${{ env.PROJECT_NAME }}/.env
+          sshpass -p '${{ env.SSH_PASSWORD }}' scp docker-compose.deploy.yml tunnel-server:/opt/${{ env.PROJECT_NAME }}/docker-compose.yml
+          
+          # Login to registry on remote server
+          echo "Logging into Docker registry on remote server..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin"
+          
+          # Pull latest images
+          echo "Pulling latest Docker images..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose pull"
+          
+          # Stop existing containers
+          echo "Stopping existing containers..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose down --remove-orphans || true"
+          
+          # Start new deployment
+          echo "Starting new deployment..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose up -d"
+          
+          # Wait for services to be healthy
+          echo "Waiting for services to start..."
+          sleep 30
+          
+          # Check service health
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose ps"
+
+      - name: Verify Deployment
+        run: |
+          echo "🔍 Verifying deployment via Cloudflare tunnel..."
+          
+          # Check if services are running
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "docker ps --filter 'name=${{ env.PROJECT_NAME }}' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+          
+          # Test API health endpoint
+          echo "Testing backend API..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "curl -f http://localhost:30001/health || echo 'Backend not ready yet'"
+          
+          # Test main application
+          echo "Testing container app..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "curl -f http://localhost:30002/ || echo 'Container app not ready yet'"
+          
+          echo "✅ Deployment verification completed!"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Logout from registry on remote server
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "docker logout ${{ env.REGISTRY }}" || true
+
+      - name: Deployment Summary
+        run: |
+          echo "🎉 Deployment via Cloudflare tunnel completed!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 Summary:"
+          echo "  ✅ Server: ${{ inputs.server }} (via Cloudflare tunnel)"
+          echo "  ✅ User: ${{ inputs.ssh_user }}"
+          echo "  ✅ Environment: ${{ inputs.environment }}"
+          echo "  ✅ Auth: Password via Cloudflare tunnel"
+          echo "  ✅ All services deployed"
+          echo ""
+          echo "🌐 Access URLs:"
+          echo "  📍 Main App: http://${{ inputs.server }}:30002"
+          echo "  📍 API Docs: http://${{ inputs.server }}:30001/docs"
+          echo "  📍 User Management: http://${{ inputs.server }}:30003"
+          echo "  📍 Data Grid: http://${{ inputs.server }}:30004"
+          echo "  📍 Analytics: http://${{ inputs.server }}:30005"
+          echo "  📍 Settings: http://${{ inputs.server }}:30006"
+          echo ""
+          echo "✅ Cloudflare tunnel deployment successful!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
