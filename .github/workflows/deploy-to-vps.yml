@@ -63,15 +63,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup SSH Connection via Cloudflare
-        uses: ./.github/actions/cloudflare-ssh
-        with:
-          ssh-private-key: ${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}
-          server-hostname: ${{ inputs.server }}
-          server-user: ${{ inputs.ssh_option }}
-          host-alias: 'fds-server'
-          cloudflare-service-token-id: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_ID }}
-          cloudflare-service-token-secret: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_SECRET }}
+        - name: Install sshpass for password authentication
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y sshpass
 
       - name: Generate deployment configuration
         run: |
@@ -288,51 +283,51 @@ jobs:
           
           # Test SSH connection first
           echo "Testing SSH connection..."
-          ssh -o ConnectTimeout=30 -o BatchMode=yes fds-server "echo 'SSH connection verified'"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "echo 'SSH connection verified'"
           
           # Create deployment directory on server
           echo "Creating deployment directory..."
-          ssh fds-server "sudo mkdir -p /opt/${{ env.PROJECT_NAME }} && sudo chown ${{ inputs.ssh_option }}:${{ inputs.ssh_option }} /opt/${{ env.PROJECT_NAME }}"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "sudo mkdir -p /opt/${{ env.PROJECT_NAME }} && sudo chown ${{ inputs.ssh_option }}:${{ inputs.ssh_option }} /opt/${{ env.PROJECT_NAME }}"
           
           # Copy deployment files to server
           echo "Copying deployment files..."
-          scp -o ConnectTimeout=30 .env.production fds-server:/opt/${{ env.PROJECT_NAME }}/.env
-          scp -o ConnectTimeout=30 docker-compose.deploy.yml fds-server:/opt/${{ env.PROJECT_NAME }}/docker-compose.yml
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' scp -o ConnectTimeout=30 -o StrictHostKeyChecking=no .env.production ${{ inputs.ssh_option }}@${{ inputs.server }}:/opt/${{ env.PROJECT_NAME }}/.env
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' scp -o ConnectTimeout=30 -o StrictHostKeyChecking=no docker-compose.deploy.yml ${{ inputs.ssh_option }}@${{ inputs.server }}:/opt/${{ env.PROJECT_NAME }}/docker-compose.yml
           
           # Login to registry on remote server
           echo "Logging into Docker registry on remote server..."
-          ssh fds-server "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin"
           
           # Pull latest images
           echo "Pulling latest Docker images..."
-          ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose pull"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "cd /opt/${{ env.PROJECT_NAME }} && docker-compose pull"
           
           # Stop existing containers
           echo "Stopping existing containers..."
-          ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose down --remove-orphans || true"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "cd /opt/${{ env.PROJECT_NAME }} && docker-compose down --remove-orphans || true"
           
           # Start new deployment
-          ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose up -d"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "cd /opt/${{ env.PROJECT_NAME }} && docker-compose up -d"
           
           # Wait for services to be healthy
           echo "Waiting for services to start..."
           sleep 30
           
           # Check service health
-          ssh fds-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose ps"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "cd /opt/${{ env.PROJECT_NAME }} && docker-compose ps"
 
       - name: Verify Deployment
         run: |
           echo "Verifying deployment..."
           
           # Check if services are running
-          ssh fds-server "docker ps --filter 'name=${{ env.PROJECT_NAME }}' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "docker ps --filter 'name=${{ env.PROJECT_NAME }}' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
           
           # Test API health endpoint
-          ssh fds-server "curl -f http://localhost:30001/health || exit 1"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "curl -f http://localhost:30001/health || exit 1"
           
           # Test main application
-          ssh fds-server "curl -f http://localhost:30002/ || exit 1"
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "curl -f http://localhost:30002/ || exit 1"
           
           echo "✅ Deployment successful!"
           echo "🌐 Application URL: http://${{ inputs.domain }}"
@@ -342,7 +337,7 @@ jobs:
         if: always()
         run: |
           # Logout from registry on remote server
-          ssh fds-server "docker logout ${{ env.REGISTRY }}" || true
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "docker logout ${{ env.REGISTRY }}" || true
           
           # Clean up old images (keep last 3 versions)
-          ssh fds-server "docker image prune -f" || true
+          sshpass -p '${{ secrets.CREAMAT_SSH_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ inputs.ssh_option }}@${{ inputs.server }} "docker image prune -f" || true
