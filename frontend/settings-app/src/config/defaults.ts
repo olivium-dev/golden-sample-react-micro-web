@@ -35,7 +35,7 @@ export const defaultConfig: SettingsConfig = {
   api: {
     services: {
       settings: {
-        baseUrl: 'http://localhost:8000/api',
+        baseUrl: 'http://localhost:30001/api',
         timeout: 10000,
         routes: {
           get: '/settings',

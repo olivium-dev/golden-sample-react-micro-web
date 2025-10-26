@@ -50,7 +50,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify('development'),
-        REACT_APP_API_URL: JSON.stringify('http://localhost:8000'),
+        REACT_APP_API_URL: JSON.stringify('http://localhost:30001'),
       },
     }),
     new HtmlWebpackPlugin({
