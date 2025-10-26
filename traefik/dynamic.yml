@@ -1,0 +1,23 @@
+http:
+  middlewares:
+    cors-headers:
+      headers:
+        accessControlAllowOriginList:
+          - "*"
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "PUT"
+          - "DELETE"
+          - "OPTIONS"
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Authorization"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+    
+    basic-auth:
+      basicAuth:
+        users:
+          - "admin:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"  # admin:admin123
+

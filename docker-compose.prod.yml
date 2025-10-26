@@ -1,22 +1,50 @@
 version: '3.8'
 
 services:
+  # Traefik Reverse Proxy
+  traefik:
+    build:
+      context: ./traefik
+      dockerfile: Dockerfile
+    container_name: micro-frontend-traefik
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/logs:/var/log/traefik
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # Backend API Service
   backend:
     build:
       context: ./backend/mock-data-service
       dockerfile: Dockerfile
     container_name: micro-frontend-backend
-    ports:
-      - "30001:30001"
+    expose:
+      - "30001"
     environment:
       - API_HOST=0.0.0.0
       - API_PORT=30001
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
       - JWT_REFRESH_SECRET_KEY=${JWT_REFRESH_SECRET_KEY:-dev-refresh-secret-key-change-in-production}
-      - CORS_ORIGINS=http://localhost:30002,https://fds-1.com
+      - CORS_ORIGINS=http://localhost,https://fds-1.com
     networks:
       - micro-frontend-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.services.backend.loadbalancer.server.port=30001"
+      - "traefik.http.routers.backend.middlewares=cors-headers"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:30001/health"]
       interval: 30s
@@ -32,12 +60,19 @@ services:
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-container
-    ports:
-      - "30002:80"
+    expose:
+      - "80"
     depends_on:
       - backend
+      - traefik
     networks:
       - micro-frontend-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.container.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.container.entrypoints=web"
+      - "traefik.http.routers.container.priority=1"
+      - "traefik.http.services.container.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 30s
@@ -52,12 +87,18 @@ services:
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-user-management
-    ports:
-      - "30003:80"
+    expose:
+      - "80"
     depends_on:
       - backend
+      - traefik
     networks:
       - micro-frontend-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user-mgmt.rule=PathPrefix(`/users`)"
+      - "traefik.http.routers.user-mgmt.entrypoints=web"
+      - "traefik.http.services.user-mgmt.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 30s
@@ -72,12 +113,18 @@ services:
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-data-grid
-    ports:
-      - "30004:80"
+    expose:
+      - "80"
     depends_on:
       - backend
+      - traefik
     networks:
       - micro-frontend-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.data-grid.rule=PathPrefix(`/data`)"
+      - "traefik.http.routers.data-grid.entrypoints=web"
+      - "traefik.http.services.data-grid.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 30s
@@ -92,12 +139,18 @@ services:
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-analytics
-    ports:
-      - "30005:80"
+    expose:
+      - "80"
     depends_on:
       - backend
+      - traefik
     networks:
       - micro-frontend-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.analytics.rule=PathPrefix(`/analytics`)"
+      - "traefik.http.routers.analytics.entrypoints=web"
+      - "traefik.http.services.analytics.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 30s
@@ -112,41 +165,20 @@ services:
       args:
         - REACT_APP_API_URL=http://localhost:30001
     container_name: micro-frontend-settings
-    ports:
-      - "30006:80"
+    expose:
+      - "80"
     depends_on:
       - backend
+      - traefik
     networks:
       - micro-frontend-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.settings.rule=PathPrefix(`/settings`)"
+      - "traefik.http.routers.settings.entrypoints=web"
+      - "traefik.http.services.settings.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Nginx Reverse Proxy (Optional - for unified access)
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    container_name: micro-frontend-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - container
-      - user-management
-      - data-grid
-      - analytics
-      - settings
-      - backend
-    networks:
-      - micro-frontend-network
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -99,6 +99,17 @@ export default defineConfig({
       // Run setup to start all services
       dependencies: [],
     },
+    
+    {
+      name: 'traefik-validation',
+      testDir: './tests/traefik',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'http://localhost', // Traefik routing
+      },
+      // Tests Traefik routing and Module Federation
+      dependencies: [],
+    },
   ],
 
   // Global setup and teardown

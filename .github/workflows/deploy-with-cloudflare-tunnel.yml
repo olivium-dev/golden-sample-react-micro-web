@@ -248,21 +248,54 @@ jobs:
           
           echo "✅ Settings app built and pushed"
 
+      - name: Build and Push Traefik Image
+        run: |
+          echo "🐳 Building Traefik configuration..."
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --file traefik/Dockerfile \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-traefik:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-traefik:latest \
+            traefik
+          
+          echo "✅ Traefik image built and pushed"
+
       - name: Create Docker Compose File
         run: |
           cat > docker-compose.deploy.yml <<EOF
           version: '3.8'
           services:
+            traefik:
+              image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-traefik:${{ env.IMAGE_TAG }}
+              container_name: ${{ env.PROJECT_NAME }}-traefik
+              ports:
+                - "80:80"
+                - "443:443"
+                - "8080:8080"
+              volumes:
+                - /var/run/docker.sock:/var/run/docker.sock:ro
+                - /opt/${{ env.PROJECT_NAME }}/traefik-logs:/var/log/traefik
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+
             backend:
               image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-backend:${{ env.IMAGE_TAG }}
               container_name: ${{ env.PROJECT_NAME }}-backend
-              ports:
-                - "30001:30001"
+              expose:
+                - "30001"
               environment:
                 API_PORT: 30001
-                CORS_ORIGINS: "http://192.168.2.73:30002,http://localhost:30002,http://vps-73.fds-1.com:30002"
+                CORS_ORIGINS: "http://192.168.2.73,http://localhost,http://vps-73.fds-1.com"
                 JWT_SECRET_KEY: "test-jwt-secret-key-change-in-production"
                 JWT_REFRESH_SECRET_KEY: "test-jwt-refresh-secret-key-change-in-production"
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.backend.rule=PathPrefix(\`/api\`)"
+                - "traefik.http.routers.backend.entrypoints=web"
+                - "traefik.http.services.backend.loadbalancer.server.port=30001"
+                - "traefik.http.routers.backend.middlewares=cors-headers"
               networks:
                 - micro-frontend-network
               restart: unless-stopped
@@ -270,10 +303,17 @@ jobs:
             container:
               image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:${{ env.IMAGE_TAG }}
               container_name: ${{ env.PROJECT_NAME }}-container
-              ports:
-                - "30002:80"
+              expose:
+                - "80"
               depends_on:
                 - backend
+                - traefik
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.container.rule=PathPrefix(\`/\`)"
+                - "traefik.http.routers.container.entrypoints=web"
+                - "traefik.http.routers.container.priority=1"
+                - "traefik.http.services.container.loadbalancer.server.port=80"
               networks:
                 - micro-frontend-network
               restart: unless-stopped
@@ -281,10 +321,16 @@ jobs:
             user-management:
               image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:${{ env.IMAGE_TAG }}
               container_name: ${{ env.PROJECT_NAME }}-user-management
-              ports:
-                - "30003:80"
+              expose:
+                - "80"
               depends_on:
                 - backend
+                - traefik
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.user-mgmt.rule=PathPrefix(\`/users\`)"
+                - "traefik.http.routers.user-mgmt.entrypoints=web"
+                - "traefik.http.services.user-mgmt.loadbalancer.server.port=80"
               networks:
                 - micro-frontend-network
               restart: unless-stopped
@@ -292,10 +338,16 @@ jobs:
             data-grid:
               image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:${{ env.IMAGE_TAG }}
               container_name: ${{ env.PROJECT_NAME }}-data-grid
-              ports:
-                - "30004:80"
+              expose:
+                - "80"
               depends_on:
                 - backend
+                - traefik
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.data-grid.rule=PathPrefix(\`/data\`)"
+                - "traefik.http.routers.data-grid.entrypoints=web"
+                - "traefik.http.services.data-grid.loadbalancer.server.port=80"
               networks:
                 - micro-frontend-network
               restart: unless-stopped
@@ -303,10 +355,16 @@ jobs:
             analytics:
               image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:${{ env.IMAGE_TAG }}
               container_name: ${{ env.PROJECT_NAME }}-analytics
-              ports:
-                - "30005:80"
+              expose:
+                - "80"
               depends_on:
                 - backend
+                - traefik
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.analytics.rule=PathPrefix(\`/analytics\`)"
+                - "traefik.http.routers.analytics.entrypoints=web"
+                - "traefik.http.services.analytics.loadbalancer.server.port=80"
               networks:
                 - micro-frontend-network
               restart: unless-stopped
@@ -314,10 +372,16 @@ jobs:
             settings:
               image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:${{ env.IMAGE_TAG }}
               container_name: ${{ env.PROJECT_NAME }}-settings
-              ports:
-                - "30006:80"
+              expose:
+                - "80"
               depends_on:
                 - backend
+                - traefik
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.settings.rule=PathPrefix(\`/settings\`)"
+                - "traefik.http.routers.settings.entrypoints=web"
+                - "traefik.http.services.settings.loadbalancer.server.port=80"
               networks:
                 - micro-frontend-network
               restart: unless-stopped
@@ -327,7 +391,7 @@ jobs:
               driver: bridge
           EOF
           
-          echo "✅ Docker Compose file created"
+          echo "✅ Docker Compose file created with Traefik"
 
       - name: Deploy to Server via Cloudflare Tunnel
         run: |

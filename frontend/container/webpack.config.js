@@ -61,10 +61,10 @@ module.exports = {
         './sharedUI': '../shared-ui-lib/src/index.ts',
       },
       remotes: {
-        userApp: `userApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}:30003/remoteEntry.js`,
-        dataApp: `dataApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}:30004/remoteEntry.js`,
-        analyticsApp: `analyticsApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}:30005/remoteEntry.js`,
-        settingsApp: `settingsApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}:30006/remoteEntry.js`,
+        userApp: `userApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}/users/remoteEntry.js`,
+        dataApp: `dataApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}/data/remoteEntry.js`,
+        analyticsApp: `analyticsApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}/analytics/remoteEntry.js`,
+        settingsApp: `settingsApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}/settings/remoteEntry.js`,
       },
       shared: {
         react: {
