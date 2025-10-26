@@ -206,19 +206,19 @@ export const testConfig: TestConfig = {
   },
   
   urls: {
-    backend: 'http://localhost:30001',
-    container: 'http://localhost:30002',
+    backend: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30001` : 'http://localhost:30001',
+    container: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30002` : 'http://localhost:30002',
     standalone: {
-      userManagement: 'http://localhost:30103',
-      dataGrid: 'http://localhost:30104',
-      analytics: 'http://localhost:30105',
-      settings: 'http://localhost:30106',
+      userManagement: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30103` : 'http://localhost:30103',
+      dataGrid: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30104` : 'http://localhost:30104',
+      analytics: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30105` : 'http://localhost:30105',
+      settings: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30106` : 'http://localhost:30106',
     },
     moduleFederation: {
-      userManagement: 'http://localhost:30003',
-      dataGrid: 'http://localhost:30004',
-      analytics: 'http://localhost:30005',
-      settings: 'http://localhost:30006',
+      userManagement: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30003` : 'http://localhost:30003',
+      dataGrid: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30004` : 'http://localhost:30004',
+      analytics: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30005` : 'http://localhost:30005',
+      settings: process.env.TEST_SERVER_IP ? `http://${process.env.TEST_SERVER_IP}:30006` : 'http://localhost:30006',
     },
   },
   
@@ -280,8 +280,9 @@ export function getServiceUrl(serviceName: keyof TestConfig['services'], mode: '
     return testConfig.urls.container;
   }
   
+  const baseHost = process.env.TEST_SERVER_IP || 'localhost';
   const port = mode === 'standalone' ? service.port : service.mfPort;
-  return `http://localhost:${port}`;
+  return `http://${baseHost}:${port}`;
 }
 
 export function getExpectedContent(serviceName: keyof TestConfig['services']): string[] {

@@ -30,13 +30,16 @@ RUN cd frontend/container && \
 
 # Build arguments - MUST be before ENV
 ARG REACT_APP_API_URL=http://localhost:30001
+ARG REACT_APP_REMOTE_HOST=http://localhost
 
 # Set environment variables
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV REACT_APP_REMOTE_HOST=$REACT_APP_REMOTE_HOST
 ENV NODE_ENV=production
 
-# Debug: Show what API URL will be used
-RUN echo "🔍 Building with REACT_APP_API_URL=$REACT_APP_API_URL"
+# Debug: Show what URLs will be used
+RUN echo "🔍 Building with REACT_APP_API_URL=$REACT_APP_API_URL" && \
+    echo "🔍 Building with REACT_APP_REMOTE_HOST=$REACT_APP_REMOTE_HOST"
 
 # Build the application
 RUN cd frontend/container && npm run build
