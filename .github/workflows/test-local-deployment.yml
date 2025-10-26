@@ -1,0 +1,161 @@
+name: Test Local Server Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      server:
+        description: 'Server IP address'
+        required: true
+        default: '192.168.2.73'
+      ssh_user:
+        description: 'SSH username'
+        required: true
+        default: 'ec2-user'
+      test_only:
+        description: 'Test connection only (no deployment)'
+        required: true
+        default: true
+        type: boolean
+
+env:
+  # HARDCODED PASSWORD FOR TESTING - REMOVE AFTER VERIFICATION
+  SSH_PASSWORD: 'P@ssw0rd768'
+  SERVER_IP: ${{ inputs.server }}
+  SSH_USER: ${{ inputs.ssh_user }}
+
+jobs:
+  test-connection:
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: |
+          echo "📥 Installing sshpass..."
+          sudo apt-get update -qq
+          sudo apt-get install -y sshpass curl
+          echo "✅ sshpass installed"
+          sshpass -V
+
+      - name: Test SSH Connection
+        run: |
+          echo "🧪 Testing SSH connection to ${{ env.SERVER_IP }}..."
+          echo "Using hardcoded password for testing..."
+          
+          # Test basic SSH connection
+          if sshpass -p '${{ env.SSH_PASSWORD }}' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "echo 'SSH connection successful!'"; then
+            echo "✅ SSH connection works!"
+          else
+            echo "❌ SSH connection failed"
+            exit 1
+          fi
+
+      - name: Test Server Commands
+        run: |
+          echo "🔍 Testing server commands..."
+          
+          # Test whoami
+          echo "Current user:"
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "whoami"
+          
+          # Test system info
+          echo "System information:"
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "uname -a"
+          
+          # Test Docker
+          echo "Docker version:"
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "docker --version"
+          
+          # Test Docker Compose
+          echo "Docker Compose version:"
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "docker-compose --version"
+          
+          # Test sudo access
+          echo "Testing sudo access:"
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "sudo whoami"
+
+      - name: Test File Operations
+        run: |
+          echo "📁 Testing file operations..."
+          
+          # Create test directory
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "mkdir -p /tmp/github-actions-test"
+          
+          # Create test file locally
+          echo "Hello from GitHub Actions!" > test-file.txt
+          
+          # Copy file to server
+          sshpass -p '${{ env.SSH_PASSWORD }}' scp -o StrictHostKeyChecking=no test-file.txt ${{ env.SSH_USER }}@${{ env.SERVER_IP }}:/tmp/github-actions-test/
+          
+          # Verify file on server
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "cat /tmp/github-actions-test/test-file.txt"
+          
+          # Cleanup
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "rm -rf /tmp/github-actions-test"
+          rm test-file.txt
+          
+          echo "✅ File operations successful!"
+
+      - name: Test Docker Registry Login
+        if: ${{ !inputs.test_only }}
+        run: |
+          echo "🐳 Testing Docker registry login..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+          echo "✅ Docker registry login successful!"
+
+      - name: Simple Deployment Test
+        if: ${{ !inputs.test_only }}
+        run: |
+          echo "🚀 Testing simple deployment..."
+          
+          # Create deployment directory
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "sudo mkdir -p /opt/test-deployment && sudo chown ${{ env.SSH_USER }}:${{ env.SSH_USER }} /opt/test-deployment"
+          
+          # Create simple docker-compose file
+          cat > simple-compose.yml <<EOF
+          version: '3.8'
+          services:
+            nginx:
+              image: nginx:alpine
+              ports:
+                - "8080:80"
+              restart: unless-stopped
+          EOF
+          
+          # Copy to server
+          sshpass -p '${{ env.SSH_PASSWORD }}' scp simple-compose.yml ${{ env.SSH_USER }}@${{ env.SERVER_IP }}:/opt/test-deployment/docker-compose.yml
+          
+          # Deploy
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "cd /opt/test-deployment && docker-compose up -d"
+          
+          # Wait and test
+          sleep 10
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "curl -f http://localhost:8080/ > /dev/null && echo 'Nginx test container is running!'"
+          
+          # Cleanup
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "cd /opt/test-deployment && docker-compose down && cd / && sudo rm -rf /opt/test-deployment"
+          
+          echo "✅ Simple deployment test successful!"
+
+      - name: Summary
+        run: |
+          echo "🎉 All tests completed successfully!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 Test Results:"
+          echo "  ✅ SSH Connection: Working"
+          echo "  ✅ Server Commands: Working"
+          echo "  ✅ File Operations: Working"
+          if [ "${{ inputs.test_only }}" = "false" ]; then
+            echo "  ✅ Docker Registry: Working"
+            echo "  ✅ Simple Deployment: Working"
+          fi
+          echo ""
+          echo "🌐 Server Details:"
+          echo "  📍 IP: ${{ env.SERVER_IP }}"
+          echo "  👤 User: ${{ env.SSH_USER }}"
+          echo "  🔑 Auth: Password (hardcoded for testing)"
+          echo ""
+          echo "✅ Ready for full micro-frontend deployment!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
