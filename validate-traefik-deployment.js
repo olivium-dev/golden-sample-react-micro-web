@@ -24,12 +24,12 @@ async function validateTraefikDeployment(baseURL) {
     results.dashboard = dashResponse.ok();
     
     // Test API
-    const apiResponse = await page.request.get(`${baseURL}/api/health`);
+    const apiResponse = await page.request.get(`${baseURL}:8090/api/health`);
     results.api = apiResponse.ok();
     results.cors = apiResponse.headers()['access-control-allow-origin'] !== undefined;
     
     // Test container app with authentication
-    await page.goto(baseURL);
+    await page.goto(`${baseURL}:8090`);
     await page.fill('input[name="email"]', 'admin@example.com');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');

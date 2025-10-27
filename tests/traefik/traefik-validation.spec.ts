@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Traefik Routing Validation', () => {
-  const baseURL = 'http://localhost';
+  const baseURL = 'http://localhost:8090';
 
   test('should access Traefik dashboard', async ({ page }) => {
-    await page.goto(`${baseURL}:8080`);
+    await page.goto('http://localhost:8080');
     await expect(page.locator('text=Traefik')).toBeVisible();
   });
 

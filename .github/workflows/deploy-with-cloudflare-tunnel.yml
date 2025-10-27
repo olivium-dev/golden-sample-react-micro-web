@@ -270,8 +270,8 @@ jobs:
               image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-traefik:${{ env.IMAGE_TAG }}
               container_name: ${{ env.PROJECT_NAME }}-traefik
               ports:
-                - "80:80"
-                - "443:443"
+                - "8090:80"
+                - "8443:443"
                 - "8080:8080"
               volumes:
                 - /var/run/docker.sock:/var/run/docker.sock:ro
