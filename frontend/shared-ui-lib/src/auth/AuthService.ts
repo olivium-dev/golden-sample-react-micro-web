@@ -14,7 +14,8 @@ function getApiUrl(): string {
     } else if (currentHost.includes('dev-creamat.fds-1.com')) {
       return 'https://dev-creamat.fds-1.com';
     } else if (currentHost.includes('192.168.2.73')) {
-      return 'http://192.168.2.73:30001';
+      // Use Traefik routing instead of direct backend port
+      return `http://${currentHost}`;
     } else if (currentHost.includes('localhost')) {
       return 'http://localhost:30001';
     }
