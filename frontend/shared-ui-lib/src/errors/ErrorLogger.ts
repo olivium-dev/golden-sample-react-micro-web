@@ -8,7 +8,7 @@ class ErrorLoggerService {
     maxErrors: 100,
     enableConsoleLog: true,
     enableRemoteLogging: true,
-    remoteEndpoint: this.getApiUrl() + '/api/errors',
+    remoteEndpoint: '', // Will be set dynamically at runtime
     enableToasts: true,
     enableLocalStorage: true,
   };
@@ -232,13 +232,18 @@ class ErrorLoggerService {
     }
 
     // Send to remote endpoint
-    if (this.config.enableRemoteLogging && this.config.remoteEndpoint) {
+    if (this.config.enableRemoteLogging) {
       this.sendToRemote(error);
     }
   }
 
   private async sendToRemote(error: ErrorEntry): Promise<void> {
     try {
+      // Set the endpoint dynamically at runtime
+      if (!this.config.remoteEndpoint) {
+        this.config.remoteEndpoint = this.getApiUrl() + '/api/errors';
+      }
+      
       // Get auth token from localStorage
       const token = localStorage.getItem('access_token');
       
@@ -251,7 +256,7 @@ class ErrorLoggerService {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(this.config.remoteEndpoint!, {
+      const response = await fetch(this.config.remoteEndpoint, {
         method: 'POST',
         headers,
         body: JSON.stringify(error),
