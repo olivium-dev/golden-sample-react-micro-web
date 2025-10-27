@@ -17,15 +17,11 @@ COPY frontend/analytics-app ./frontend/analytics-app
 RUN cd frontend/shared-ui-lib && echo "Installing shared-ui-lib dependencies..." && npm --version && ls -la && npm install --production=false
 RUN cd frontend/analytics-app && npm install --production=false
 
-# Build arguments
-ARG REACT_APP_API_URL=http://localhost:30001
-
-# Set environment variables
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
+# No build arguments - using runtime dynamic API URL detection
 ENV NODE_ENV=production
 
-# Debug: Show what API URL will be used
-RUN echo "🔍 Building with REACT_APP_API_URL=$REACT_APP_API_URL"
+# Debug: Show build mode
+RUN echo "🔍 Building with RUNTIME dynamic API URL detection (no build-time URLs)"
 
 # Build the application
 RUN cd frontend/analytics-app && npm run build
