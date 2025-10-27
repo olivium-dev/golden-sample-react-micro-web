@@ -372,3 +372,4 @@ test.describe('Settings Panel - Standalone Mode', () => {
     });
   });
 });
+

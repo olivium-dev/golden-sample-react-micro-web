@@ -427,3 +427,4 @@ test.describe('Cross-Module Navigation - E2E', () => {
     console.log('✅ Module state persistence test completed');
   });
 });
+

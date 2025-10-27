@@ -405,3 +405,4 @@ test.describe('Container App - Module Federation E2E', () => {
     await takeScreenshot(page, 'container-error-handling-test');
   });
 });
+

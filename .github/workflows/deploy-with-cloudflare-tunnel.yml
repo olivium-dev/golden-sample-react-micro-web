@@ -36,7 +36,59 @@ env:
   SSH_PASSWORD: 'P@ssw0rd768'
 
 jobs:
+  check-ssl:
+    runs-on: ubuntu-22.04
+    outputs:
+      ssl_main_valid: ${{ steps.check.outputs.main_valid }}
+      ssl_subdomain_valid: ${{ steps.check.outputs.subdomain_valid }}
+    
+    steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass curl
+
+      - name: Setup Cloudflare Tunnel
+        run: |
+          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb
+          
+          mkdir -p ~/.ssh
+          cat > ~/.ssh/config << 'EOF'
+          Host tunnel-server
+            HostName 192.168.2.73
+            User ec2-user
+            ProxyCommand cloudflared access ssh --hostname vps-73.fds-1.com
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Check SSL Certificates
+        id: check
+        run: |
+          echo "Checking SSL certificates..."
+          
+          # Check main domain
+          MAIN_VALID=$(sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server \
+            "test -f /etc/letsencrypt/live/dev-creamat.fds-1.com/fullchain.pem && echo 'true' || echo 'false'")
+          
+          # Check subdomain
+          SUBDOMAIN_VALID=$(sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server \
+            "test -f /etc/letsencrypt/live/golden-sample.dev-creamat.fds-1.com/fullchain.pem && echo 'true' || echo 'false'")
+          
+          echo "main_valid=$MAIN_VALID" >> $GITHUB_OUTPUT
+          echo "subdomain_valid=$SUBDOMAIN_VALID" >> $GITHUB_OUTPUT
+          
+          echo "Main domain SSL: $MAIN_VALID"
+          echo "Subdomain SSL: $SUBDOMAIN_VALID"
+          
+          if [ "$SUBDOMAIN_VALID" != "true" ]; then
+            echo "⚠️ WARNING: Subdomain SSL certificate not found. Run ssl-certificate-check workflow first."
+          fi
+
   build-and-deploy:
+    needs: check-ssl
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -424,22 +476,41 @@ jobs:
           # Check service health
           sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "cd /opt/${{ env.PROJECT_NAME }} && docker-compose ps"
 
-      - name: Verify Deployment
+      - name: Verify Traefik Routing
         run: |
-          echo "🔍 Verifying deployment via Cloudflare tunnel..."
+          echo "🔍 Verifying Traefik routing..."
           
           # Check if services are running
           sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "docker ps --filter 'name=${{ env.PROJECT_NAME }}' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
           
-          # Test API health endpoint
-          echo "Testing backend API..."
-          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "curl -f http://localhost:30001/health || echo 'Backend not ready yet'"
+          # Test backend API through Traefik
+          echo "Testing backend API through Traefik (port 8090)..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "curl -f http://localhost:8090/api/health || exit 1"
           
-          # Test main application
-          echo "Testing container app..."
-          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "curl -f http://localhost:30002/ || echo 'Container app not ready yet'"
+          # Test container app through Traefik
+          echo "Testing container app through Traefik..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "curl -f http://localhost:8090/ || exit 1"
           
-          echo "✅ Deployment verification completed!"
+          # Test Traefik dashboard
+          echo "Testing Traefik dashboard..."
+          sshpass -p '${{ env.SSH_PASSWORD }}' ssh tunnel-server "curl -f http://localhost:8080/api/http/routers || echo 'Dashboard not accessible'"
+          
+          echo "✅ Traefik routing verification completed!"
+
+      - name: Trigger Nginx Configuration Update
+        run: |
+          echo "🔄 Triggering nginx configuration update in server-cremati repository..."
+          
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/olivium-dev/server-cremati/dispatches \
+            -d '{"event_type":"update-nginx","client_payload":{"project":"golden-sample","traefik_port":"8090","subdomain":"golden-sample.dev-creamat.fds-1.com","main_domain":"dev-creamat.fds-1.com"}}' \
+            || echo "⚠️ Note: Could not trigger server-cremati pipeline (repo may not have workflow_dispatch configured)"
+          
+          echo "✅ Nginx update request sent"
 
       - name: Cleanup
         if: always()

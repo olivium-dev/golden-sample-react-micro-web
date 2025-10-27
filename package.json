@@ -31,7 +31,8 @@
     "test:analyze": "node parse-test-results.js",
     "test:run-and-analyze": "npm run test:playwright && npm run test:analyze",
     "start:full": "concurrently --names \"BACKEND,CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS\" --prefix-colors \"red,blue,green,yellow,magenta,cyan\" \"npm run dev:backend\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\"",
-    "test:full": "echo '🚀 Starting comprehensive test execution...' && npm run test:playwright --reporter=json --output-file=test-results/all-results.json && echo '📊 Generating detailed summary...' && npm run test:analyze && npm run test:summary"
+    "test:full": "echo '🚀 Starting comprehensive test execution...' && npm run test:playwright --reporter=json --output-file=test-results/all-results.json && echo '📊 Generating detailed summary...' && npm run test:analyze && npm run test:summary",
+    "deploy:iterate": "node scripts/deploy-and-test-iteratively.js"
   },
   "keywords": [
     "micro-frontend",
