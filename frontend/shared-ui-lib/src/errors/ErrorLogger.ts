@@ -21,28 +21,24 @@ class ErrorLoggerService {
   }
 
   private getApiUrl(): string {
-    // Try to get API URL from environment variables first
     if (typeof window !== 'undefined') {
-      // Check for React environment variables
-      const reactApiUrl = process.env.REACT_APP_API_URL;
-      if (reactApiUrl) {
-        return reactApiUrl;
-      }
-      
-      // Check for global config
+      // Check for global config first
       const globalConfig = (window as any).__APP_CONFIG__;
       if (globalConfig?.apiUrl) {
         return globalConfig.apiUrl;
       }
       
-      // Determine based on current domain
+      // Determine based on current domain (this is the key fix)
       const currentHost = window.location.host;
-      if (currentHost.includes('golden-sample.dev-creamat.fds-1.com')) {
+      if (currentHost === 'golden-sample.dev-creamat.fds-1.com') {
+        // Use the subdomain itself for API calls (routed through Traefik)
         return 'https://golden-sample.dev-creamat.fds-1.com';
       } else if (currentHost.includes('dev-creamat.fds-1.com')) {
         return 'https://dev-creamat.fds-1.com';
       } else if (currentHost.includes('192.168.2.73')) {
         return 'http://192.168.2.73:30001';
+      } else if (currentHost.includes('localhost')) {
+        return 'http://localhost:30001';
       }
     }
     
