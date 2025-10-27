@@ -8,7 +8,7 @@ class ErrorLoggerService {
     maxErrors: 100,
     enableConsoleLog: true,
     enableRemoteLogging: true,
-    remoteEndpoint: 'http://localhost:30001/api/errors',
+    remoteEndpoint: this.getApiUrl() + '/api/errors',
     enableToasts: true,
     enableLocalStorage: true,
   };
@@ -18,6 +18,36 @@ class ErrorLoggerService {
   constructor() {
     this.loadFromStorage();
     this.setupGlobalErrorHandlers();
+  }
+
+  private getApiUrl(): string {
+    // Try to get API URL from environment variables first
+    if (typeof window !== 'undefined') {
+      // Check for React environment variables
+      const reactApiUrl = process.env.REACT_APP_API_URL;
+      if (reactApiUrl) {
+        return reactApiUrl;
+      }
+      
+      // Check for global config
+      const globalConfig = (window as any).__APP_CONFIG__;
+      if (globalConfig?.apiUrl) {
+        return globalConfig.apiUrl;
+      }
+      
+      // Determine based on current domain
+      const currentHost = window.location.host;
+      if (currentHost.includes('golden-sample.dev-creamat.fds-1.com')) {
+        return 'https://golden-sample.dev-creamat.fds-1.com';
+      } else if (currentHost.includes('dev-creamat.fds-1.com')) {
+        return 'https://dev-creamat.fds-1.com';
+      } else if (currentHost.includes('192.168.2.73')) {
+        return 'http://192.168.2.73:30001';
+      }
+    }
+    
+    // Fallback to localhost for development
+    return 'http://localhost:30001';
   }
 
   public configure(config: Partial<ErrorLoggerConfig>): void {
