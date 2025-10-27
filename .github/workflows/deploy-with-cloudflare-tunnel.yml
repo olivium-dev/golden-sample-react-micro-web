@@ -294,8 +294,8 @@ jobs:
                 - "traefik.enable=true"
                 - "traefik.http.routers.backend.rule=PathPrefix(\`/api\`)"
                 - "traefik.http.routers.backend.entrypoints=web"
+                - "traefik.http.routers.backend.priority=100"
                 - "traefik.http.services.backend.loadbalancer.server.port=30001"
-                - "traefik.http.routers.backend.middlewares=cors-headers"
               networks:
                 - micro-frontend-network
               restart: unless-stopped
