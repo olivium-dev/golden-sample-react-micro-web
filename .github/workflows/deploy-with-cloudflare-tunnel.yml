@@ -150,8 +150,7 @@ jobs:
           PROJECT_NAME=${{ env.PROJECT_NAME }}
           IMAGE_TAG=${{ env.IMAGE_TAG }}
           
-          # API Configuration
-          REACT_APP_API_URL=http://192.168.2.73:30001
+          # API Configuration - Using runtime dynamic detection (no hardcoded URLs)
           
           # Security (using defaults for testing)
           JWT_SECRET_KEY=test-jwt-secret-key-change-in-production
@@ -179,13 +178,11 @@ jobs:
       - name: Build and Push Container App
         run: |
           echo "🐳 Building container app..."
-          echo "Using API URL: http://192.168.2.73:30001"
+          echo "Using RUNTIME dynamic API URL detection (no hardcoded URLs)"
           docker buildx build \
             --platform linux/amd64 \
             --push \
             --file frontend/container/Dockerfile \
-            --build-arg REACT_APP_API_URL=http://192.168.2.73:30001 \
-            --build-arg REACT_APP_REMOTE_HOST=http://192.168.2.73 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-container:latest \
             .
@@ -199,7 +196,6 @@ jobs:
             --platform linux/amd64 \
             --push \
             --file frontend/user-management-app/Dockerfile \
-            --build-arg REACT_APP_API_URL=http://192.168.2.73:30001 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-user-management:latest \
             .
@@ -213,7 +209,6 @@ jobs:
             --platform linux/amd64 \
             --push \
             --file frontend/data-grid-app/Dockerfile \
-            --build-arg REACT_APP_API_URL=http://192.168.2.73:30001 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-data-grid:latest \
             .
@@ -227,7 +222,6 @@ jobs:
             --platform linux/amd64 \
             --push \
             --file frontend/analytics-app/Dockerfile \
-            --build-arg REACT_APP_API_URL=http://192.168.2.73:30001 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-analytics:latest \
             .
@@ -241,7 +235,6 @@ jobs:
             --platform linux/amd64 \
             --push \
             --file frontend/settings-app/Dockerfile \
-            --build-arg REACT_APP_API_URL=http://192.168.2.73:30001 \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:${{ env.IMAGE_TAG }} \
             --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.PROJECT_NAME }}-settings:latest \
             .
