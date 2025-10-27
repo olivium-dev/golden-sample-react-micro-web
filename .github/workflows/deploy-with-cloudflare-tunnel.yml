@@ -157,8 +157,8 @@ jobs:
           JWT_SECRET_KEY=test-jwt-secret-key-change-in-production
           JWT_REFRESH_SECRET_KEY=test-jwt-refresh-secret-key-change-in-production
           
-          # CORS Origins
-          CORS_ORIGINS=http://localhost:30002,http://192.168.2.73:30002,http://vps-73.fds-1.com:30002
+          # CORS Origins - includes subdomain
+          CORS_ORIGINS=http://localhost:30002,http://192.168.2.73:30002,http://vps-73.fds-1.com:30002,https://golden-sample.dev-creamat.fds-1.com,https://dev-creamat.fds-1.com
           EOF
           
           echo "✅ Environment configuration created"
@@ -287,7 +287,7 @@ jobs:
                 - "30001"
               environment:
                 API_PORT: 30001
-                CORS_ORIGINS: "http://192.168.2.73,http://localhost,http://vps-73.fds-1.com"
+                CORS_ORIGINS: "http://192.168.2.73,http://localhost,http://vps-73.fds-1.com,https://golden-sample.dev-creamat.fds-1.com,https://dev-creamat.fds-1.com"
                 JWT_SECRET_KEY: "test-jwt-secret-key-change-in-production"
                 JWT_REFRESH_SECRET_KEY: "test-jwt-refresh-secret-key-change-in-production"
               labels:
