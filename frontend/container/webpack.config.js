@@ -51,7 +51,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
-        REACT_APP_API_URL: JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:30001'),
+        // No REACT_APP_API_URL - using runtime dynamic detection
       },
     }),
     new ModuleFederationPlugin({
@@ -61,10 +61,10 @@ module.exports = {
         './sharedUI': '../shared-ui-lib/src/index.ts',
       },
       remotes: {
-        userApp: `userApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}/users/remoteEntry.js`,
-        dataApp: `dataApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}/data/remoteEntry.js`,
-        analyticsApp: `analyticsApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}/analytics/remoteEntry.js`,
-        settingsApp: `settingsApp@${process.env.REACT_APP_REMOTE_HOST || 'http://localhost'}/settings/remoteEntry.js`,
+        userApp: 'userApp@promise new Promise(resolve => { const remoteUrl = window.location.origin + "/users/remoteEntry.js"; resolve(remoteUrl); })',
+        dataApp: 'dataApp@promise new Promise(resolve => { const remoteUrl = window.location.origin + "/data/remoteEntry.js"; resolve(remoteUrl); })',
+        analyticsApp: 'analyticsApp@promise new Promise(resolve => { const remoteUrl = window.location.origin + "/analytics/remoteEntry.js"; resolve(remoteUrl); })',
+        settingsApp: 'settingsApp@promise new Promise(resolve => { const remoteUrl = window.location.origin + "/settings/remoteEntry.js"; resolve(remoteUrl); })',
       },
       shared: {
         react: {
