@@ -5,7 +5,24 @@ import apiClient from '../api/apiClient';
 import { authBroadcast } from './broadcast';
 import { User, LoginCredentials, TokenResponse } from './types';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:30001';
+// Dynamic API URL detection (runtime, not build-time)
+function getApiUrl(): string {
+  if (typeof window !== 'undefined') {
+    const currentHost = window.location.host;
+    if (currentHost === 'golden-sample.dev-creamat.fds-1.com') {
+      return 'https://golden-sample.dev-creamat.fds-1.com';
+    } else if (currentHost.includes('dev-creamat.fds-1.com')) {
+      return 'https://dev-creamat.fds-1.com';
+    } else if (currentHost.includes('192.168.2.73')) {
+      return 'http://192.168.2.73:30001';
+    } else if (currentHost.includes('localhost')) {
+      return 'http://localhost:30001';
+    }
+  }
+  return 'http://localhost:30001';
+}
+
+const API_URL = getApiUrl();
 
 class AuthService {
   private static instance: AuthService;
