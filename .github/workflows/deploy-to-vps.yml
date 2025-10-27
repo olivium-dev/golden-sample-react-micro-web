@@ -5,15 +5,15 @@ on:
     inputs:
       registry:
         description: 'Docker registry URL'
-        required: true
+        required: false
         default: 'ghcr.io'
       project_name:
         description: 'Project name for deployment'
-        required: true
+        required: false
         default: 'micro-frontend-sample'
       environment:
         description: 'Deployment environment'
-        required: true
+        required: false
         default: 'production'
         type: choice
         options:
@@ -21,11 +21,11 @@ on:
           - staging
       server:
         description: 'Server address for SSH (hostname only)'
-        required: true
+        required: false
         default: 'vps-73.fds-1.com'
       ssh_option:
         description: 'Choose SSH user option'
-        required: true
+        required: false
         default: 'ec2-user'
         type: choice
         options:
@@ -33,13 +33,17 @@ on:
           - root
       domain:
         description: 'Domain name for the application'
-        required: true
+        required: false
         default: 'fds-1.com'
 
 env:
-  REGISTRY: ${{ inputs.registry }}
-  PROJECT_NAME: ${{ inputs.project_name }}
+  REGISTRY: ${{ inputs.registry || 'ghcr.io' }}
+  PROJECT_NAME: ${{ inputs.project_name || 'micro-frontend-sample' }}
   IMAGE_TAG: ${{ github.run_id }}
+  ENVIRONMENT: ${{ inputs.environment || 'production' }}
+  SERVER: ${{ inputs.server || 'vps-73.fds-1.com' }}
+  SSH_USER: ${{ inputs.ssh_option || 'ec2-user' }}
+  DOMAIN: ${{ inputs.domain || 'fds-1.com' }}
 
 jobs:
   build-and-deploy:
