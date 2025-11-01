@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 const path = require('path');
 
 module.exports = {
@@ -13,7 +14,7 @@ module.exports = {
     },
   },
   output: {
-    publicPath: '/',
+    publicPath: 'http://localhost:3001/',
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },
@@ -49,6 +50,9 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/index.html',
       favicon: './public/favicon.ico',
+    }),
+    new webpack.DefinePlugin({
+      'process.env': JSON.stringify(process.env),
     }),
   ],
 };
