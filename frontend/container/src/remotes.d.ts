@@ -20,6 +20,11 @@ declare module 'settingsApp/Settings' {
   export default Settings;
 }
 
+declare module 'ordersApp/Orders' {
+  const Orders: React.ComponentType;
+  export default Orders;
+}
+
 
 
 

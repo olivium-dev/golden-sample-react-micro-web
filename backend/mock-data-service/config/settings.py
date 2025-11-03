@@ -27,6 +27,7 @@ class Settings:
         "http://localhost:3002",
         "http://localhost:3003",
         "http://localhost:3004",
+        "http://localhost:3005", # Orders app
         "http://localhost:30002",
         "http://localhost:30003",
         "http://localhost:30004",

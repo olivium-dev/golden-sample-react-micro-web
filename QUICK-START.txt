@@ -1,0 +1,113 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   MICRO-FRONTEND PLATFORM - QUICK START                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔧 FIRST TIME? INSTALL DEPENDENCIES FIRST!                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+   Step 1:  CHECK-PREREQUISITES.bat       (Verify Python & Node.js)
+   Step 2:  INSTALL-ALL-DEPENDENCIES.bat  (Install everything - 5-10 min)
+   Step 3:  START-MODULE-FEDERATION.bat   (Start the platform)
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🚀 FASTEST WAY TO START (After Installation)                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+   Double-click:  START-MODULE-FEDERATION.bat
+   
+   Then open:     http://localhost:30002
+   
+   Login:         admin@example.com / admin123
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📋 STARTUP OPTIONS                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+   1. Module Federation (Recommended)
+      ├─ File: START-MODULE-FEDERATION.bat
+      ├─ URL:  http://localhost:30002
+      └─ Use:  Full micro-frontend experience, production-like
+   
+   2. Standalone Mode
+      ├─ File: START-STANDALONE-MODE.bat
+      ├─ URL:  http://localhost:3000
+      └─ Use:  Independent app development
+   
+   3. Orders App Only
+      ├─ File: START-ORDERS-APP.bat
+      ├─ URL:  http://localhost:3005
+      └─ Use:  Testing with real API
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔑 LOGIN CREDENTIALS                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+   Admin:   admin@example.com   / admin123
+   User:    user@example.com    / user123
+   Viewer:  viewer@example.com  / viewer123
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📊 PORT REFERENCE (Module Federation)                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+   Backend:         30001  │  http://localhost:30001
+   Container:       30002  │  http://localhost:30002  ⭐ START HERE
+   User Management: 30003  │  http://localhost:30003/remoteEntry.js
+   Data Grid:       30004  │  http://localhost:30004/remoteEntry.js
+   Analytics:       30005  │  http://localhost:30005/remoteEntry.js
+   Settings:        30006  │  http://localhost:30006/remoteEntry.js
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🐛 TROUBLESHOOTING                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+   ❌ "Loading script failed"
+   ✅ Use START-MODULE-FEDERATION.bat (not standalone mode)
+   ✅ Wait 15 seconds for all services to start
+   
+   ❌ "401 Unauthorized"
+   ✅ This is normal before login - just log in!
+   
+   ❌ "Port already in use"
+   ✅ Close previous instances or change ports in webpack.config.js
+   
+   ❌ "CORS policy" (Orders App)
+   ✅ Use START-ORDERS-APP.bat (launches Chrome with CORS disabled)
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📚 DOCUMENTATION                                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+   Full Guide:       STARTUP-GUIDE.md
+   Fixes Applied:    FIXES-APPLIED.md
+   This File:        QUICK-START.txt
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ✅ SUCCESS INDICATORS                                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+   ✓ All terminals show "webpack compiled successfully"
+   ✓ No red errors in browser console (F12)
+   ✓ Can log in with demo credentials
+   ✓ Can navigate between all modules
+   ✓ Module Federation: All apps load in one container
+   ✓ Standalone: Each app works independently
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 RECOMMENDED WORKFLOW                                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+   1. Start services:     START-MODULE-FEDERATION.bat
+   2. Wait 15 seconds:    Let all services initialize
+   3. Open browser:       http://localhost:30002
+   4. Log in:             admin@example.com / admin123
+   5. Explore:            Click modules in sidebar
+   6. Develop:            Edit code, see live reload
+   7. Test Orders:        Run START-ORDERS-APP.bat separately
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  Need help? Check browser console (F12) and terminal outputs for details.   ║
+║  All documentation is in the golden-sample-react-micro-web folder.          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+

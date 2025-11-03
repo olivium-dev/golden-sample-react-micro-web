@@ -124,7 +124,12 @@ class AuthService {
   async getCurrentUser(): Promise<User> {
     try {
       const response = await apiClient.get<User>('/auth/me');
-      return response.data;
+      const user = response.data;
+      // Add name alias for backward compatibility
+      if (!user.name && user.full_name) {
+        user.name = user.full_name;
+      }
+      return user;
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Failed to get user info');
     }

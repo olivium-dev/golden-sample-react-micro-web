@@ -31,6 +31,7 @@ import {
   Analytics as AnalyticsIcon,
   BugReport as BugReportIcon,
   Logout as LogoutIcon,
+  ShoppingCart as ShoppingCartIcon,
 } from '@mui/icons-material';
 import { 
   ErrorBoundary, 
@@ -48,6 +49,7 @@ const UserManagement = React.lazy(() => import('userApp/UserManagement'));
 const DataGrid = React.lazy(() => import('dataApp/DataGrid'));
 const Analytics = React.lazy(() => import('analyticsApp/Analytics'));
 const Settings = React.lazy(() => import('settingsApp/Settings'));
+const Orders = React.lazy(() => import('ordersApp/Orders'));
 
 interface MenuItem {
   id: string;
@@ -85,6 +87,13 @@ const menuItems: MenuItem[] = [
     label: 'Analytics',
     color: '#4ecdc4',
     description: 'Real-time analytics and reporting',
+  },
+  {
+    id: 'orders',
+    icon: <ShoppingCartIcon />,
+    label: 'Orders',
+    color: '#9c27b0',
+    description: 'Manage orders and view order history',
   },
   {
     id: 'settings',
@@ -288,6 +297,18 @@ function App() {
                     }}
                   >
                     <Settings />
+                  </ErrorBoundary>
+                );
+              case 'orders':
+                return (
+                  <ErrorBoundary 
+                    componentName="Orders App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('ordersApp/Orders', error);
+                    }}
+                  >
+                    <Orders />
                   </ErrorBoundary>
                 );
               default:

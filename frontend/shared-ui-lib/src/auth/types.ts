@@ -7,6 +7,7 @@ export interface User {
   email: string;
   username: string;
   full_name: string;
+  name?: string; // Alias for full_name for backward compatibility
   role: string;
   is_active: boolean;
 }

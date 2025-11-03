@@ -37,7 +37,7 @@ def create_data_row(data_row: DataRowCreate):
     new_id = max([d["id"] for d in data_rows_db], default=0) + 1
     new_data_row = {
         "id": new_id,
-        **data_row.dict(),
+        **(data_row.model_dump() if hasattr(data_row, 'model_dump') else data_row.dict()),
         "created_at": datetime.now(),
         "updated_at": datetime.now()
     }

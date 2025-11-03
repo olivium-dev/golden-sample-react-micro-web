@@ -27,7 +27,7 @@ def create_user(user: UserCreate):
     new_id = max([u["id"] for u in users_db], default=0) + 1
     new_user = {
         "id": new_id,
-        **user.dict(),
+        **(user.model_dump() if hasattr(user, 'model_dump') else user.dict()),
         "created_at": datetime.now(),
         "updated_at": datetime.now()
     }

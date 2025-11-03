@@ -7,7 +7,7 @@ module.exports = {
   entry: './src/index.tsx',
   mode: 'development',
   devServer: {
-    port: 30002,
+    port: 30007,
     historyApiFallback: true,
     hot: true,
     headers: {
@@ -15,14 +15,13 @@ module.exports = {
     },
     proxy: [
       {
-        // Proxy Orders API requests to external API
-        context: ['/api/Order'],
+        context: ['/api'],
         target: 'https://dev-creamat.fds-1.com/gateway',
         changeOrigin: true,
         secure: true,
         logLevel: 'debug',
         pathRewrite: {
-          '^/api': '/api'  // Keep the /api prefix
+          '^/api': '/api'
         },
         onProxyReq: (proxyReq, req, res) => {
           proxyReq.setHeader('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0RGVhY3RpdmF0ZU9yZGVyQGdtYWlsLmNvbSIsImp0aSI6IjgzZDQxODU0LTc1ZmQtNDYxYy1iNzk1LTdhZDhjZmNhNGVhYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL3NpZCI6Ijg0NDA3OTJlLThjZjYtNGI4MC05NjA0LWIxMzM3ZGIzNGI0ZCIsImV4cCI6MTc2NzQ0OTg4NSwiaXNzIjoidXNlci1tYW5hZ2VtZW50IiwiYXVkIjoidXNlci1tYW5hZ2VtZW50In0.0Le14dZd4ceOnpraAyPaPltpiJS4w14D1QEHYLUX-qc');
@@ -30,13 +29,6 @@ module.exports = {
           proxyReq.setHeader('X-Service-Token-Key', 'order-service-token-key-def456');
           proxyReq.setHeader('Accept', 'text/plain');
         }
-      },
-      {
-        // Proxy all other /api requests to local mock backend
-        context: ['/api'],
-        target: 'http://localhost:30001',
-        changeOrigin: true,
-        logLevel: 'debug'
       }
     ]
   },
@@ -56,7 +48,7 @@ module.exports = {
         use: {
           loader: 'ts-loader',
           options: {
-            transpileOnly: true, // Skip type checking for faster builds
+            transpileOnly: true,
             compilerOptions: {
               noEmit: false,
             },
@@ -77,21 +69,17 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
-        // No REACT_APP_API_URL - using runtime dynamic detection
+        REACT_APP_API_URL: JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:30001'),
       },
     }),
     new ModuleFederationPlugin({
-      name: 'container',
+      name: 'ordersApp',
       filename: 'remoteEntry.js',
       exposes: {
-        './sharedUI': '../shared-ui-lib/src/index.ts',
+        './Orders': './src/bootstrap.tsx',
       },
       remotes: {
-        userApp: 'userApp@http://localhost:30003/remoteEntry.js',
-        dataApp: 'dataApp@http://localhost:30004/remoteEntry.js',
-        analyticsApp: 'analyticsApp@http://localhost:30005/remoteEntry.js',
-        settingsApp: 'settingsApp@http://localhost:30006/remoteEntry.js',
-        ordersApp: 'ordersApp@http://localhost:30007/remoteEntry.js',
+        sharedUI: 'container@http://localhost:30002/remoteEntry.js',
       },
       shared: {
         react: {
@@ -111,11 +99,6 @@ module.exports = {
           requiredVersion: '^5.0.0',
           eager: false,
         },
-        'react-router-dom': {
-          singleton: true,
-          requiredVersion: '^6.21.0',
-          eager: false,
-        },
         '@mui/material': {
           singleton: true,
           requiredVersion: '^5.15.0',
@@ -131,11 +114,6 @@ module.exports = {
           requiredVersion: '^6.18.0',
           eager: false,
         },
-        '@mui/x-charts': {
-          singleton: true,
-          requiredVersion: '^6.18.0',
-          eager: false,
-        },
         '@emotion/react': {
           singleton: true,
           requiredVersion: '^11.11.0',
@@ -146,6 +124,16 @@ module.exports = {
           requiredVersion: '^11.11.0',
           eager: false,
         },
+        'react-router-dom': {
+          singleton: true,
+          requiredVersion: '^6.21.0',
+          eager: false,
+        },
+        axios: {
+          singleton: true,
+          requiredVersion: '^1.6.0',
+          eager: false,
+        },
       },
     }),
     new HtmlWebpackPlugin({
@@ -154,4 +142,3 @@ module.exports = {
     }),
   ],
 };
-

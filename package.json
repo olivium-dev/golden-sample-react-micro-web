@@ -4,12 +4,13 @@
   "description": "Golden sample project demonstrating micro-frontend architecture using React + Webpack Module Federation + Material-UI",
   "private": true,
   "scripts": {
-    "dev:all": "concurrently --names \"CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS\" --prefix-colors \"blue,green,red,yellow,magenta\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\"",
+    "dev:all": "concurrently --names \"CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS,ORDERS\" --prefix-colors \"blue,green,red,yellow,magenta,orange\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\" \"npm run dev:orders\"",
     "dev:container": "cd frontend/container && npm run start:minimal",
     "dev:user-management": "cd frontend/user-management-app && npm run start:minimal",
     "dev:data-grid": "cd frontend/data-grid-app && npm run start:minimal",
     "dev:analytics": "cd frontend/analytics-app && npm run start:minimal",
     "dev:settings": "cd frontend/settings-app && npm run start:minimal",
+    "dev:orders": "cd frontend/orders-app && npx webpack serve --config webpack.minimal.js",
     "dev:backend": "cd backend/mock-data-service && python main.py",
     "install:all": "npm install && cd frontend/shared-ui-lib && npm install && cd ../container && npm install && cd ../user-management-app && npm install && cd ../data-grid-app && npm install && cd ../analytics-app && npm install && cd ../settings-app && npm install",
     "install:backend": "cd backend/mock-data-service && pip install -r requirements.txt",
@@ -30,7 +31,7 @@
     "test:summary:e2e": "./run-tests-summary.sh --e2e-only",
     "test:analyze": "node parse-test-results.js",
     "test:run-and-analyze": "npm run test:playwright && npm run test:analyze",
-    "start:full": "concurrently --names \"BACKEND,CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS\" --prefix-colors \"red,blue,green,yellow,magenta,cyan\" \"npm run dev:backend\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\"",
+    "start:full": "concurrently --names \"BACKEND,CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS,ORDERS\" --prefix-colors \"red,blue,green,yellow,magenta,cyan,orange\" \"npm run dev:backend\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\" \"npm run dev:orders\"",
     "test:full": "echo '🚀 Starting comprehensive test execution...' && npm run test:playwright --reporter=json --output-file=test-results/all-results.json && echo '📊 Generating detailed summary...' && npm run test:analyze && npm run test:summary",
     "deploy:iterate": "node scripts/deploy-and-test-iteratively.js"
   },

@@ -40,7 +40,8 @@ async def create_error_log(error: ErrorLogCreate):
     try:
         errors = load_errors()
         
-        error_dict = error.dict()
+        # Use model_dump() for Pydantic v2
+        error_dict = error.model_dump() if hasattr(error, 'model_dump') else error.dict()
         error_dict["id"] = generate_error_id()
         error_dict["created_at"] = datetime.now().isoformat()
         error_dict["resolved"] = False
@@ -59,6 +60,7 @@ async def create_error_log(error: ErrorLogCreate):
             message="Error logged successfully"
         )
     except Exception as e:
+        print(f"Error logging failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to log error: {str(e)}")
 
 @router.get("/", response_model=List[ErrorLog])
