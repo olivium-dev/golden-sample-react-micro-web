@@ -3,6 +3,9 @@
  * Exports theme configuration, design tokens, and common components
  */
 
+// Providers
+export { ReactQueryProvider, queryClient } from './providers/ReactQueryProvider';
+
 // Theme exports
 export { lightTheme, darkTheme, getTheme, createCustomTheme } from './theme';
 export type { Theme, ThemeOptions } from '@mui/material/styles';

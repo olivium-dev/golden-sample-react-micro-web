@@ -30,6 +30,8 @@ import {
   Settings as SettingsIcon,
   Analytics as AnalyticsIcon,
   BugReport as BugReportIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Category as CategoryIcon,
 } from '@mui/icons-material';
 import { 
   ErrorBoundary, 
@@ -45,6 +47,8 @@ const UserManagement = React.lazy(() => import('userApp/UserManagement'));
 const DataGrid = React.lazy(() => import('dataApp/DataGrid'));
 const Analytics = React.lazy(() => import('analyticsApp/Analytics'));
 const Settings = React.lazy(() => import('settingsApp/Settings'));
+const Orders = React.lazy(() => import('ordersApp/Orders'));
+const Catalog = React.lazy(() => import('catalogApp/Catalog'));
 
 interface MenuItem {
   id: string;
@@ -89,6 +93,20 @@ const menuItems: MenuItem[] = [
     label: 'Settings',
     color: '#ffa726',
     description: 'System configuration and preferences',
+  },
+  {
+    id: 'orders',
+    icon: <ShoppingCartIcon />,
+    label: 'Orders',
+    color: '#9c27b0',
+    description: 'Manage orders and order processing',
+  },
+  {
+    id: 'catalog',
+    icon: <CategoryIcon />,
+    label: 'Catalog',
+    color: '#00bcd4',
+    description: 'Manage catalog items and categories',
   },
   {
     id: 'error-monitor',
@@ -158,10 +176,17 @@ function App() {
   };
 
   const handleMenuItemClick = (tabId: string) => {
+    console.log(`🔄 Navigating to: ${tabId}`);
     setActiveTab(tabId);
     if (isMobile) {
       setDrawerOpen(false);
     }
+    // Scroll to top when changing tabs
+    window.scrollTo(0, 0);
+    // Force re-render
+    setTimeout(() => {
+      console.log(`✅ Navigation complete to: ${tabId}`);
+    }, 100);
   };
 
   const renderRemoteApp = () => {
@@ -181,10 +206,13 @@ function App() {
     const ErrorFallback = (error: Error, errorInfo: React.ErrorInfo, retry: () => void) => (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography variant="h6" color="error" gutterBottom>
-          Failed to load micro-frontend
+          Module Federation Error
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          The remote application could not be loaded. This might be due to a network issue or the service being unavailable.
+          Error: {error.message}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontFamily: 'monospace' }}>
+          Stack: {error.stack?.substring(0, 200)}...
         </Typography>
         <Button variant="contained" onClick={retry}>
           Retry Loading
@@ -252,6 +280,30 @@ function App() {
                     }}
                   >
                     <Settings />
+                  </ErrorBoundary>
+                );
+              case 'orders':
+                return (
+                  <ErrorBoundary 
+                    componentName="Orders App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('ordersApp/Orders', error);
+                    }}
+                  >
+                    <Orders />
+                  </ErrorBoundary>
+                );
+              case 'catalog':
+                return (
+                  <ErrorBoundary 
+                    componentName="Catalog App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('catalogApp/Catalog', error);
+                    }}
+                  >
+                    <Catalog />
                   </ErrorBoundary>
                 );
               default:
@@ -430,6 +482,10 @@ function App() {
                       <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
                         <Button
                           variant="contained"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMenuItemClick(item.id);
+                          }}
                           sx={{
                       backgroundColor: item.color,
                       color: '#ffffff',

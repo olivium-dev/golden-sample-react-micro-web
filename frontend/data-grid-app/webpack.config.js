@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 const { ModuleFederationPlugin } = require('webpack').container;
 const path = require('path');
 
@@ -51,7 +52,7 @@ module.exports = {
       name: 'dataApp',
       filename: 'remoteEntry.js',
       exposes: {
-        './DataGrid': './src/app/App.tsx',
+        './DataGrid': './src/DataGrid.tsx',
       },
       remotes: {
         sharedUI: 'container@http://localhost:3000/remoteEntry.js',
@@ -96,6 +97,13 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/index.html',
       favicon: './public/favicon.ico',
+    }),
+    // Define process.env for browser
+    new webpack.DefinePlugin({
+      'process.env': JSON.stringify({
+        NODE_ENV: process.env.NODE_ENV || 'development',
+        REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000'
+      })
     }),
   ],
 };

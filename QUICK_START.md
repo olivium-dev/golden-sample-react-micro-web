@@ -1,124 +1,82 @@
 # 🚀 Quick Start Guide
 
-## One Command to Rule Them All
+## ✅ Current Status
 
+**Container is running and accessible!**
+
+🌐 **Access the application:** http://localhost:3000
+
+## 📊 Service Status
+
+Currently running:
+- ✅ Container (3000) - **ACCESSIBLE**
+- ✅ User Management (3001)
+- ✅ Data Grid (3002)
+- ✅ Analytics (3003)
+- ✅ Settings (3004)
+- ✅ Orders (3005)
+- ⚠️ Catalog (3006) - Not running (optional)
+- ⚠️ Backend API (8000) - Not running (optional for frontend testing)
+
+## 🎯 Manual Testing
+
+### 1. Open Your Browser
+Navigate to: **http://localhost:3000**
+
+### 2. Test Available Apps
+The container app should load with a menu. You can test:
+- **Home** - Dashboard
+- **User Management** - User CRUD operations
+- **Data Grid** - Advanced data tables
+- **Analytics** - Charts and reports
+- **Settings** - Configuration
+- **Orders** - Order management (NEW)
+- **Error Monitor** - Error tracking
+
+### 3. Check Service Status
 ```bash
-./run.sh
+./scripts/check-services.sh
 ```
 
-That's it! Wait ~60 seconds for compilation, then open: **http://localhost:3000**
+## 🔧 Start Missing Services (Optional)
 
----
+If you need the Catalog app or Backend API:
 
-## What Just Happened?
-
-The `run.sh` script:
-1. ✅ Stops any existing services
-2. ✅ Starts FastAPI backend (port 8000)
-3. ✅ Starts all 5 micro-frontends with working configs
-4. ✅ Uses `webpack.minimal.js` (not the broken old configs)
-
----
-
-## Access Your Apps
-
-| App | URL | What It Does |
-|-----|-----|--------------|
-| **🏠 Container (Main)** | http://localhost:3000 | Navigation hub - access all apps here |
-| 👥 User Management | http://localhost:3001 | CRUD operations, DataGrid |
-| 📊 Data Grid | http://localhost:3002 | Clean Architecture example |
-| 📈 Analytics | http://localhost:3003 | Charts and metrics |
-| ⚙️ Settings | http://localhost:3004 | Theme and preferences |
-| 🐍 Backend API | http://localhost:8000/docs | FastAPI documentation |
-
----
-
-## Stop All Services
-
+### Start Catalog App
 ```bash
-./stop.sh
+cd frontend/catalog-app
+npm start
 ```
 
----
-
-## What's Working
-
-✅ **All 5 micro-frontends rendering**
-✅ **Container app with navigation**
-✅ **MUI components everywhere**
-✅ **Backend API integration**
-✅ **React 18.2.0 stable**
-✅ **No white screens**
-✅ **No infinite error loops**
-
----
-
-## Troubleshooting
-
-### Container not loading?
-
+### Start Backend API
 ```bash
-# Check if it compiled
-tail -20 frontend/container/container.log | grep "compiled"
-
-# Should see: "webpack 5.102.1 compiled successfully"
+cd backend/mock-data-service
+python3 main.py
 ```
 
-### Still seeing white screen?
-
+Or use the automated script:
 ```bash
-# Make sure run.sh was updated to use webpack.minimal.js
-grep "webpack.minimal.js" run.sh
-
-# You should see it in all 5 app start commands
+./scripts/start-services.sh
 ```
 
-### Services not starting?
+## 🛑 Stop All Services
 
 ```bash
-# Check if ports are in use
-lsof -ti:3000 3001 3002 3003 3004 8000
-
-# Stop everything and restart
-./stop.sh && ./run.sh
+./scripts/stop-services.sh
 ```
 
----
+## 📝 Notes
 
-## Files You Need to Know
+- The **Container app** is the main entry point
+- All 6 micro-frontends are connected via Module Federation
+- The container will load apps on-demand when you click menu items
+- If an app isn't running, you'll see an error in the container (this is expected)
 
-- `run.sh` - ✅ **FIXED** to use webpack.minimal.js
-- `stop.sh` - Stop all services
-- `run_minimal.sh` - Alternative startup script
-- `LESSONS_LEARNED.md` - Why things broke and how we fixed them
-- `FINAL_SUCCESS_REPORT.md` - Complete project report
+## ✅ Verification
 
----
+The container is working if:
+1. You can access http://localhost:3000
+2. You see the application UI with a menu
+3. You can navigate between different apps
 
-## Key Insight
-
-**The Problem:** The old `webpack.config.js` files use ErrorCapture which causes infinite loops (35k+ errors).
-
-**The Solution:** We created `webpack.minimal.js` configs that work perfectly.
-
-**The Fix:** Updated `run.sh` to use the minimal configs.
-
----
-
-## Next Steps
-
-1. **Explore the apps** - Click around in the container
-2. **Test the features** - Add users, change themes, view charts
-3. **Read the docs** - Check out LESSONS_LEARNED.md
-4. **Customize** - It's your golden sample now!
-
----
-
-**Status:** ✅ Fully Working  
-**Last Updated:** Now!  
-**Your Move:** Open http://localhost:3000 and enjoy! 🎉
-
-
-
-
-
+**The application is ready for manual testing!** 🎉

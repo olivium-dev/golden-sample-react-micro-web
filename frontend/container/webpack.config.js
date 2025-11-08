@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 const { ModuleFederationPlugin } = require('webpack').container;
 const path = require('path');
 
@@ -58,19 +59,21 @@ module.exports = {
         dataApp: 'dataApp@http://localhost:3002/remoteEntry.js',
         analyticsApp: 'analyticsApp@http://localhost:3003/remoteEntry.js',
         settingsApp: 'settingsApp@http://localhost:3004/remoteEntry.js',
+        ordersApp: 'ordersApp@http://localhost:3005/remoteEntry.js',
+        catalogApp: 'catalogApp@http://localhost:3006/remoteEntry.js',
       },
       shared: {
         react: {
           singleton: true,
           requiredVersion: "18.2.0",
           strictVersion: false,
-          eager: true,
+          eager: false,
         },
         'react-dom': {
           singleton: true,
           requiredVersion: "18.2.0",
           strictVersion: false,
-          eager: true,
+          eager: false,
         },
         'react-router-dom': {
           singleton: true,
@@ -79,32 +82,45 @@ module.exports = {
         '@mui/material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: true,
         },
         '@mui/icons-material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: true,
         },
         '@mui/x-data-grid': {
           singleton: true,
           requiredVersion: '^6.18.0',
+          eager: true,
         },
         '@mui/x-charts': {
           singleton: true,
           requiredVersion: '^6.18.0',
+          eager: true,
         },
         '@emotion/react': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: true,
         },
         '@emotion/styled': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: true,
         },
       },
     }),
     new HtmlWebpackPlugin({
       template: './public/index.html',
       favicon: './public/favicon.ico',
+    }),
+    // Define process.env for browser
+    new webpack.DefinePlugin({
+      'process.env': JSON.stringify({
+        NODE_ENV: process.env.NODE_ENV || 'development',
+        REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000'
+      })
     }),
   ],
 };

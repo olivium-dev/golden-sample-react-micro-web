@@ -1,0 +1,114 @@
+export interface ItemDetailsRequest {
+  name: string | null;
+  description: string | null;
+  language: string | null;
+  additionalParams: { [key: string]: string | null } | null;
+}
+
+export interface ItemResponse {
+  guid: string;
+  parent: string | null;
+  name: string | null;
+  description: string | null;
+  type: string | null;
+  children: ItemResponse[] | null;
+  tags: string[] | null;
+  additionalParams: { [key: string]: string | null } | null;
+  createdAt: string | null;
+  categories: string[] | null;
+}
+
+export interface GetItemForCmsResponse {
+  guid: string;
+  parent: string | null;
+  name: string | null;
+  description: string | null;
+  type: string | null;
+  children: GetItemForCmsResponse[] | null;
+  tags: string[] | null;
+  additionalParams: { [key: string]: string | null } | null;
+  createdAt: string | null;
+  categories: string[] | null;
+  details: ItemDetailsRequest[] | null;
+  success: boolean | true;
+}
+
+export interface ItemDetailsForCms {
+  name: string | null;
+  description: string | null;
+  language: string | null;
+  additionalParams: { [key: string]: string | null } | null;
+}
+
+export interface CreateItemRequest {
+  parent: string | null;
+  tags: string[] | null;
+  type: string | null;
+  details: ItemDetailsRequest[] | null;
+  additionalParams: { [key: string]: string | null } | null;
+  categories: string[] | null;
+}
+
+export interface CreateItemResponse {
+  guid: string;
+}
+
+export interface UpdateItemRequest {
+  parent: string | null;
+  tags: string[] | null;
+  type: string | null;
+  details: ItemDetailsRequest[] | null;
+  additionalParams: { [key: string]: string | null } | null;
+  categories: string[] | null;
+  guid: string;
+}
+
+export interface UpdateItemResponse {
+  guid: string;
+}
+
+export interface DeleteItemResponse {
+  success: boolean;
+}
+
+export interface SearchItemsRequest {
+  query: string | null;
+  tags: string[] | null;
+  type: string | null;
+  pageSize: number;
+  pageNumber: number;
+  language: string | null;
+  categories: string[] | null;
+}
+
+export interface SearchItemsResponse {
+  totalCount: number;
+  items: ItemResponse[] | null;
+}
+
+export interface GetItemRequest {
+  guid: string;
+  language: string | null;
+}
+
+export interface ItemTagsRequest {
+  guid: string;
+  tags: string[] | null;
+}
+
+export interface ItemTagsResponse {
+  success: boolean;
+}
+
+export interface TagResponse {
+  guid: string;
+  name: string | null;
+}
+
+export interface GetAllTagsResponse {
+  tags: TagResponse[] | null;
+}
+
+export interface GetAllTagNamesResponse {
+  tags: string[] | null;
+}
