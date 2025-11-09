@@ -191,7 +191,7 @@ const OrdersList: React.FC = () => {
   const { data: rawOrders = [], isLoading, error } = useQuery({
     queryKey: ['orders'],
     queryFn: async () => {
-      const response = await apiClient.get('/Order/User/b85951de-169f-4b96-83fd-346740877dd5');
+      const response = await apiClient.get('/api/users/b85951de-169f-4b96-83fd-346740877dd5/orders');
       return response.data;
     },
     retry: 2,
@@ -250,7 +250,7 @@ const OrdersList: React.FC = () => {
         tag: "order-checkout"
       };
       
-      return apiClient.post('/Order', payload);
+      return apiClient.post('/api/Orders', payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -265,7 +265,7 @@ const OrdersList: React.FC = () => {
 
   const cancelMutation = useMutation({
     mutationFn: (id: number | string) => {
-      return apiClient.put(`/Order/${id}/Status`, {
+      return apiClient.put(`/api/Orders/${id}/status`, {
         status: 'Cancelled',
         tag: 'order-cancellation'
       });
@@ -324,7 +324,7 @@ const OrdersList: React.FC = () => {
           Failed to load orders from API: {error instanceof Error ? error.message : 'Unknown error'}
         </Alert>
         <Typography variant="body2" sx={{ mt: 2 }}>
-          API Endpoint: https://dev-creamat.fds-1.com/gateway/api/Order/User/b85951de-169f-4b96-83fd-346740877dd5
+          API Endpoint: https://dev-creamat.fds-1.com/order/api/users/b85951de-169f-4b96-83fd-346740877dd5/orders
         </Typography>
       </Container>
     );
