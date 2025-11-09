@@ -127,12 +127,9 @@ module.exports = {
     }),
     // Define environment variables
     new webpack.DefinePlugin({
-      'process.env': JSON.stringify({
-        NODE_ENV: process.env.NODE_ENV || 'development',
-        REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'https://localhost:44355'
-      }),
-      // For direct access in code
-      'API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || 'https://localhost:44355')
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000'),
+      'API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || 'http://localhost:8000')
     }),
   ],
 };
