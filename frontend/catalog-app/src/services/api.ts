@@ -43,9 +43,6 @@ const apiClient = axios.create({
   timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization, X-Request-With',
   },
   // For browser environments, we can't use Node.js https module
   // We'll handle SSL certificate validation through the browser
@@ -56,9 +53,7 @@ const cdnApiClient = axios.create({
   baseURL: CDN_API_URL,
   timeout: API_TIMEOUT,
   headers: {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization, X-Request-With',
+    'Content-Type': 'application/json',
   },
 });
 
