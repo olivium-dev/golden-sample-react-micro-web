@@ -96,12 +96,10 @@ module.exports = {
       template: './public/index.html',
       favicon: './public/favicon.ico',
     }),
-    // Define process.env for browser
+    // Define environment variables for browser
     new webpack.DefinePlugin({
-      'process.env': JSON.stringify({
-        NODE_ENV: process.env.NODE_ENV || 'development',
-        REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000'
-      })
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000')
     }),
   ],
 };
