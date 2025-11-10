@@ -39,6 +39,10 @@ export { default as LoginPage } from './components/LoginPage';
 export { default as UserMenu } from './components/UserMenu';
 export { default as apiClient } from './api/apiClient';
 
+// Firebase exports
+export * from './auth/firebaseConfig';
+export * from './auth/firebaseTypes';
+
 // Re-export commonly used MUI components for convenience
 export {
   Box,

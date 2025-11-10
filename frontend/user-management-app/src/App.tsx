@@ -32,7 +32,8 @@ import {
 import axios from 'axios';
 import { ErrorCapture } from '../../shared-ui-lib/src';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+// Use relative path - BFF server will proxy to backend
+const API_BASE_URL = '/api/users';
 
 interface User {
   id: number;
@@ -76,10 +77,14 @@ function App() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/users`);
-      setUsers(response.data);
+      const response = await axios.get(API_BASE_URL);
+      // Handle different response formats from backend
+      let usersList = Array.isArray(response.data) ? response.data : response.data?.users || [];
+      setUsers(usersList);
     } catch (error) {
-      ErrorCapture.captureApiError(error, `${API_BASE_URL}/users`, 'GET');
+      // If API fails, set empty array to prevent .filter() error
+      setUsers([]);
+      ErrorCapture.captureApiError(error, API_BASE_URL, 'GET');
       showSnackbar('Error fetching users', 'error');
     } finally {
       setLoading(false);
@@ -128,16 +133,16 @@ function App() {
   const handleSaveUser = async () => {
     try {
       if (editingUser) {
-        await axios.put(`${API_BASE_URL}/users/${editingUser.id}`, formData);
+        await axios.put(`${API_BASE_URL}/${editingUser.id}`, formData);
         showSnackbar('User updated successfully', 'success');
       } else {
-        await axios.post(`${API_BASE_URL}/users`, formData);
+        await axios.post(API_BASE_URL, formData);
         showSnackbar('User created successfully', 'success');
       }
       fetchUsers();
       handleCloseDialog();
     } catch (error) {
-      ErrorCapture.captureApiError(error, `${API_BASE_URL}/users`, editingUser ? 'PUT' : 'POST');
+      ErrorCapture.captureApiError(error, API_BASE_URL, editingUser ? 'PUT' : 'POST');
       showSnackbar('Error saving user', 'error');
     }
   };
@@ -145,11 +150,11 @@ function App() {
   const handleDeleteUser = async (userId: number) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await axios.delete(`${API_BASE_URL}/users/${userId}`);
+        await axios.delete(`${API_BASE_URL}/${userId}`);
         showSnackbar('User deleted successfully', 'success');
         fetchUsers();
       } catch (error) {
-        ErrorCapture.captureApiError(error, `${API_BASE_URL}/users/${userId}`, 'DELETE');
+        ErrorCapture.captureApiError(error, `${API_BASE_URL}/${userId}`, 'DELETE');
         showSnackbar('Error deleting user', 'error');
       }
     }
@@ -210,12 +215,12 @@ function App() {
     },
   ];
 
-  const filteredUsers = users.filter(
+  const filteredUsers = Array.isArray(users) ? users.filter(
     (user) =>
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) : [];
 
   return (
     <Container maxWidth="xl">

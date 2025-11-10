@@ -98,8 +98,10 @@ module.exports = {
     }),
     // Define environment variables for browser
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000')
+      'process.env': JSON.stringify({
+        NODE_ENV: process.env.NODE_ENV || 'development',
+        REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000'
+      })
     }),
   ],
 };

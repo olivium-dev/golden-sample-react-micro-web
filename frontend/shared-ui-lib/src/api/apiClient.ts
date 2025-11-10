@@ -3,11 +3,12 @@
  */
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Use empty base URL for relative paths - container app webpack proxy will route to BFF servers
+const API_URL = '';
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: API_URL, // Empty string for relative paths
   headers: {
     'Content-Type': 'application/json',
   },
@@ -48,7 +49,7 @@ apiClient.interceptors.response.use(
         }
 
         // Try to refresh the token
-        const response = await axios.post(`${API_URL}/api/auth/refresh`, {
+        const response = await axios.post('/api/users/refresh', {
           refresh_token: refreshToken,
         });
 

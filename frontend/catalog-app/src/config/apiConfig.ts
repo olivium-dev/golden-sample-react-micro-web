@@ -12,23 +12,23 @@ export interface ApiConfig {
 // Environment-specific configurations
 const configurations: Record<string, ApiConfig> = {
   development: {
-    baseUrl: 'https://dev-creamat.fds-1.com', 
-    catalogApi: 'https://dev-creamat.fds-1.com/catalog', 
-    cdnApi: 'https://dev-creamat.fds-1.com/cdn',
+    baseUrl: '', // Use relative paths - BFF server will proxy
+    catalogApi: '/api/catalog', // Relative path - BFF server will proxy
+    cdnApi: '/api/cdn', // Relative path - BFF server will proxy
     timeout: 30000, // 30 seconds
     retryAttempts: 3,
   },
   staging: {
-    baseUrl: 'https://dev-creamat.fds-1.com',
-    catalogApi: 'https://dev-creamat.fds-1.com/catalog',
-    cdnApi: 'https://dev-creamat.fds-1.com/cdn',
+    baseUrl: '',
+    catalogApi: '/api/catalog',
+    cdnApi: '/api/cdn',
     timeout: 30000,
     retryAttempts: 3,
   },
   production: {
-    baseUrl: 'https://dev-creamat.fds-1.com',
-    catalogApi: 'https://dev-creamat.fds-1.com/catalog',
-    cdnApi: 'https://dev-creamat.fds-1.com/cdn',
+    baseUrl: '',
+    catalogApi: '/api/catalog',
+    cdnApi: '/api/cdn',
     timeout: 30000,
     retryAttempts: 3,
   },

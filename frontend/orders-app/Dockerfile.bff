@@ -1,0 +1,69 @@
+# Multi-stage build for Orders BFF
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY frontend/shared-ui-lib/package*.json ./frontend/shared-ui-lib/
+COPY frontend/orders-app/package*.json ./frontend/orders-app/
+
+# Install dependencies for shared-ui-lib
+WORKDIR /app/frontend/shared-ui-lib
+RUN npm ci --legacy-peer-deps --production=false
+
+# Install dependencies for orders-app
+WORKDIR /app/frontend/orders-app
+RUN npm ci --legacy-peer-deps --production=false
+
+# Copy source code
+WORKDIR /app
+COPY frontend/shared-ui-lib ./frontend/shared-ui-lib
+COPY frontend/orders-app ./frontend/orders-app
+
+# Build the React application
+WORKDIR /app/frontend/orders-app
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy package files for BFF server dependencies
+COPY frontend/orders-app/package*.json ./
+
+# Install only production dependencies for BFF server
+RUN npm ci --only=production --legacy-peer-deps && \
+    npm cache clean --force
+
+# Copy built React app
+COPY --from=builder /app/frontend/orders-app/dist ./dist
+
+# Copy BFF server files
+COPY frontend/orders-app/server ./server
+
+# Create .env file template (will be overridden by docker-compose)
+RUN echo "NODE_ENV=production" > .env && \
+    echo "BFF_PORT=4005" >> .env && \
+    echo "FRONTEND_PORT=3005" >> .env
+
+# Change ownership to non-root user
+RUN chown -R nodejs:nodejs /app
+
+USER nodejs
+
+# Expose BFF port
+EXPOSE 4005
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:4005/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Start BFF server
+CMD ["node", "server/server.js"]
+

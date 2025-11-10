@@ -3,6 +3,15 @@
  */
 import apiClient from '../api/apiClient';
 import { User, LoginCredentials, TokenResponse } from './types';
+import { 
+  auth, 
+  googleProvider, 
+  signInWithPopup, 
+  signInWithEmailAndPassword as firebaseSignInWithEmail,
+  createUserWithEmailAndPassword as firebaseCreateUserWithEmail,
+  signOut as firebaseSignOut
+} from './firebaseConfig';
+import { SocialLoginResponse } from './firebaseTypes';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -52,11 +61,12 @@ class AuthService {
   }
 
   /**
-   * Login user with credentials
+   * Login user with credentials (traditional email/password)
    */
   async login(credentials: LoginCredentials): Promise<TokenResponse> {
     try {
-      const response = await apiClient.post<TokenResponse>('/auth/login', credentials);
+      // Use the BFF endpoint for authentication
+      const response = await apiClient.post<TokenResponse>('/api/users/login', credentials);
       const tokens = response.data;
 
       // Store tokens
@@ -75,6 +85,204 @@ class AuthService {
   }
 
   /**
+   * Login with Google using Firebase
+   */
+  async loginWithGoogle(): Promise<TokenResponse> {
+    try {
+      console.log('🔐 Starting Google Sign-In...');
+      
+      // 1. Sign in with Google using Firebase
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      console.log('✅ Firebase Google Sign-In successful:', user.email);
+      
+      // 2. Get Firebase ID token
+      const idToken = await user.getIdToken();
+      
+      console.log('🎫 Firebase ID token obtained');
+      
+      // 3. Send Firebase token to BFF for verification
+      const response = await apiClient.post<SocialLoginResponse>('/api/users/social', {
+        socialId: user.uid,
+        socialToken: idToken,
+        socialPlatform: 'google'
+      });
+      
+      console.log('✅ Backend authentication successful');
+      
+      // 4. Map response to TokenResponse format
+      const tokens: TokenResponse = {
+        access_token: response.data.authToken,
+        refresh_token: response.data.refreshToken,
+      };
+
+      // Store tokens
+      this.storeTokens(tokens);
+
+      // Schedule automatic token refresh
+      this.scheduleTokenRefresh();
+
+      // Broadcast login to other tabs
+      this.broadcastMessage({ type: 'LOGIN', tokens });
+
+      return tokens;
+    } catch (error: any) {
+      console.error('❌ Google Sign-In error:', error);
+      
+      // Handle Firebase errors
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/popup-closed-by-user':
+            throw new Error('Sign-in cancelled');
+          case 'auth/popup-blocked':
+            throw new Error('Popup blocked by browser. Please allow popups for this site.');
+          case 'auth/cancelled-popup-request':
+            throw new Error('Sign-in cancelled');
+          default:
+            throw new Error(error.message || 'Google Sign-In failed');
+        }
+      }
+      
+      throw new Error(error.response?.data?.message || error.message || 'Google Sign-In failed');
+    }
+  }
+
+  /**
+   * Login with Email/Password using Firebase
+   */
+  async loginWithEmailPassword(email: string, password: string): Promise<TokenResponse> {
+    try {
+      console.log('🔐 Starting Firebase Email/Password Sign-In...');
+      
+      // 1. Sign in with Firebase
+      const userCredential = await firebaseSignInWithEmail(auth, email, password);
+      const user = userCredential.user;
+      
+      console.log('✅ Firebase Email Sign-In successful:', user.email);
+      
+      // 2. Get Firebase ID token
+      const idToken = await user.getIdToken();
+      
+      console.log('🎫 Firebase ID token obtained');
+      
+      // 3. Send Firebase token to BFF for verification
+      const response = await apiClient.post<SocialLoginResponse>('/api/users/social', {
+        socialId: user.uid,
+        socialToken: idToken,
+        socialPlatform: 'email'
+      });
+      
+      console.log('✅ Backend authentication successful');
+      
+      // 4. Map response to TokenResponse format
+      const tokens: TokenResponse = {
+        access_token: response.data.authToken,
+        refresh_token: response.data.refreshToken,
+      };
+
+      // Store tokens
+      this.storeTokens(tokens);
+
+      // Schedule automatic token refresh
+      this.scheduleTokenRefresh();
+
+      // Broadcast login to other tabs
+      this.broadcastMessage({ type: 'LOGIN', tokens });
+
+      return tokens;
+    } catch (error: any) {
+      console.error('❌ Email/Password Sign-In error:', error);
+      
+      // Handle Firebase errors
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/user-not-found':
+            throw new Error('User not found. Please register first.');
+          case 'auth/wrong-password':
+            throw new Error('Incorrect password');
+          case 'auth/invalid-email':
+            throw new Error('Invalid email address');
+          case 'auth/user-disabled':
+            throw new Error('Account has been disabled');
+          case 'auth/too-many-requests':
+            throw new Error('Too many failed attempts. Please try again later.');
+          default:
+            throw new Error(error.message || 'Email/Password Sign-In failed');
+        }
+      }
+      
+      throw new Error(error.response?.data?.message || error.message || 'Email/Password Sign-In failed');
+    }
+  }
+
+  /**
+   * Register with Email/Password using Firebase
+   */
+  async registerWithEmailPassword(email: string, password: string, username?: string): Promise<TokenResponse> {
+    try {
+      console.log('📝 Starting Firebase Email/Password Registration...');
+      
+      // 1. Create user with Firebase
+      const userCredential = await firebaseCreateUserWithEmail(auth, email, password);
+      const user = userCredential.user;
+      
+      console.log('✅ Firebase user created:', user.email);
+      
+      // 2. Get Firebase ID token
+      const idToken = await user.getIdToken();
+      
+      console.log('🎫 Firebase ID token obtained');
+      
+      // 3. Send Firebase token to BFF for verification and user creation
+      const response = await apiClient.post<SocialLoginResponse>('/api/users/social', {
+        socialId: user.uid,
+        socialToken: idToken,
+        socialPlatform: 'email'
+      });
+      
+      console.log('✅ Backend user registration successful');
+      
+      // 4. Map response to TokenResponse format
+      const tokens: TokenResponse = {
+        access_token: response.data.authToken,
+        refresh_token: response.data.refreshToken,
+      };
+
+      // Store tokens
+      this.storeTokens(tokens);
+
+      // Schedule automatic token refresh
+      this.scheduleTokenRefresh();
+
+      // Broadcast login to other tabs
+      this.broadcastMessage({ type: 'LOGIN', tokens });
+
+      return tokens;
+    } catch (error: any) {
+      console.error('❌ Email/Password Registration error:', error);
+      
+      // Handle Firebase errors
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            throw new Error('Email already registered. Please login instead.');
+          case 'auth/invalid-email':
+            throw new Error('Invalid email address');
+          case 'auth/weak-password':
+            throw new Error('Password is too weak. Use at least 6 characters.');
+          case 'auth/operation-not-allowed':
+            throw new Error('Email/Password registration is not enabled');
+          default:
+            throw new Error(error.message || 'Registration failed');
+        }
+      }
+      
+      throw new Error(error.response?.data?.message || error.message || 'Registration failed');
+    }
+  }
+
+  /**
    * Logout user
    */
   async logout(): Promise<void> {
@@ -82,7 +290,7 @@ class AuthService {
       const refreshToken = localStorage.getItem('refresh_token');
       
       if (refreshToken) {
-        await apiClient.post('/auth/logout', {
+        await apiClient.post('/api/users/logout', {
           refresh_token: refreshToken,
         });
       }
@@ -102,7 +310,7 @@ class AuthService {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      const response = await apiClient.get<User>('/auth/me');
+      const response = await apiClient.get<User>('/api/users/me');
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Failed to get user info');
@@ -120,7 +328,7 @@ class AuthService {
     }
 
     try {
-      const response = await apiClient.post<TokenResponse>('/auth/refresh', {
+      const response = await apiClient.post<TokenResponse>('/api/users/refresh', {
         refresh_token: refreshToken,
       });
 
