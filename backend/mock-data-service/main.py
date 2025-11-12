@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import users, data, analytics, settings, errors, auth, orders
+from routers import users, data, analytics, settings, errors, auth, orders, parcelets
 from dotenv import load_dotenv
 from config.settings import settings as app_settings
 
@@ -31,6 +31,7 @@ app.include_router(data.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(settings.router, prefix="/api")
 app.include_router(orders.router, prefix="/api")
+app.include_router(parcelets.router, prefix="/api")
 app.include_router(errors.router)
 
 @app.get("/")

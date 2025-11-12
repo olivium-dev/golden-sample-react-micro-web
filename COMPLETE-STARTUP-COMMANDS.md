@@ -1,16 +1,16 @@
 # 🚀 COMPLETE STARTUP COMMANDS
 
-## ✅ **ORDERS NOW INTEGRATED IN DASHBOARD!**
+## ✅ **ORDERS AND DELIVERY NOW INTEGRATED IN DASHBOARD!**
 
-Orders is now part of the main micro-frontend platform with Module Federation.
+Orders and Delivery are now part of the main micro-frontend platform with Module Federation.
 
 ---
 
-## 📋 **START ALL SERVICES (7 Terminals)**
+## 📋 **START ALL SERVICES (8 Terminals)**
 
 Open VS Code in: `C:\Users\y2005\Desktop\my-main\golden-sample-react-micro-web`
 
-Then open 7 terminals and run:
+Then open 8 terminals and run:
 
 ---
 
@@ -74,9 +74,19 @@ npx webpack serve
 
 ---
 
-### **Terminal 7 - Orders (NEW!):**
+### **Terminal 7 - Orders:**
 ```bash
 cd frontend\orders-app
+npx webpack serve
+```
+
+**Wait for:** `webpack compiled successfully`
+
+---
+
+### **Terminal 8 - Delivery (NEW!):**
+```bash
+cd frontend\delivery-app
 npx webpack serve
 ```
 
@@ -105,6 +115,12 @@ Then open: **http://localhost:30002**
 - Delete orders
 - View order details
 
+✅ **Delivery is now in the sidebar!**
+- Click "Delivery" in the left sidebar
+- Track and manage parcel deliveries
+- View delivery details
+- Update delivery status
+
 ✅ **Uses same backend as other apps**
 - No need for CORS-disabled Chrome
 - Uses standard authentication
@@ -127,13 +143,14 @@ Then open: **http://localhost:30002**
 | Data Grid | 30004 | http://localhost:30004 |
 | Analytics | 30005 | http://localhost:30005 |
 | Settings | 30006 | http://localhost:30006 |
-| **Orders** 🆕 | **30007** | **http://localhost:30007** |
+| Orders | 30007 | http://localhost:30007 |
+| **Delivery** 🆕 | **30008** | **http://localhost:30008** |
 
 ---
 
 ## 🛑 **To Stop:**
 
-Press **Ctrl+C** in each of the 7 terminals
+Press **Ctrl+C** in each of the 8 terminals
 
 ---
 
@@ -142,15 +159,15 @@ Press **Ctrl+C** in each of the 7 terminals
 ✓ All terminals show "webpack compiled successfully"
 ✓ No red errors in browser console (F12)
 ✓ Can log in with demo credentials
-✓ Can see **7 menu items** in sidebar (including Orders!)
-✓ Orders loads without errors
-✓ Can create/delete orders
+✓ Can see **8 menu items** in sidebar (including Orders and Delivery!)
+✓ Orders and Delivery load without errors
+✓ Can interact with all features
 
 ---
 
 ## 🎊 **You're All Set!**
 
-Navigate through all modules including the new Orders section! 🚀
+Navigate through all modules including the new Orders and Delivery sections! 🚀
 
 
 

@@ -32,6 +32,7 @@ import {
   BugReport as BugReportIcon,
   Logout as LogoutIcon,
   ShoppingCart as ShoppingCartIcon,
+  LocalShipping as LocalShippingIcon,
 } from '@mui/icons-material';
 import { 
   ErrorBoundary, 
@@ -50,6 +51,7 @@ const DataGrid = React.lazy(() => import('dataApp/DataGrid'));
 const Analytics = React.lazy(() => import('analyticsApp/Analytics'));
 const Settings = React.lazy(() => import('settingsApp/Settings'));
 const Orders = React.lazy(() => import('ordersApp/Orders'));
+const Delivery = React.lazy(() => import('deliveryApp/Delivery'));
 
 interface MenuItem {
   id: string;
@@ -94,6 +96,13 @@ const menuItems: MenuItem[] = [
     label: 'Orders',
     color: '#9c27b0',
     description: 'Manage orders and view order history',
+  },
+  {
+    id: 'delivery',
+    icon: <LocalShippingIcon />,
+    label: 'Delivery',
+    color: '#2196f3',
+    description: 'Track and manage parcel deliveries',
   },
   {
     id: 'settings',
@@ -309,6 +318,18 @@ function App() {
                     }}
                   >
                     <Orders />
+                  </ErrorBoundary>
+                );
+              case 'delivery':
+                return (
+                  <ErrorBoundary 
+                    componentName="Delivery App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('deliveryApp/Delivery', error);
+                    }}
+                  >
+                    <Delivery />
                   </ErrorBoundary>
                 );
               default:
