@@ -78,10 +78,10 @@ module.exports = {
         settingsApp: 'settingsApp@http://localhost:3004/remoteEntry.js',
         ordersApp: isDockerMode
           ? 'ordersApp@http://orders-bff:4005/remoteEntry.js'
-          : 'ordersApp@http://localhost:3005/remoteEntry.js',
+          : 'ordersApp@http://localhost:3006/remoteEntry.js',
         catalogApp: isDockerMode
           ? 'catalogApp@http://catalog-bff:4006/remoteEntry.js'
-          : 'catalogApp@http://localhost:3006/remoteEntry.js',
+          : 'catalogApp@http://localhost:3005/remoteEntry.js',
       },
       shared: {
         react: {

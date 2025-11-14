@@ -7,7 +7,7 @@ module.exports = {
   entry: './src/index.tsx',
   mode: 'development',
   devServer: {
-    port: 3006, // Using port 3006 for catalog-app
+    port: 3005, // Using port 3005 for catalog-app
     historyApiFallback: true,
     hot: true,
     headers: {
@@ -67,7 +67,7 @@ module.exports = {
       name: 'catalogApp',
       filename: 'remoteEntry.js',
       exposes: {
-        './Catalog': './src/Catalog.tsx',
+        './Catalog': './src/App.tsx',
       },
       remotes: {
         sharedUI: 'container@http://localhost:3000/remoteEntry.js',
@@ -77,43 +77,53 @@ module.exports = {
           singleton: true,
           requiredVersion: "18.2.0",
           strictVersion: false,
+          eager: false,
         },
         'react-dom': {
           singleton: true,
           requiredVersion: "18.2.0",
           strictVersion: false,
+          eager: false,
         },
         'react-router-dom': {
           singleton: true,
           requiredVersion: '^6.21.0',
+          eager: false,
         },
         '@mui/material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: false,
         },
         '@mui/icons-material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: false,
         },
         '@mui/x-data-grid': {
           singleton: true,
           requiredVersion: '^6.18.0',
+          eager: false,
         },
         '@emotion/react': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: false,
         },
         '@emotion/styled': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: false,
         },
         axios: {
           singleton: true,
           requiredVersion: '^1.6.0',
+          eager: false,
         },
         uuid: {
           singleton: true,
           requiredVersion: '^9.0.1',
+          eager: false,
         },
       },
     }),
@@ -127,9 +137,12 @@ module.exports = {
     }),
     // Define environment variables
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000'),
-      'API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || 'http://localhost:8000')
+      'process.env': JSON.stringify({
+        NODE_ENV: process.env.NODE_ENV || 'development',
+        REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'https://localhost:44355'
+      }),
+      // For direct access in code
+      'API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || 'https://localhost:44355')
     }),
   ],
 };

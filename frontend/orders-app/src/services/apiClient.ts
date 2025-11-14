@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Use relative path - BFF server will proxy to backend
-const API_BASE_URL = '/api/orders';
+// Call gateway API directly
+const API_BASE_URL = 'https://dev-creamat.fds-1.com/gateway/api/orders';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -14,6 +14,11 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
+    // Add Bearer token authorization
+    const token = localStorage.getItem('access_token');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {

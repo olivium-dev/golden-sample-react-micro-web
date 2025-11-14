@@ -22,12 +22,15 @@ import {
   Search as SearchIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  Link as LinkIcon,
+  LinkOff as UnlinkIcon,
 } from '@mui/icons-material';
 import { itemApi, tagApi, categoryApi } from '../services/api';
 import { GetItemForCmsResponse, ItemDetailsForCms, ItemResponse, SearchItemsRequest } from '../types/item';
-import { CategoryResponse } from '../types/category';
+import { CategoryCmsResponse } from '../types/category';
 import { AdditionalParamsService } from '../services/additionalParamsService';
 import ItemDialog from './ItemDialog';
+import LinkItemDialog from './LinkItemDialog';
 
 interface ItemWithDetails extends ItemResponse {
   details?: any[];
@@ -43,6 +46,8 @@ const ItemList: React.FC = () => {
   });
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [currentItem, setCurrentItem] = useState<GetItemForCmsResponse | null>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState<boolean>(false);
+  const [itemToLink, setItemToLink] = useState<ItemResponse | null>(null);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -62,7 +67,7 @@ const ItemList: React.FC = () => {
   
   // Available options for filters
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<CategoryResponse[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<CategoryCmsResponse[]>([]);
 
   // Load items on component mount and when pagination or search changes
   useEffect(() => {
@@ -225,6 +230,51 @@ const ItemList: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Handle opening link dialog
+  const handleOpenLinkDialog = (item: ItemResponse) => {
+    setItemToLink(item);
+    setLinkDialogOpen(true);
+  };
+
+  // Handle closing link dialog
+  const handleCloseLinkDialog = () => {
+    setLinkDialogOpen(false);
+    setItemToLink(null);
+  };
+
+  // Handle successful link operation
+  const handleLinkSuccess = (result: any) => {
+    showSnackbar(
+      `Items linked successfully! Parent ID: ${result.parentId}${result.parentCreated ? ' (new parent created)' : ''}`,
+      'success'
+    );
+    fetchItems(); // Refresh the items list
+  };
+
+  // Handle unlink operation
+  const handleUnlinkItem = async (item: ItemResponse) => {
+    if (!item.parent) {
+      showSnackbar('Item has no parent to unlink from', 'error');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to unlink "${item.name || item.guid}" from its parent?`;
+    if (window.confirm(confirmMessage)) {
+      try {
+        const response = await itemApi.unlinkItem({ itemId: item.guid });
+        if (response.success) {
+          showSnackbar('Item unlinked successfully', 'success');
+          fetchItems(); // Refresh the items list
+        } else {
+          showSnackbar('Failed to unlink item', 'error');
+        }
+      } catch (error: any) {
+        console.error('Error unlinking item:', error);
+        showSnackbar(error.message || 'Failed to unlink item', 'error');
+      }
+    }
+  };
+
   // Define columns for the data grid
   const columns: GridColDef[] = [
         { 
@@ -233,6 +283,29 @@ const ItemList: React.FC = () => {
       width: 200,
       valueGetter: (params) => {
         return params.row.name || 'N/A';
+      }
+    },
+    {
+      field: 'parent',
+      headerName: 'Parent',
+      width: 120,
+      renderCell: (params) => {
+        const parentId = params.row.parent;
+        return parentId ? (
+          <Chip 
+            label="Has Parent" 
+            size="small" 
+            color="success"
+            title={`Parent ID: ${parentId}`}
+          />
+        ) : (
+          <Chip 
+            label="Root Item" 
+            size="small" 
+            color="default"
+            title="No parent - this is a root item"
+          />
+        );
       }
     },
     // Dynamic additional parameter columns
@@ -256,7 +329,6 @@ const ItemList: React.FC = () => {
           <Chip 
             label="📷" 
             size="small" 
-            variant="outlined" 
             color="primary"
             title={imageName}
           />
@@ -270,10 +342,10 @@ const ItemList: React.FC = () => {
       renderCell: (params) => (
         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
           {params.row.tags?.slice(0, 2).map((tag: string, index: number) => (
-            <Chip key={index} label={tag} size="small" variant="outlined" />
+            <Chip key={index} label={tag} size="small" color="default" />
           ))}
           {params.row.tags?.length > 2 && (
-            <Chip label={`+${params.row.tags.length - 2}`} size="small" variant="outlined" />
+            <Chip label={`+${params.row.tags.length - 2}`} size="small" color="default" />
           )}
         </Box>
       ),
@@ -281,26 +353,54 @@ const ItemList: React.FC = () => {
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 120,
+      width: 180,
       sortable: false,
-      renderCell: (params) => (
-        <Box>
-          <IconButton
-            size="small"
-            onClick={() => handleOpenDialog(params.row as ItemResponse)}
-            color="primary"
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => handleDeleteItem((params.row as ItemResponse).guid)}
-            color="error"
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      ),
+      renderCell: (params) => {
+        const item = params.row as ItemResponse;
+        const hasParent = item.parent && item.parent !== null;
+        
+        return (
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <IconButton
+              size="small"
+              onClick={() => handleOpenDialog(item)}
+              color="primary"
+              title="Edit item"
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+            
+            {hasParent ? (
+              <IconButton
+                size="small"
+                onClick={() => handleUnlinkItem(item)}
+                color="warning"
+                title="Unlink from parent"
+              >
+                <UnlinkIcon fontSize="small" />
+              </IconButton>
+            ) : (
+              <IconButton
+                size="small"
+                onClick={() => handleOpenLinkDialog(item)}
+                color="info"
+                title="Link with another item"
+              >
+                <LinkIcon fontSize="small" />
+              </IconButton>
+            )}
+            
+            <IconButton
+              size="small"
+              onClick={() => handleDeleteItem(item.guid)}
+              color="error"
+              title="Delete item"
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        );
+      },
     },
   ];
 
@@ -420,7 +520,7 @@ const ItemList: React.FC = () => {
         </Collapse>
       </Box>
 
-      <Box sx={{ height: 500, width: '100%' }}>
+      <Box sx={{ height: 600, width: '100%' }}>
         <DataGrid
           rows={items}
           columns={columns}
@@ -428,9 +528,13 @@ const ItemList: React.FC = () => {
           loading={loading}
           paginationMode="server"
           rowCount={totalCount}
-          pageSizeOptions={[5, 10, 25, 50]}
+          pageSizeOptions={[10, 25, 50, 100]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 25 } },
+          }}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
+          checkboxSelection
           disableRowSelectionOnClick
           sx={{
             '& .MuiDataGrid-cell:hover': {
@@ -446,6 +550,14 @@ const ItemList: React.FC = () => {
         item={currentItem}
         onClose={handleCloseDialog}
         onSave={handleSaveItem}
+      />
+
+      {/* Link Item Dialog */}
+      <LinkItemDialog
+        open={linkDialogOpen}
+        currentItem={itemToLink}
+        onClose={handleCloseLinkDialog}
+        onSuccess={handleLinkSuccess}
       />
 
       {/* Snackbar for notifications */}

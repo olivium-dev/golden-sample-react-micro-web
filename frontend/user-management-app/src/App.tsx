@@ -5,52 +5,21 @@ import {
   Typography,
   Button,
   TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Switch,
-  FormControlLabel,
   Snackbar,
   Alert,
-  IconButton,
   Chip,
   InputAdornment,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
   Search as SearchIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import axios from 'axios';
-import { ErrorCapture } from '../../shared-ui-lib/src';
-
-// Use relative path - BFF server will proxy to backend
-const API_BASE_URL = '/api/users';
-
-interface User {
-  id: number;
-  email: string;
-  username: string;
-  full_name: string;
-  role: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { User, fetchAllUsers, searchUsers } from './api';
 
 function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -62,32 +31,26 @@ function App() {
     severity: 'success',
   });
 
-  const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    full_name: '',
-    role: 'user',
-    is_active: true,
-  });
-
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
+    console.log('🔄 App: Starting to fetch users...');
     setLoading(true);
     try {
-      const response = await axios.get(API_BASE_URL);
-      // Handle different response formats from backend
-      let usersList = Array.isArray(response.data) ? response.data : response.data?.users || [];
-      setUsers(usersList);
-    } catch (error) {
+      const response = await fetchAllUsers({ skip: 0, limit: 50 });
+      console.log('✅ App: Received users response:', response);
+      setUsers(response.users);
+      console.log('✅ App: Users state updated with', response.users.length, 'users');
+    } catch (error: any) {
+      console.error('❌ App: Error fetching users:', error.message);
       // If API fails, set empty array to prevent .filter() error
       setUsers([]);
-      ErrorCapture.captureApiError(error, API_BASE_URL, 'GET');
-      showSnackbar('Error fetching users', 'error');
+      showSnackbar(`Error: ${error.message}`, 'error');
     } finally {
       setLoading(false);
+      console.log('✅ App: Loading state set to false');
     }
   };
 
@@ -102,125 +65,87 @@ function App() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleOpenDialog = (user?: User) => {
-    if (user) {
-      setEditingUser(user);
-      setFormData({
-        email: user.email,
-        username: user.username,
-        full_name: user.full_name,
-        role: user.role,
-        is_active: user.is_active,
-      });
-    } else {
-      setEditingUser(null);
-      setFormData({
-        email: '',
-        username: '',
-        full_name: '',
-        role: 'user',
-        is_active: true,
-      });
-    }
-    setDialogOpen(true);
-  };
-
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-    setEditingUser(null);
-  };
-
-  const handleSaveUser = async () => {
-    try {
-      if (editingUser) {
-        await axios.put(`${API_BASE_URL}/${editingUser.id}`, formData);
-        showSnackbar('User updated successfully', 'success');
-      } else {
-        await axios.post(API_BASE_URL, formData);
-        showSnackbar('User created successfully', 'success');
-      }
-      fetchUsers();
-      handleCloseDialog();
-    } catch (error) {
-      ErrorCapture.captureApiError(error, API_BASE_URL, editingUser ? 'PUT' : 'POST');
-      showSnackbar('Error saving user', 'error');
-    }
-  };
-
-  const handleDeleteUser = async (userId: number) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await axios.delete(`${API_BASE_URL}/${userId}`);
-        showSnackbar('User deleted successfully', 'success');
-        fetchUsers();
-      } catch (error) {
-        ErrorCapture.captureApiError(error, `${API_BASE_URL}/${userId}`, 'DELETE');
-        showSnackbar('Error deleting user', 'error');
-      }
-    }
-  };
 
   const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 70 },
+    { field: 'userId', headerName: 'User ID', width: 200 },
     { field: 'username', headerName: 'Username', width: 150 },
-    { field: 'full_name', headerName: 'Full Name', width: 200 },
-    { field: 'email', headerName: 'Email', width: 220 },
+    { field: 'email', headerName: 'Email', width: 250 },
     {
-      field: 'role',
-      headerName: 'Role',
+      field: 'profilePic',
+      headerName: 'Profile Picture',
       width: 120,
       renderCell: (params) => (
-        <Chip
-          label={params.value}
-          color={params.value === 'admin' ? 'error' : 'default'}
-          size="small"
-        />
-      ),
-    },
-    {
-      field: 'is_active',
-      headerName: 'Status',
-      width: 100,
-      renderCell: (params) => (
-        <Chip
-          label={params.value ? 'Active' : 'Inactive'}
-          color={params.value ? 'success' : 'default'}
-          size="small"
-        />
-      ),
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 120,
-      sortable: false,
-      renderCell: (params) => (
-        <Box>
-          <IconButton
+        params.value ? (
+          <Chip
+            label="📷"
             size="small"
-            onClick={() => handleOpenDialog(params.row as User)}
             color="primary"
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton
+            title="Has profile picture"
+          />
+        ) : (
+          <Chip
+            label="No Image"
             size="small"
-            onClick={() => handleDeleteUser(params.row.id)}
-            color="error"
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
+            color="default"
+          />
+        )
+      ),
+    },
+    {
+      field: 'dateOfBirth',
+      headerName: 'Date of Birth',
+      width: 130,
+      renderCell: (params) => (
+        params.value ? (
+          <span>{new Date(params.value).toLocaleDateString()}</span>
+        ) : (
+          <span style={{ color: '#999' }}>Not provided</span>
+        )
+      ),
+    },
+    {
+      field: 'createdDate',
+      headerName: 'Created Date',
+      width: 150,
+      renderCell: (params) => (
+        <span>{new Date(params.value).toLocaleDateString()}</span>
       ),
     },
   ];
 
-  const filteredUsers = Array.isArray(users) ? users.filter(
-    (user) =>
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  // Search users with debouncing
+  useEffect(() => {
+    const searchUsersDebounced = async () => {
+      if (!searchQuery.trim()) {
+        // If no search query, just fetch all users
+        fetchUsers();
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const searchResults = await searchUsers(searchQuery, { skip: 0, limit: 50 });
+        setUsers(searchResults);
+      } catch (error) {
+        setUsers([]);
+        showSnackbar('Error searching users', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Debounce search to avoid too many API calls
+    const timeoutId = setTimeout(searchUsersDebounced, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Debug logging
+  console.log('🔍 App render - Current state:', {
+    usersCount: users.length,
+    loading,
+    searchQuery,
+    hasUsers: users.length > 0
+  });
 
   return (
     <Container maxWidth="xl">
@@ -235,24 +160,12 @@ function App() {
         >
           <Box>
             <Typography variant="h4" gutterBottom sx={{ color: '#61dafb' }}>
-              👥 User Management
+              👥 User Management - View Only
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Manage users, roles, and permissions
+              View user profiles and information (Read-only mode)
             </Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{
-              backgroundColor: '#61dafb',
-              color: '#000',
-              '&:hover': { backgroundColor: '#4fb3d4' },
-            }}
-          >
-            Add User
-          </Button>
         </Box>
 
         <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
@@ -280,8 +193,9 @@ function App() {
 
         <Box sx={{ height: 600, width: '100%' }}>
           <DataGrid
-            rows={filteredUsers}
+            rows={users}
             columns={columns}
+            getRowId={(row) => row.userId}
             loading={loading}
             pageSizeOptions={[10, 25, 50, 100]}
             initialState={{
@@ -298,84 +212,6 @@ function App() {
         </Box>
       </Box>
 
-      {/* User Dialog */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingUser ? 'Edit User' : 'Create New User'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              required
-            />
-            <TextField
-              fullWidth
-              label="Username"
-              value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
-              required
-            />
-            <TextField
-              fullWidth
-              label="Full Name"
-              value={formData.full_name}
-              onChange={(e) =>
-                setFormData({ ...formData, full_name: e.target.value })
-              }
-              required
-            />
-            <FormControl fullWidth>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={formData.role}
-                label="Role"
-                onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value })
-                }
-              >
-                <MenuItem value="user">User</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="manager">Manager</MenuItem>
-                <MenuItem value="viewer">Viewer</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.is_active}
-                  onChange={(e) =>
-                    setFormData({ ...formData, is_active: e.target.checked })
-                  }
-                />
-              }
-              label="Active"
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            onClick={handleSaveUser}
-            variant="contained"
-            sx={{
-              backgroundColor: '#61dafb',
-              color: '#000',
-              '&:hover': { backgroundColor: '#4fb3d4' },
-            }}
-          >
-            {editingUser ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       {/* Snackbar */}
       <Snackbar

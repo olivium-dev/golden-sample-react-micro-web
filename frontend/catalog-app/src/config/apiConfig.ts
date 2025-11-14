@@ -12,23 +12,23 @@ export interface ApiConfig {
 // Environment-specific configurations
 const configurations: Record<string, ApiConfig> = {
   development: {
-    baseUrl: '', // Use relative paths - BFF server will proxy
-    catalogApi: '/api/catalog', // Relative path - BFF server will proxy
-    cdnApi: '/api/cdn', // Relative path - BFF server will proxy
+    baseUrl: 'https://dev-creamat.fds-1.com', //, 'https://localhost:44355'
+    catalogApi: 'https://dev-creamat.fds-1.com/gateway/api/Catalog', //https://localhost:7254/api/Catalog', //'https://localhost:44355', // ,
+    cdnApi: 'https://dev-creamat.fds-1.com/gateway', //'https://localhost:7126', //'https://dev-creamat.fds-1.com/cdn', CDN API endpoint
     timeout: 30000, // 30 seconds
     retryAttempts: 3,
   },
   staging: {
-    baseUrl: '',
-    catalogApi: '/api/catalog',
-    cdnApi: '/api/cdn',
+    baseUrl: 'https://dev-creamat.fds-1.com',
+    catalogApi: 'https://dev-creamat.fds-1.com/gateway/api/Catalog', //'https://localhost:44355', // ,
+    cdnApi: 'https://dev-creamat.fds-1.com/gateway', 
     timeout: 30000,
     retryAttempts: 3,
   },
   production: {
-    baseUrl: '',
-    catalogApi: '/api/catalog',
-    cdnApi: '/api/cdn',
+    baseUrl: 'https://dev-creamat.fds-1.com',
+    catalogApi: 'https://dev-creamat.fds-1.com/gateway/api/Catalog', //'https://localhost:44355', // ,
+    cdnApi: 'https://dev-creamat.fds-1.com/gateway', 
     timeout: 30000,
     retryAttempts: 3,
   },

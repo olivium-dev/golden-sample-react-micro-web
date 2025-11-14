@@ -8,7 +8,8 @@ import {
   Typography,
   Snackbar,
   Alert,
-  Avatar
+  Avatar,
+  Chip
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Image as ImageIcon } from '@mui/icons-material';
@@ -186,20 +187,12 @@ const CategoryList: React.FC = () => {
         return (
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
             {languages.map((lang, index) => (
-              <Typography
+              <Chip
                 key={index}
-                variant="caption"
-                sx={{
-                  bgcolor: '#e3f2fd',
-                  color: '#1976d2',
-                  px: 1,
-                  py: 0.25,
-                  borderRadius: 1,
-                  fontSize: '0.7rem'
-                }}
-              >
-                {lang?.toUpperCase()}
-              </Typography>
+                label={lang?.toUpperCase()}
+                size="small"
+                color="primary"
+              />
             ))}
           </Box>
         );
@@ -251,7 +244,7 @@ const CategoryList: React.FC = () => {
         </Button>
       </Box>
 
-      <Box sx={{ height: 500, width: '100%' }}>
+      <Box sx={{ height: 600, width: '100%' }}>
         <DataGrid
           rows={categories}
           columns={columns}
@@ -259,9 +252,13 @@ const CategoryList: React.FC = () => {
           loading={loading}
           paginationMode="server"
           rowCount={totalCount}
-          pageSizeOptions={[5, 10, 25, 50]}
+          pageSizeOptions={[10, 25, 50, 100]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 25 } },
+          }}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
+          checkboxSelection
           disableRowSelectionOnClick
           sx={{
             '& .MuiDataGrid-cell:hover': {

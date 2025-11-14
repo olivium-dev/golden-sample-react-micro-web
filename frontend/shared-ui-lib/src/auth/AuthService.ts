@@ -103,7 +103,7 @@ class AuthService {
       console.log('🎫 Firebase ID token obtained');
       
       // 3. Send Firebase token to BFF for verification
-      const response = await apiClient.post<SocialLoginResponse>('/api/users/social', {
+      const response = await apiClient.post<SocialLoginResponse>('/api/user/social', {
         socialId: user.uid,
         socialToken: idToken,
         socialPlatform: 'google'
@@ -167,7 +167,7 @@ class AuthService {
       console.log('🎫 Firebase ID token obtained');
       
       // 3. Send Firebase token to BFF for verification
-      const response = await apiClient.post<SocialLoginResponse>('/api/users/social', {
+      const response = await apiClient.post<SocialLoginResponse>('/api/user/social', {
         socialId: user.uid,
         socialToken: idToken,
         socialPlatform: 'email'
@@ -235,7 +235,7 @@ class AuthService {
       console.log('🎫 Firebase ID token obtained');
       
       // 3. Send Firebase token to BFF for verification and user creation
-      const response = await apiClient.post<SocialLoginResponse>('/api/users/social', {
+      const response = await apiClient.post<SocialLoginResponse>('/api/user/social', {
         socialId: user.uid,
         socialToken: idToken,
         socialPlatform: 'email'

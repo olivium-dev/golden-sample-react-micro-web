@@ -9,7 +9,7 @@ RUN npm install --legacy-peer-deps
 # Copy application code
 COPY . .
 
-EXPOSE 3001
+EXPOSE 3006
 
 CMD ["npx", "webpack", "serve", "--config", "webpack.minimal.js", "--host", "0.0.0.0"]
 

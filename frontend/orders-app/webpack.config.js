@@ -7,7 +7,7 @@ module.exports = {
   entry: './src/index.tsx',
   mode: 'development',
   devServer: {
-    port: 3005,
+    port: 3006, // Using port 3006 for orders-app
     historyApiFallback: true,
     hot: true,
     headers: {

@@ -61,34 +61,44 @@ module.exports = {
         react: {
           singleton: true,
           requiredVersion: "18.2.0",
-          strictVersion: false,          eager: true,        },
+          strictVersion: false,
+          eager: false,
+        },
         'react-dom': {
           singleton: true,
           requiredVersion: "18.2.0",
-          strictVersion: false,          eager: true,        },
+          strictVersion: false,
+          eager: false,
+        },
         '@mui/material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: false,
         },
         '@mui/icons-material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: false,
         },
         '@mui/x-charts': {
           singleton: true,
           requiredVersion: '^6.18.0',
+          eager: false,
         },
         '@emotion/react': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: false,
         },
         '@emotion/styled': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: false,
         },
         axios: {
           singleton: true,
           requiredVersion: '^1.6.0',
+          eager: false,
         },
       },
     }),

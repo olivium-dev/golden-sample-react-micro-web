@@ -112,3 +112,27 @@ export interface GetAllTagsResponse {
 export interface GetAllTagNamesResponse {
   tags: string[] | null;
 }
+
+// Link Items API interfaces
+export interface LinkItemsRequest {
+  firstItemId: string;
+  secondItemId: string;
+}
+
+export interface LinkItemsResponse {
+  firstItemId: string;
+  secondItemId: string;
+  parentId: string;
+  parentCreated: boolean;
+  success: boolean;
+}
+
+// Unlink Item API interfaces
+export interface UnlinkItemRequest {
+  itemId: string;
+}
+
+export interface UnlinkItemResponse {
+  itemId: string;
+  success: boolean;
+}

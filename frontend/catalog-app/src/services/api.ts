@@ -23,7 +23,11 @@ import {
   ItemTagsResponse,
   GetAllTagsResponse,
   GetAllTagNamesResponse,
-  GetItemForCmsResponse
+  GetItemForCmsResponse,
+  LinkItemsRequest,
+  LinkItemsResponse,
+  UnlinkItemRequest,
+  UnlinkItemResponse
 } from '../types/item';
 import {
   FileUploadResponse,
@@ -44,8 +48,8 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // For browser environments, we can't use Node.js https module
-  // We'll handle SSL certificate validation through the browser
+  // Enable credentials for cross-origin requests
+  withCredentials: false,
 });
 
 // Create separate axios instance for CDN API
@@ -55,19 +59,28 @@ const cdnApiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Enable credentials for cross-origin requests
+  withCredentials: false,
 });
 
-// Add auth token to requests for both API clients
-const addAuthToken = (config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem('token');
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Add auth token and service headers to requests for both API clients
+const addAuthHeaders = (config: InternalAxiosRequestConfig) => {
+  if (config.headers) {
+    // Add Bearer token authorization
+    //const token = localStorage.getItem('access_token');
+   // if (token) {
+   //   config.headers.Authorization = `Bearer ${token}`;
+  //  }
+    
+    // Add required service headers for catalog API
+    config.headers['X-Service-API-Key'] = 'catalog-service-api-key-2024-secure';
+    config.headers['X-Service-Token-Key'] = 'catalog-service-token-key-jkl012';
   }
   return config;
 };
 
-apiClient.interceptors.request.use(addAuthToken);
-cdnApiClient.interceptors.request.use(addAuthToken);
+apiClient.interceptors.request.use(addAuthHeaders);
+cdnApiClient.interceptors.request.use(addAuthHeaders);
 
 // Category API functions
 export const categoryApi = {
@@ -196,7 +209,7 @@ export const itemApi = {
 
   // Search items with pagination and filters
   searchItems: async (searchRequest: SearchItemsRequest): Promise<SearchItemsResponse> => {
-    const response = await apiClient.post('/Item/Search', searchRequest);
+    const response = await apiClient.post('/ItemExtended/Search', searchRequest);
     return response.data;
   },
 
@@ -216,6 +229,50 @@ export const itemApi = {
   removeItemTags: async (request: ItemTagsRequest): Promise<ItemTagsResponse> => {
     const response = await apiClient.post('/Item/Tag/Remove', request);
     return response.data;
+  },
+
+  // Link two items together
+  linkItems: async (request: LinkItemsRequest): Promise<LinkItemsResponse> => {
+    try {
+      console.log('Linking items with data:', JSON.stringify(request));
+      const response = await apiClient.post('/ItemExtended/link', request);
+      console.log('Link items response:', response);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error linking items:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+      throw error;
+    }
+  },
+
+  // Unlink an item from its parent
+  unlinkItem: async (request: UnlinkItemRequest): Promise<UnlinkItemResponse> => {
+    try {
+      console.log('Unlinking item with data:', JSON.stringify(request));
+      const response = await apiClient.post('/ItemExtended/unlink', request);
+      console.log('Unlink item response:', response);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error unlinking item:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+      throw error;
+    }
   },
 };
 
@@ -267,7 +324,7 @@ export const cdnApi = {
       };
 
       const response = await cdnApiClient.post<FileUploadResponse>(
-        '/api/ImageUpload/upload',
+        '/api/CDN/upload',
         formData,
         config
       );
@@ -289,8 +346,8 @@ export const cdnApi = {
   // Fetch an image by filename
   fetchImage: async (fileName: string, resolution?: string): Promise<Blob> => {
     const endpoint = resolution 
-      ? `/api/ImageUpload/fetch/${fileName}/res/${resolution}`
-      : `/api/ImageUpload/fetch/${fileName}`;
+      ? `/api/CDN/fetch/${fileName}/res/${resolution}`
+      : `/api/CDN/fetch/${fileName}`;
     
     const response = await cdnApiClient.get(endpoint, {
       responseType: 'blob',
@@ -302,8 +359,8 @@ export const cdnApi = {
   // Get image URL for display
   getImageUrl: (fileName: string, resolution?: string): string => {
     const endpoint = resolution 
-      ? `/api/ImageUpload/fetch/${fileName}/res/${resolution}`
-      : `/api/ImageUpload/fetch/${fileName}`;
+      ? `/api/CDN/fetch/${fileName}/res/${resolution}`
+      : `/api/CDN/fetch/${fileName}`;
     
     return `${CDN_API_URL}${endpoint}`;
   },
@@ -311,7 +368,7 @@ export const cdnApi = {
   // Delete an image
   deleteImage: async (fileName: string): Promise<boolean> => {
     try {
-      await cdnApiClient.delete(`/api/ImageUpload/delete/${fileName}`);
+      await cdnApiClient.delete(`/api/CDN/delete/${fileName}`);
       return true;
     } catch (error: any) {
       console.error('Error deleting image:', error);
@@ -321,18 +378,18 @@ export const cdnApi = {
 
   // Get available media types
   getMediaTypes: async (): Promise<MediaType[]> => {
-    const response = await cdnApiClient.get<MediaType[]>('/api/ImageUpload/mediaTypes');
+    const response = await cdnApiClient.get<MediaType[]>('/api/CDN/mediaTypes');
     return response.data;
   },
 
   // Generate LQIP (Low Quality Image Placeholder)
   generateLqip: async (id: string): Promise<void> => {
-    await cdnApiClient.get(`/api/ImageUpload/generate-lqip/${id}`);
+    await cdnApiClient.get(`/api/CDN/generate-lqip/${id}`);
   },
 
   // Get diagnostic configuration
   getDiagnosticConfig: async (): Promise<any> => {
-    const response = await cdnApiClient.get('/api/ImageUpload/diagnose-config');
+    const response = await cdnApiClient.get('/api/CDN/diagnose-config');
     return response.data;
   },
 };

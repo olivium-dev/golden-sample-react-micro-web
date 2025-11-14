@@ -26,36 +26,7 @@ module.exports = {
     headers: {
       'Access-Control-Allow-Origin': '*',
     },
-    proxy: [
-      {
-        context: ['/api/users'],
-        target: 'http://localhost:4001',
-        changeOrigin: true,
-        secure: false,
-        logLevel: 'debug',
-      },
-      {
-        context: ['/api/catalog'],
-        target: 'http://localhost:4006',
-        changeOrigin: true,
-        secure: false,
-        logLevel: 'debug',
-      },
-      {
-        context: ['/api/cdn'],
-        target: 'http://localhost:4006',
-        changeOrigin: true,
-        secure: false,
-        logLevel: 'debug',
-      },
-      {
-        context: ['/api/orders'],
-        target: 'http://localhost:4005',
-        changeOrigin: true,
-        secure: false,
-        logLevel: 'debug',
-      },
-    ],
+    // BFF proxy configuration removed - micro-frontends will call gateway API directly
   },
   output: {
     publicPath: 'auto',
@@ -102,8 +73,8 @@ module.exports = {
         dataApp: 'dataApp@http://localhost:3002/remoteEntry.js',
         analyticsApp: 'analyticsApp@http://localhost:3003/remoteEntry.js',
         settingsApp: 'settingsApp@http://localhost:3004/remoteEntry.js',
-        ordersApp: 'ordersApp@http://localhost:3005/remoteEntry.js',
-        catalogApp: 'catalogApp@http://localhost:3006/remoteEntry.js',
+        ordersApp: 'ordersApp@http://localhost:3006/remoteEntry.js',
+        catalogApp: 'catalogApp@http://localhost:3005/remoteEntry.js',
       },
       shared: {
         react: {
@@ -163,12 +134,12 @@ module.exports = {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
       'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000'),
       // Firebase configuration - Using saawt-app to match backend Admin SDK
-      'process.env.REACT_APP_FIREBASE_API_KEY': JSON.stringify(process.env.REACT_APP_FIREBASE_API_KEY || 'AIzaSyCBqiELZcS0Aw2qEqYxJdXzYqVx8Zw8fZ0'),
-      'process.env.REACT_APP_FIREBASE_AUTH_DOMAIN': JSON.stringify(process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || 'saawt-app.firebaseapp.com'),
-      'process.env.REACT_APP_FIREBASE_PROJECT_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_PROJECT_ID || 'saawt-app'),
-      'process.env.REACT_APP_FIREBASE_STORAGE_BUCKET': JSON.stringify(process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || 'saawt-app.appspot.com'),
-      'process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || '111180020195242483280'),
-      'process.env.REACT_APP_FIREBASE_APP_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_APP_ID || '1:111180020195242483280:web:8c9e5f3a4b2d1e6f7a8b9c'),
+      'process.env.REACT_APP_FIREBASE_API_KEY': JSON.stringify(process.env.REACT_APP_FIREBASE_API_KEY || 'AIzaSyA3Hy9lztHYQXqkViAONm9UXIWHq2OGscA'),
+      'process.env.REACT_APP_FIREBASE_AUTH_DOMAIN': JSON.stringify(process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || 'creamati.firebaseapp.com'),
+      'process.env.REACT_APP_FIREBASE_PROJECT_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_PROJECT_ID || 'creamati'),
+      'process.env.REACT_APP_FIREBASE_STORAGE_BUCKET': JSON.stringify(process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || 'creamati.firebasestorage.app'),
+      'process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || '84649081999'),
+      'process.env.REACT_APP_FIREBASE_APP_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_APP_ID || '1:84649081999:android:b7f05dc7d0e702c833c4fa'),
     }),
   ],
 };

@@ -39,9 +39,23 @@ export { default as LoginPage } from './components/LoginPage';
 export { default as UserMenu } from './components/UserMenu';
 export { default as apiClient } from './api/apiClient';
 
-// Firebase exports
+// Firebase exports - with HMR handling
 export * from './auth/firebaseConfig';
 export * from './auth/firebaseTypes';
+
+// Type declaration for HMR
+declare const module: {
+  hot?: {
+    accept: (dependencies?: string | string[], callback?: () => void) => void;
+  };
+};
+
+// HMR acceptance for the entire shared-ui-lib
+if (typeof module !== 'undefined' && module.hot) {
+  module.hot.accept('./auth/firebaseConfig', () => {
+    console.log('🔄 HMR: Firebase config module updated');
+  });
+}
 
 // Re-export commonly used MUI components for convenience
 export {

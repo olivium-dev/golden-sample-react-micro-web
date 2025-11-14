@@ -9,7 +9,7 @@ const config = require('./config');
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK
-const serviceAccountPath = path.resolve(__dirname, '../../../secrets/firebase-admin.json');
+const serviceAccountPath = path.resolve(__dirname, '../../../creamat-firebase-admin.json');
 try {
   const serviceAccount = require(serviceAccountPath);
   admin.initializeApp({
