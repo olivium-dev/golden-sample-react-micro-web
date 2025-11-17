@@ -158,14 +158,6 @@ function App() {
             mb: 4,
           }}
         >
-          <Box>
-            <Typography variant="h4" gutterBottom sx={{ color: '#61dafb' }}>
-              👥 User Management - View Only
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              View user profiles and information (Read-only mode)
-            </Typography>
-          </Box>
         </Box>
 
         <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>

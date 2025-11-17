@@ -74,13 +74,6 @@ const App: React.FC = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <CssBaseline />
       
-      <AppBar position="static" sx={{ backgroundColor: '#61dafb', color: '#000' }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            📋 Catalog Management
-          </Typography>
-        </Toolbar>
-      </AppBar>
       
       <Container component="main" sx={{ mt: 4, mb: 4, flex: 1 }}>
         <Paper elevation={3} sx={{ p: 3 }}>

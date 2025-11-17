@@ -167,7 +167,6 @@ const CategoryList: React.FC = () => {
 
   // Define columns for the data grid
   const columns: GridColDef[] = [
-    { field: 'guid', headerName: 'ID', width: 200 },
     { 
       field: 'name', 
       headerName: 'Name', 
