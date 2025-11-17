@@ -241,7 +241,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, loading = false, err
           variant="body2"
           sx={{ textAlign: 'center', mt: 3, color: 'white' }}
         >
-          Powered by BFF Architecture | Secure & Scalable
+          Powered by Micro-Frontend Architecture | Secure & Scalable
         </Typography>
       </Container>
     </Box>

@@ -65,7 +65,7 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<TokenResponse> {
     try {
-      // Use the BFF endpoint for authentication
+      // Use the gateway endpoint for authentication
       const response = await apiClient.post<TokenResponse>('/api/users/login', credentials);
       const tokens = response.data;
 
@@ -102,7 +102,7 @@ class AuthService {
       
       console.log('🎫 Firebase ID token obtained');
       
-      // 3. Send Firebase token to BFF for verification
+      // 3. Send Firebase token to gateway for verification
       const response = await apiClient.post<SocialLoginResponse>('/api/user/social', {
         socialId: user.uid,
         socialToken: idToken,
@@ -166,7 +166,7 @@ class AuthService {
       
       console.log('🎫 Firebase ID token obtained');
       
-      // 3. Send Firebase token to BFF for verification
+      // 3. Send Firebase token to gateway for verification
       const response = await apiClient.post<SocialLoginResponse>('/api/user/social', {
         socialId: user.uid,
         socialToken: idToken,
@@ -234,7 +234,7 @@ class AuthService {
       
       console.log('🎫 Firebase ID token obtained');
       
-      // 3. Send Firebase token to BFF for verification and user creation
+      // 3. Send Firebase token to gateway for verification and user creation
       const response = await apiClient.post<SocialLoginResponse>('/api/user/social', {
         socialId: user.uid,
         socialToken: idToken,

@@ -49,7 +49,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   // Enable credentials for cross-origin requests
-  withCredentials: false,
+  //withCredentials: true,
 });
 
 // Create separate axios instance for CDN API
@@ -60,7 +60,7 @@ const cdnApiClient = axios.create({
     'Content-Type': 'application/json',
   },
   // Enable credentials for cross-origin requests
-  withCredentials: false,
+  //withCredentials: false,
 });
 
 // Add auth token and service headers to requests for both API clients
@@ -69,10 +69,11 @@ const addAuthHeaders = (config: InternalAxiosRequestConfig) => {
     // Add Bearer token authorization
     //const token = localStorage.getItem('access_token');
    // if (token) {
-   //   config.headers.Authorization = `Bearer ${token}`;
-  //  }
+    // config.headers.Authorization = `Bearer ${token}`;
+    //}
     
-    // Add required service headers for catalog API
+    // Only add service headers if backend expects them
+    // These custom headers trigger CORS preflight - ensure backend allows them
     config.headers['X-Service-API-Key'] = 'catalog-service-api-key-2024-secure';
     config.headers['X-Service-Token-Key'] = 'catalog-service-token-key-jkl012';
   }
@@ -80,7 +81,7 @@ const addAuthHeaders = (config: InternalAxiosRequestConfig) => {
 };
 
 apiClient.interceptors.request.use(addAuthHeaders);
-cdnApiClient.interceptors.request.use(addAuthHeaders);
+//cdnApiClient.interceptors.request.use(addAuthHeaders);
 
 // Category API functions
 export const categoryApi = {

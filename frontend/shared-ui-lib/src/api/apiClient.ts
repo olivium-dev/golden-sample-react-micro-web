@@ -3,9 +3,9 @@
  */
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-// Use empty base URL for relative paths - container app webpack proxy will route to BFF servers
+// Use empty base URL for relative paths - micro-frontends call gateway API directly
 // This avoids CORS issues by using the same origin as the frontend
-const API_URL = 'https://localhost:7254/';
+const API_URL = 'https://dev-creamat.fds-1.com/gateway/'; //'https://localhost:7254/';
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({

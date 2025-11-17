@@ -26,7 +26,7 @@ module.exports = {
     headers: {
       'Access-Control-Allow-Origin': '*',
     },
-    // BFF proxy configuration removed - micro-frontends will call gateway API directly
+    // Direct gateway API calls - no proxy needed
   },
   output: {
     publicPath: 'auto',

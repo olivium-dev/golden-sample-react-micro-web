@@ -43,10 +43,7 @@
   },
   "scripts": {
     "start": "webpack serve --config webpack.config.js --mode development",
-    "start:bff": "node server/server.js",
-    "start:dev": "concurrently \"npm start\" \"npm run start:bff\"",
     "build": "webpack --config webpack.config.js --mode production",
-    "build:bff": "npm run build && NODE_ENV=production npm run start:bff",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start:standalone": "webpack serve --config webpack.standalone.config.js --port 3101",
