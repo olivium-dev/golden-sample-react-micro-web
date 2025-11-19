@@ -6,7 +6,7 @@ class ErrorLoggerService {
   private config: ErrorLoggerConfig = {
     maxErrors: 100,
     enableConsoleLog: true,
-    enableRemoteLogging: true,
+    enableRemoteLogging: false, // DISABLED: Stop localhost:8000 connection errors and infinite loops
     remoteEndpoint: 'http://localhost:8000/api/errors',
     enableToasts: true,
     enableLocalStorage: true,

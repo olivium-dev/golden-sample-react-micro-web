@@ -18,6 +18,57 @@ This is a golden sample project demonstrating micro-frontend architecture using 
 - Analytics Service (FastAPI) - port 8003
 - Settings Service (FastAPI) - port 8004
 
+## ⚠️ MANDATORY DEVELOPMENT RULES
+
+**These rules MUST be followed for ALL code changes and implementations. No exceptions.**
+
+### Rule 1: Material-UI (MUI) Only - No Custom UI Components
+- **STRICTLY FORBIDDEN**: Using any UI components, design tokens, colors, or fonts that are NOT from https://mui.com/
+- **REQUIRED**: All UI components MUST be from Material-UI (MUI) library
+- **REQUIRED**: All colors, typography, spacing, and design tokens MUST use MUI theme system
+- **REQUIRED**: All icons MUST be from `@mui/icons-material`
+- **REQUIRED**: All styling MUST use MUI's `sx` prop, `styled` components, or theme system
+- **NO EXCEPTIONS**: Do not create custom UI libraries, design systems, or component libraries outside of MUI
+
+### Rule 2: BFF Architecture for All Micro-Frontends
+- **REQUIRED**: All micro-frontends (MF) MUST follow the Backend-for-Frontend (BFF) architecture pattern
+- **REQUIRED**: Each micro-frontend MUST have its own BFF Express server
+- **REQUIRED**: All API calls from micro-frontends MUST go through their respective BFF servers
+- **REQUIRED**: BFF servers MUST proxy requests to backend services
+- **FORBIDDEN**: Direct API calls from micro-frontends to backend services (bypassing BFF)
+- **REQUIRED**: BFF servers MUST handle authentication, request transformation, and response formatting
+
+### Rule 3: No Mocks, Fakes, or Workarounds
+- **STRICTLY FORBIDDEN**: Mock implementations, fake data, or workaround solutions
+- **REQUIRED**: All implementations MUST use real backend APIs and services
+- **REQUIRED**: All API integrations MUST connect to actual production or development backend services
+- **FORBIDDEN**: Temporary solutions, placeholder code, or "TODO" implementations
+- **REQUIRED**: If a backend service is unavailable, the issue MUST be fixed at the source, not worked around
+
+### Rule 4: Bottom-to-Top Testing Strategy
+- **REQUIRED**: Always test from bottom to top in this exact order:
+  1. **Backend API** - Verify backend endpoints are working correctly
+  2. **BFF APIs** - Verify BFF servers are proxying correctly to backend
+  3. **Frontend Functionality** - Verify frontend components work with BFF APIs
+- **REQUIRED**: Before testing frontend, verify backend and BFF are working
+- **REQUIRED**: Document test results at each layer before proceeding to the next
+- **REQUIRED**: Fix issues at the lowest layer first before moving up
+
+### Rule 5: Comprehensive Testing and Validation
+- **REQUIRED**: Any code added or modified MUST be thoroughly tested
+- **REQUIRED**: All changes MUST be validated before marking as complete
+- **REQUIRED**: Testing MUST include:
+  - Unit tests for individual functions/components
+  - Integration tests for API connections
+  - End-to-end tests for user flows
+  - Manual testing in browser
+  - Console error verification
+  - Network request validation
+- **REQUIRED**: All tests MUST pass before considering work complete
+- **REQUIRED**: Document test results and validation steps
+
+---
+
 ## Code Standards & Best Practices
 
 ### General Guidelines
@@ -29,6 +80,7 @@ This is a golden sample project demonstrating micro-frontend architecture using 
 - Use semantic HTML and accessibility best practices
 
 ### Material-UI (MUI) Standards
+- **MANDATORY**: Use ONLY MUI components from https://mui.com/ (see Rule 1 above)
 - Use MUI v5 with emotion styling engine
 - Implement consistent theme across all micro-frontends
 - Use MUI Data Grid for all tabular data displays
@@ -37,6 +89,7 @@ This is a golden sample project demonstrating micro-frontend architecture using 
 - Implement responsive design with MUI breakpoints
 - Use MUI's sx prop for custom styling
 - Maintain theme consistency through shared theme provider
+- **FORBIDDEN**: Custom UI components, design tokens, colors, or fonts outside of MUI
 
 ### Module Federation Specific
 - Always use singleton sharing for React and ReactDOM to prevent version conflicts

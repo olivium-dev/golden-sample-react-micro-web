@@ -3,6 +3,9 @@
  * Exports theme configuration, design tokens, and common components
  */
 
+// Providers
+export { ReactQueryProvider, queryClient } from './providers/ReactQueryProvider';
+
 // Theme exports
 export { lightTheme, darkTheme, getTheme, createCustomTheme } from './theme';
 export type { Theme, ThemeOptions } from '@mui/material/styles';
@@ -35,6 +38,24 @@ export { default as LoginForm } from './components/LoginForm';
 export { default as LoginPage } from './components/LoginPage';
 export { default as UserMenu } from './components/UserMenu';
 export { default as apiClient } from './api/apiClient';
+
+// Firebase exports - with HMR handling
+export * from './auth/firebaseConfig';
+export * from './auth/firebaseTypes';
+
+// Type declaration for HMR
+declare const module: {
+  hot?: {
+    accept: (dependencies?: string | string[], callback?: () => void) => void;
+  };
+};
+
+// HMR acceptance for the entire shared-ui-lib
+if (typeof module !== 'undefined' && module.hot) {
+  module.hot.accept('./auth/firebaseConfig', () => {
+    console.log('🔄 HMR: Firebase config module updated');
+  });
+}
 
 // Re-export commonly used MUI components for convenience
 export {

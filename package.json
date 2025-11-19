@@ -4,16 +4,18 @@
   "description": "Golden sample project demonstrating micro-frontend architecture using React + Webpack Module Federation + Material-UI",
   "private": true,
   "scripts": {
-    "dev:all": "concurrently --names \"CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS\" --prefix-colors \"blue,green,red,yellow,magenta\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\"",
+    "dev:all": "concurrently --names \"CONTAINER,USER-MGMT,DATA-GRID,ANALYTICS,SETTINGS,ORDERS,CATALOG\" --prefix-colors \"blue,green,red,yellow,magenta,orange,cyan\" \"npm run dev:container\" \"npm run dev:user-management\" \"npm run dev:data-grid\" \"npm run dev:analytics\" \"npm run dev:settings\" \"npm run dev:orders\" \"npm run dev:catalog\"",
     "dev:container": "cd frontend/container && npm start",
     "dev:user-management": "cd frontend/user-management-app && npm start",
-    "dev:data-grid": "cd frontend/data-grid-app && npm start", 
+    "dev:data-grid": "cd frontend/data-grid-app && npm start",
     "dev:analytics": "cd frontend/analytics-app && npm start",
     "dev:settings": "cd frontend/settings-app && npm start",
+    "dev:orders": "cd frontend/orders-app && npm start",
+    "dev:catalog": "cd frontend/catalog-app && npm start",
     "dev:backend": "cd backend/mock-data-service && python main.py",
-    "install:all": "npm install && cd frontend/shared-ui-lib && npm install && cd ../container && npm install && cd ../user-management-app && npm install && cd ../data-grid-app && npm install && cd ../analytics-app && npm install && cd ../settings-app && npm install",
+    "install:all": "npm install && cd frontend/shared-ui-lib && npm install && cd ../container && npm install && cd ../user-management-app && npm install && cd ../data-grid-app && npm install && cd ../analytics-app && npm install && cd ../settings-app && npm install && cd ../orders-app && npm install && cd ../catalog-app && npm install",
     "install:backend": "cd backend/mock-data-service && pip install -r requirements.txt",
-    "build:all": "cd frontend/user-management-app && npm run build && cd ../data-grid-app && npm run build && cd ../analytics-app && npm run build && cd ../settings-app && npm run build && cd ../container && npm run build",
+    "build:all": "cd frontend/user-management-app && npm run build && cd ../data-grid-app && npm run build && cd ../analytics-app && npm run build && cd ../settings-app && npm run build && cd ../orders-app && npm run build && cd ../catalog-app && npm run build && cd ../container && npm run build",
     "test:all": "cd frontend/container && npm test && cd ../user-management-app && npm test && cd ../data-grid-app && npm test && cd ../analytics-app && npm test && cd ../settings-app && npm test",
     "lint:all": "cd frontend/container && npm run lint && cd ../user-management-app && npm run lint && cd ../data-grid-app && npm run lint && cd ../analytics-app && npm run lint && cd ../settings-app && npm run lint"
   },
@@ -29,6 +31,10 @@
   "author": "Micro-Frontend Team",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "concurrently": "^8.2.0"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.17.0"
   }
 }

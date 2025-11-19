@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "table": {
+    "defaultPageSize": 50,
+    "pageSizeOptions": [25, 50, 100],
+    "enableExport": false
+  },
+  "roles": {
+    "visible": ["superadmin", "operator", "readonly"]
+  },
+  "features": {
+    "createEnabled": true,
+    "deleteEnabled": false,
+    "bulkActions": false
+  },
+  "api": {
+    "services": {
+      "users": {
+        "baseUrl": "https://api.project-x.com",
+        "routes": {
+          "list": "/v2/accounts",
+          "create": "/v2/accounts/new",
+          "update": "/v2/accounts/:id/edit",
+          "delete": "/v2/accounts/:id/archive"
+        }
+      }
+    }
+  },
+  "theme": {
+    "primaryColor": "#d32f2f",
+    "tableHeaderBg": "#fafafa"
+  },
+  "mock": {
+    "enabled": true,
+    "authBypass": true,
+    "apiDelay": 200,
+    "mockUsers": [
+      {
+        "id": 1,
+        "email": "admin@projectx.com",
+        "username": "projectx_admin",
+        "full_name": "Project X Administrator",
+        "role": "superadmin",
+        "is_active": true,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+      },
+      {
+        "id": 2,
+        "email": "operator@projectx.com",
+        "username": "projectx_operator",
+        "full_name": "Project X Operator",
+        "role": "operator",
+        "is_active": true,
+        "created_at": "2024-01-02T00:00:00Z",
+        "updated_at": "2024-01-02T00:00:00Z"
+      }
+    ]
+  }
+}
+

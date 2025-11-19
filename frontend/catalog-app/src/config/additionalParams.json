@@ -1,0 +1,63 @@
+{
+  "additionalParams": [
+    {
+      "key": "price",
+      "label": "Price",
+      "type": "decimal",
+      "required": true,
+      "validation": {
+        "min": 0,
+        "max": 999999.99
+      },
+      "placeholder": "0.00",
+      "description": "Product price"
+    },
+    {
+      "key": "image",
+      "label": "Product Image",
+      "type": "image",
+      "required": false,
+      "validation": {
+        "maxSize": 5242880,
+        "allowedTypes": ["image/jpeg", "image/png", "image/webp"]
+      },
+      "placeholder": "Upload product image",
+      "description": "Product image (max 5MB, JPEG/PNG/WebP)"
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "type": "string",
+      "required": false,
+      "validation": {
+        "maxLength": 50
+      },
+      "placeholder": "e.g., Small, Medium, Large, XL",
+      "description": "Product size"
+    },
+    {
+      "key": "color",
+      "label": "Color",
+      "type": "string",
+      "required": false,
+      "validation": {
+        "maxLength": 50
+      },
+      "placeholder": "e.g., Red, Black, Yellow, White",
+      "description": "Product size"
+    },
+    {
+      "key": "currency",
+      "label": "Currency",
+      "type": "string",
+      "required": false,
+      "validation": {
+        "maxLength": 3,
+        "pattern": "^[A-Z]{3}$"
+      },
+      "placeholder": "USD",
+      "description": "Currency code (3 letters, e.g., USD, EUR)",
+      "defaultValue": "USD"
+    }
+  ]
+}

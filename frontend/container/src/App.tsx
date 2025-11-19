@@ -30,21 +30,28 @@ import {
   Settings as SettingsIcon,
   Analytics as AnalyticsIcon,
   BugReport as BugReportIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Category as CategoryIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { 
   ErrorBoundary, 
   ErrorPanel, 
   ErrorToast, 
   useErrorMonitor,
-  ErrorCapture 
+  ErrorCapture,
+  authService,
 } from '../../shared-ui-lib/src';
 import ErrorMonitor from './pages/ErrorMonitor';
+import LoginScreen from './components/LoginScreen';
 
 // Lazy load remote micro-frontends
 const UserManagement = React.lazy(() => import('userApp/UserManagement'));
 const DataGrid = React.lazy(() => import('dataApp/DataGrid'));
 const Analytics = React.lazy(() => import('analyticsApp/Analytics'));
 const Settings = React.lazy(() => import('settingsApp/Settings'));
+const Orders = React.lazy(() => import('ordersApp/Orders'));
+const Catalog = React.lazy(() => import('catalogApp/Catalog'));
 
 interface MenuItem {
   id: string;
@@ -91,6 +98,20 @@ const menuItems: MenuItem[] = [
     description: 'System configuration and preferences',
   },
   {
+    id: 'orders',
+    icon: <ShoppingCartIcon />,
+    label: 'Orders',
+    color: '#9c27b0',
+    description: 'Manage orders and order processing',
+  },
+  {
+    id: 'catalog',
+    icon: <CategoryIcon />,
+    label: 'Catalog',
+    color: '#00bcd4',
+    description: 'Manage catalog items and categories',
+  },
+  {
     id: 'error-monitor',
     icon: <BugReportIcon />,
     label: 'Error Monitor',
@@ -104,11 +125,49 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [errorPanelOpen, setErrorPanelOpen] = useState(false);
   const [showErrorToast, setShowErrorToast] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // Error monitoring
   const { errors, stats, clearErrors } = useErrorMonitor();
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuth = authService.isAuthenticated();
+      setIsAuthenticated(isAuth);
+      setAuthLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  // Handle login with Firebase Email/Password
+  const handleLogin = async (email: string, password: string) => {
+    setAuthLoading(true);
+    setLoginError(null);
+    try {
+      console.log('🔐 Attempting Firebase Email/Password login...');
+      await authService.loginWithEmailPassword(email, password);
+      console.log('✅ Firebase login successful');
+      setIsAuthenticated(true);
+      setAuthLoading(false);
+    } catch (error: any) {
+      console.error('❌ Firebase login failed:', error);
+      setLoginError(error.message || 'Login failed');
+      setAuthLoading(false);
+      throw error;
+    }
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    await authService.logout();
+    setIsAuthenticated(false);
+    setActiveTab('home');
+  };
 
   React.useEffect(() => {
     if (isMobile) {
@@ -158,10 +217,17 @@ function App() {
   };
 
   const handleMenuItemClick = (tabId: string) => {
+    console.log(`🔄 Navigating to: ${tabId}`);
     setActiveTab(tabId);
     if (isMobile) {
       setDrawerOpen(false);
     }
+    // Scroll to top when changing tabs
+    window.scrollTo(0, 0);
+    // Force re-render
+    setTimeout(() => {
+      console.log(`✅ Navigation complete to: ${tabId}`);
+    }, 100);
   };
 
   const renderRemoteApp = () => {
@@ -181,10 +247,13 @@ function App() {
     const ErrorFallback = (error: Error, errorInfo: React.ErrorInfo, retry: () => void) => (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography variant="h6" color="error" gutterBottom>
-          Failed to load micro-frontend
+          Module Federation Error
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          The remote application could not be loaded. This might be due to a network issue or the service being unavailable.
+          Error: {error.message}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontFamily: 'monospace' }}>
+          Stack: {error.stack?.substring(0, 200)}...
         </Typography>
         <Button variant="contained" onClick={retry}>
           Retry Loading
@@ -254,6 +323,30 @@ function App() {
                     <Settings />
                   </ErrorBoundary>
                 );
+              case 'orders':
+                return (
+                  <ErrorBoundary 
+                    componentName="Orders App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('ordersApp/Orders', error);
+                    }}
+                  >
+                    <Orders />
+                  </ErrorBoundary>
+                );
+              case 'catalog':
+                return (
+                  <ErrorBoundary 
+                    componentName="Catalog App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('catalogApp/Catalog', error);
+                    }}
+                  >
+                    <Catalog />
+                  </ErrorBoundary>
+                );
               default:
                 return null;
             }
@@ -269,6 +362,26 @@ function App() {
   };
 
   const drawerWidth = 260;
+
+  // Show login screen if not authenticated
+  if (authLoading) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={handleLogin} loading={authLoading} error={loginError} />;
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
@@ -301,6 +414,9 @@ function App() {
           <Typography variant="body2" sx={{ mr: 2, color: '#cccccc' }}>
             Welcome, Admin
           </Typography>
+          <IconButton onClick={handleLogout} sx={{ color: 'white', mr: 1 }} title="Logout">
+            <LogoutIcon />
+          </IconButton>
           <Avatar sx={{ bgcolor: '#61dafb', color: '#000' }}>A</Avatar>
         </Toolbar>
       </AppBar>
@@ -430,6 +546,10 @@ function App() {
                       <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
                         <Button
                           variant="contained"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMenuItemClick(item.id);
+                          }}
                           sx={{
                       backgroundColor: item.color,
                       color: '#ffffff',

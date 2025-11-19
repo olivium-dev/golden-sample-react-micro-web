@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 const { ModuleFederationPlugin } = require('webpack').container;
 const path = require('path');
 
@@ -51,7 +52,7 @@ module.exports = {
       name: 'analyticsApp',
       filename: 'remoteEntry.js',
       exposes: {
-        './Analytics': './src/App.tsx',
+        './Analytics': './src/Analytics.tsx',
       },
       remotes: {
         sharedUI: 'container@http://localhost:3000/remoteEntry.js',
@@ -60,40 +61,55 @@ module.exports = {
         react: {
           singleton: true,
           requiredVersion: "18.2.0",
-          strictVersion: false,          eager: true,        },
+          strictVersion: false,
+          eager: false,
+        },
         'react-dom': {
           singleton: true,
           requiredVersion: "18.2.0",
-          strictVersion: false,          eager: true,        },
+          strictVersion: false,
+          eager: false,
+        },
         '@mui/material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: false,
         },
         '@mui/icons-material': {
           singleton: true,
           requiredVersion: '^5.15.0',
+          eager: false,
         },
         '@mui/x-charts': {
           singleton: true,
           requiredVersion: '^6.18.0',
+          eager: false,
         },
         '@emotion/react': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: false,
         },
         '@emotion/styled': {
           singleton: true,
           requiredVersion: '^11.11.0',
+          eager: false,
         },
         axios: {
           singleton: true,
           requiredVersion: '^1.6.0',
+          eager: false,
         },
       },
     }),
     new HtmlWebpackPlugin({
       template: './public/index.html',
       favicon: './public/favicon.ico',
+    }),
+    // Define environment variables for browser
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000')
     }),
   ],
 };
