@@ -23,7 +23,8 @@ jobs:
       
     - name: Install all app dependencies
       run: |
-        cd frontend/container && npm install
+        cd frontend/shared-ui-lib && npm install
+        cd ../container && npm install
         cd ../user-management-app && npm install
         cd ../data-grid-app && npm install
         cd ../analytics-app && npm install
@@ -66,7 +67,9 @@ jobs:
         
     - name: Install dependencies
       run: |
-        cd frontend/container
+        cd frontend/shared-ui-lib
+        npm install
+        cd ../container
         npm install
         
     - name: Build application
@@ -105,7 +108,9 @@ jobs:
         
     - name: Install dependencies
       run: |
-        cd frontend/${{ matrix.app.name }}
+        cd frontend/shared-ui-lib
+        npm install
+        cd ../${{ matrix.app.name }}
         npm install
         
     - name: Build application
