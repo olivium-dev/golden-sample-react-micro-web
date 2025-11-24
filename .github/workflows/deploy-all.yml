@@ -23,13 +23,13 @@ jobs:
       
     - name: Install all app dependencies
       run: |
-        cd frontend/container && npm ci
-        cd ../user-management-app && npm ci
-        cd ../data-grid-app && npm ci
-        cd ../analytics-app && npm ci
-        cd ../settings-app && npm ci
-        cd ../catalog-app && npm ci
-        cd ../orders-app && npm ci
+        cd frontend/container && npm install
+        cd ../user-management-app && npm install
+        cd ../data-grid-app && npm install
+        cd ../analytics-app && npm install
+        cd ../settings-app && npm install
+        cd ../catalog-app && npm install
+        cd ../orders-app && npm install
       
     - name: Build all applications
       run: |
@@ -67,7 +67,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd frontend/container
-        npm ci
+        npm install
         
     - name: Build application
       run: |
@@ -106,7 +106,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd frontend/${{ matrix.app.name }}
-        npm ci
+        npm install
         
     - name: Build application
       run: |
