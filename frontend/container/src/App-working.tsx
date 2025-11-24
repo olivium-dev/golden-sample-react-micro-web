@@ -52,12 +52,13 @@ const ErrorMonitor = () => (
 const menuItems = [
   { id: 'home', label: 'Dashboard', icon: <HomeIcon />, color: '#61dafb' },
   { id: 'users', label: 'User Management', icon: <PeopleIcon />, color: '#4caf50' },
-  { id: 'data', label: 'Data Grid', icon: <DataGridIcon />, color: '#ff9800' },
-  { id: 'analytics', label: 'Analytics', icon: <AnalyticsIcon />, color: '#9c27b0' },
-  { id: 'settings', label: 'Settings', icon: <SettingsIcon />, color: '#f44336' },
   { id: 'orders', label: 'Orders', icon: <OrdersIcon />, color: '#00bcd4' },
   { id: 'catalog', label: 'Catalog', icon: <CatalogIcon />, color: '#795548' },
-  { id: 'error-monitor', label: 'Error Monitor', icon: <ErrorIcon />, color: '#607d8b' },
+  // Hidden menu items - analytics, data grid, settings, error monitor
+  // { id: 'data', label: 'Data Grid', icon: <DataGridIcon />, color: '#ff9800' },
+  // { id: 'analytics', label: 'Analytics', icon: <AnalyticsIcon />, color: '#9c27b0' },
+  // { id: 'settings', label: 'Settings', icon: <SettingsIcon />, color: '#f44336' },
+  // { id: 'error-monitor', label: 'Error Monitor', icon: <ErrorIcon />, color: '#607d8b' },
 ];
 
 function App() {

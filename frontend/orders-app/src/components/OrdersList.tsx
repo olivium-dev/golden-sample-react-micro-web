@@ -326,7 +326,7 @@ const OrdersList: React.FC = () => {
 
   const handleCancel = (id: number | string, order: ApiOrder) => {
     const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
-    const firstItemName = firstItem ? firstItem.productName : (order.items && order.items.length > 0 ? 'Multiple Items' : 'No Items');
+    const firstItemName = firstItem ? firstItem.itemName : (order.items && order.items.length > 0 ? 'Multiple Items' : 'No Items');
     
     setConfirmDialog({
       open: true,
@@ -344,7 +344,7 @@ const OrdersList: React.FC = () => {
   const handleAdvanceStatus = (id: number | string, order: ApiOrder) => {
     const currentStatus = order.status?.toLowerCase() || 'unknown';
     const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
-    const firstItemName = firstItem ? firstItem.productName : (order.items && order.items.length > 0 ? 'Multiple Items' : 'No Items');
+    const firstItemName = firstItem ? firstItem.itemName : (order.items && order.items.length > 0 ? 'Multiple Items' : 'No Items');
     
     const getNextStatus = (status: string) => {
       switch (status.toUpperCase()) {

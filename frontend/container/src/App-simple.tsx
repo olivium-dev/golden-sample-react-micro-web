@@ -87,12 +87,13 @@ const ErrorMonitorApp = () => (
 const menuItems = [
   { id: 'home', label: 'Dashboard', icon: <HomeIcon />, component: null },
   { id: 'users', label: 'User Management', icon: <PeopleIcon />, component: <UserManagementApp /> },
-  { id: 'data', label: 'Data Grid', icon: <DashboardIcon />, component: <DataGridApp /> },
-  { id: 'analytics', label: 'Analytics', icon: <AnalyticsIcon />, component: <AnalyticsApp /> },
-  { id: 'settings', label: 'Settings', icon: <SettingsIcon />, component: <SettingsApp /> },
   { id: 'orders', label: 'Orders', icon: <ShoppingCartIcon />, component: <OrdersApp /> },
   { id: 'catalog', label: 'Catalog', icon: <CategoryIcon />, component: <CatalogApp /> },
-  { id: 'error-monitor', label: 'Error Monitor', icon: <BugReportIcon />, component: <ErrorMonitorApp /> },
+  // Hidden menu items - analytics, data grid, settings, error monitor
+  // { id: 'data', label: 'Data Grid', icon: <DashboardIcon />, component: <DataGridApp /> },
+  // { id: 'analytics', label: 'Analytics', icon: <AnalyticsIcon />, component: <AnalyticsApp /> },
+  // { id: 'settings', label: 'Settings', icon: <SettingsIcon />, component: <SettingsApp /> },
+  // { id: 'error-monitor', label: 'Error Monitor', icon: <BugReportIcon />, component: <ErrorMonitorApp /> },
 ];
 
 function App() {
