@@ -1,0 +1,43 @@
+name: Deploy Catalog App
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/catalog-app/**'
+      - '.github/workflows/deploy-catalog-app.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'frontend/catalog-app/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        cd frontend/catalog-app
+        npm ci
+        
+    - name: Build application
+      run: |
+        cd frontend/catalog-app
+        npm run build
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: frontend/catalog-app/build
+        destination_dir: catalog
