@@ -33,14 +33,24 @@ const theme = createTheme({
 
 // Export the component for Module Federation
 const Orders: React.FC = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>
-    </QueryClientProvider>
-  );
+  try {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <App />
+        </ThemeProvider>
+      </QueryClientProvider>
+    );
+  } catch (error) {
+    console.error('Orders component error:', error);
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>Orders App Error</h2>
+        <p>Failed to load Orders component</p>
+      </div>
+    );
+  }
 };
 
 export default Orders;

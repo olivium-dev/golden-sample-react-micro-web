@@ -4,63 +4,39 @@ import {
   Container,
   Typography,
   Box,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
   Alert,
   Snackbar,
   Paper,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  DialogContentText,
+  CircularProgress,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import {
-  Add as AddIcon,
   Cancel as CancelIcon,
   Visibility as ViewIcon,
   ShoppingCart as OrderIcon,
+  PlayArrow as AdvanceIcon,
+  Edit as EditIcon,
+  Info as InfoIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../services/apiClient';
+import { 
+  OrderApiService, 
+  Order as ApiOrder, 
+  OrderItem,
+  OrderStatus,
+  GetOrdersParams 
+} from '../services/orderApi';
 
-interface Order {
-  id: number | string;
-  product_name?: string;
-  quantity?: number;
-  unit_price?: number;
-  total_amount?: number;
-  status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | string;
-  order_date?: string;
-  shipping_address?: string;
-  notes?: string;
-  // Additional fields that might come from the real API
-  orderId?: number | string;
-  productName?: string;
-  orderDate?: string;
-  totalAmount?: number;
-  [key: string]: any; // Allow additional fields
-}
+// Using ApiOrder directly from the API service
 
-interface OrderFormData {
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  shipping_address: string;
-  notes?: string;
-}
-
-const initialFormData: OrderFormData = {
-  product_name: '',
-  quantity: 1,
-  unit_price: 0,
-  status: 'pending',
-  shipping_address: '',
-  notes: '',
-};
 
 const statusColors = {
   pending: 'warning',
@@ -72,55 +48,74 @@ const statusColors = {
 
 const OrdersList: React.FC = () => {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<OrderFormData>(initialFormData);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' | 'warning' });
+  const [loadingOrderDetails, setLoadingOrderDetails] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    action: () => void;
+    actionLabel: string;
+    actionColor?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
+  }>({
+    open: false,
+    title: '',
+    message: '',
+    action: () => {},
+    actionLabel: '',
+    actionColor: 'primary',
+  });
 
   const queryClient = useQueryClient();
 
   const columns: GridColDef[] = [
     {
-      field: 'id',
-      headerName: 'ID',
+      field: 'orderId',
+      headerName: 'Order ID',
       width: 140,
-      renderCell: (params) => (
-        <Box sx={{ fontWeight: 600, color: '#1976d2' }}>
-          #{params.value}
-        </Box>
-      ),
+      renderCell: (params) => {
+        const id = params.value;
+        const isGuid = id && id.length > 8 && id.includes('-');
+        const displayId = isGuid ? id.substring(0, 8).toUpperCase() : id;
+        
+        return (
+          <Box sx={{ fontWeight: 600, color: '#1976d2' }}>
+            <Box component="span">#{displayId}</Box>
+            {isGuid && (
+              <Box 
+                component="span" 
+                sx={{ 
+                  fontSize: '0.7rem', 
+                  color: '#666', 
+                  display: 'block',
+                  fontFamily: 'monospace'
+                }}
+              >
+                {id.substring(8, 13)}...
+              </Box>
+            )}
+          </Box>
+        );
+      },
     },
     {
-      field: 'product_name',
-      headerName: 'Product',
-      minWidth: 280,
-      flex: 1,
+      field: 'userId',
+      headerName: 'User ID',
+      width: 120,
       renderCell: (params) => (
         <Box sx={{ 
-          fontWeight: 500, 
-          color: '#2c3e50',
+          fontWeight: 400, 
+          color: '#6c757d',
+          fontSize: '0.75rem',
           overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
+          textOverflow: 'ellipsis'
         }}>
-          {params.value}
+          {params.value.substring(0, 8)}...
         </Box>
       ),
     },
     {
-      field: 'quantity',
-      headerName: 'Qty',
-      width: 80,
-      type: 'number',
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => (
-        <Box sx={{ fontWeight: 500 }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'total_amount',
+      field: 'total',
       headerName: 'Total',
       width: 120,
       type: 'number',
@@ -128,7 +123,7 @@ const OrdersList: React.FC = () => {
       headerAlign: 'right',
       renderCell: (params) => (
         <Box sx={{ fontWeight: 600, color: '#2e7d32' }}>
-          ${params.value.toFixed(2)}
+          ${params.value?.toFixed(2) || '0.00'}
         </Box>
       ),
     },
@@ -138,26 +133,60 @@ const OrdersList: React.FC = () => {
       width: 140,
       align: 'center',
       headerAlign: 'center',
+      renderCell: (params) => {
+        const status = params.value?.toLowerCase() || 'unknown';
+        const getStatusColor = (status: string) => {
+          if (status.includes('pending') || status.includes('payment')) return 'warning';
+          if (status.includes('process') || status.includes('confirmed')) return 'info';
+          if (status.includes('ship')) return 'primary';
+          if (status.includes('deliver') || status.includes('complete')) return 'success';
+          if (status.includes('cancel')) return 'error';
+          return 'default';
+        };
+        
+        return (
+          <Chip 
+            label={params.value?.toUpperCase() || 'UNKNOWN'} 
+            color={getStatusColor(status) as any}
+            size="small"
+            sx={{ fontWeight: 600, minWidth: '80px' }}
+          />
+        );
+      },
+    },
+    {
+      field: 'createdAt',
+      headerName: 'Created',
+      width: 140,
+      type: 'dateTime',
+      align: 'center',
+      headerAlign: 'center',
+      valueGetter: (params) => params.value ? new Date(params.value) : null,
       renderCell: (params) => (
-        <Chip 
-          label={params.value.toUpperCase()} 
-          color={statusColors[params.value as keyof typeof statusColors]}
-          size="small"
-          sx={{ fontWeight: 600, minWidth: '80px' }}
-        />
+        <Box sx={{ fontSize: '0.875rem', color: '#6c757d' }}>
+          {params.value ? new Date(params.value).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit'
+          }) : 'N/A'}
+        </Box>
       ),
     },
     {
-      field: 'order_date',
-      headerName: 'Date',
-      width: 120,
-      type: 'date',
+      field: 'updatedAt',
+      headerName: 'Updated',
+      width: 140,
+      type: 'dateTime',
       align: 'center',
       headerAlign: 'center',
-      valueGetter: (params) => new Date(params.value),
+      valueGetter: (params) => params.value ? new Date(params.value) : null,
       renderCell: (params) => (
         <Box sx={{ fontSize: '0.875rem', color: '#6c757d' }}>
-          {new Date(params.value).toLocaleDateString()}
+          {params.value ? new Date(params.value).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit'
+          }) : 'N/A'}
         </Box>
       ),
     },
@@ -165,110 +194,125 @@ const OrdersList: React.FC = () => {
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',
-      width: 120,
+      width: 160,
       align: 'center',
       headerAlign: 'center',
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<ViewIcon />}
-          label="View Details"
-          onClick={() => handleViewDetails(params.row)}
-          color="primary"
-          sx={{ '&:hover': { backgroundColor: '#e3f2fd' } }}
-        />,
-        <GridActionsCellItem
-          icon={<CancelIcon />}
-          label="Cancel Order"
-          onClick={() => handleCancel(params.row.id)}
-          color="error"
-          sx={{ '&:hover': { backgroundColor: '#ffebee' } }}
-          disabled={params.row.status === 'cancelled' || params.row.status === 'delivered'}
-        />,
-      ],
+      getActions: (params) => {
+        const order = params.row;
+        const status = order.status?.toLowerCase() || '';
+        const isCompleted = status === 'delivered' || status === 'completed';
+        const isCancelled = status === 'cancelled';
+        const canAdvance = !isCompleted && !isCancelled;
+        const canCancel = !isCompleted && !isCancelled;
+
+        return [
+          <GridActionsCellItem
+            key="view"
+            icon={loadingOrderDetails === order.orderId ? <CircularProgress size={16} /> : <InfoIcon />}
+            label="View Details"
+            onClick={() => handleViewDetails(order)}
+            color="primary"
+            sx={{ 
+              '&:hover': { backgroundColor: '#e3f2fd' },
+              '& .MuiSvgIcon-root': { fontSize: '1.1rem' }
+            }}
+            disabled={loadingOrderDetails === order.orderId}
+            showInMenu={false}
+          />,
+          <GridActionsCellItem
+            key="advance"
+            icon={<AdvanceIcon />}
+            label={`Advance Status${status ? ` (${status})` : ''}`}
+            onClick={() => handleAdvanceStatus(order.orderId, order)}
+            color="success"
+            sx={{ 
+              '&:hover': { backgroundColor: '#e8f5e8' },
+              '& .MuiSvgIcon-root': { fontSize: '1.1rem' }
+            }}
+            disabled={!canAdvance}
+            showInMenu={false}
+          />,
+          <GridActionsCellItem
+            key="cancel"
+            icon={<CancelIcon />}
+            label="Cancel Order"
+            onClick={() => handleCancel(order.orderId, order)}
+            color="error"
+            sx={{ 
+              '&:hover': { backgroundColor: '#ffebee' },
+              '& .MuiSvgIcon-root': { fontSize: '1.1rem' }
+            }}
+            disabled={!canCancel}
+            showInMenu={false}
+          />,
+        ];
+      },
     },
   ];
 
-  const { data: rawOrders = [], isLoading, error } = useQuery({
-    queryKey: ['orders'],
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [statusFilter, setStatusFilter] = useState<string>('');
+
+  // Check if user has access token before making API calls
+  const hasAccessToken = (): boolean => {
+    const token = localStorage.getItem('access_token');
+    return Boolean(token && token.length > 0);
+  };
+
+  // Fetch orders using the new API service - only if authenticated
+  const { data: ordersResponse, isLoading, error } = useQuery({
+    queryKey: ['orders', page, pageSize, statusFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/users/b85951de-169f-4b96-83fd-346740877dd5/orders');
-      return response.data;
+      const params: GetOrdersParams = {
+        page,
+        pageSize,
+        ...(statusFilter && { status: statusFilter })
+      };
+      return await OrderApiService.getOrders(params);
     },
     retry: 2,
     retryDelay: 1000,
+    enabled: hasAccessToken(), // Only run query if user has access token
   });
 
-  const orders = Array.isArray(rawOrders) ? rawOrders.map((order: any, index: number) => {
-    const firstItem = order.items && order.items.length > 0 ? order.items[0] : {};
-    const totalQuantity = order.items ? order.items.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) : 1;
-    const unitPrice = firstItem.unitPrice || firstItem.price || 0;
-    
-    let orderStatus = 'pending';
-    if (order.status) {
-      const status = order.status.toLowerCase();
-      if (status.includes('pending') || status.includes('payment')) {
-        orderStatus = 'pending';
-      } else if (status.includes('process')) {
-        orderStatus = 'processing';
-      } else if (status.includes('ship')) {
-        orderStatus = 'shipped';
-      } else if (status.includes('deliver') || status.includes('complete')) {
-        orderStatus = 'delivered';
-      } else if (status.includes('cancel')) {
-        orderStatus = 'cancelled';
-      }
-    }
+  // Fetch order statuses for filtering - only if authenticated
+  const { data: statusesResponse } = useQuery({
+    queryKey: ['orderStatuses'],
+    queryFn: () => OrderApiService.getOrderStatuses(),
+    retry: 2,
+    retryDelay: 1000,
+    enabled: hasAccessToken(), // Only run query if user has access token
+  });
 
-    return {
-      id: order.orderId || order.id || `order-${index}`,
-      product_name: firstItem.itemName || firstItem.productName || firstItem.name || firstItem.title || 'N/A',
-      quantity: totalQuantity,
-      unit_price: unitPrice,
-      total_amount: order.total || 0,
-      status: orderStatus,
-      order_date: order.createdAt || order.orderDate || order.created_at || new Date().toISOString(),
-      shipping_address: firstItem.shippingAddress || firstItem.address || order.shippingAddress || order.address || 'N/A',
-      notes: firstItem.tag || firstItem.notes || firstItem.description || order.notes || '',
-    };
-  }) : [];
-  const createMutation = useMutation({
-    mutationFn: (newOrder: OrderFormData) => {
-      const userId = 'b85951de-169f-4b96-83fd-346740877dd5';
-      const itemId = crypto.randomUUID();
-      
-      const payload = {
-        userId: userId,
-        items: [
-          {
-            itemId: itemId,
-            itemName: newOrder.product_name,
-            quantity: newOrder.quantity,
-            unitPrice: newOrder.unit_price,
-            tag: newOrder.notes || `Order for ${newOrder.product_name}`
-          }
-        ],
-        tag: "order-checkout"
-      };
-      
-      return apiClient.post('/Orders', payload);
+  // Use orders directly from API without transformation
+  const orders: ApiOrder[] = ordersResponse?.orders || [];
+
+  // Mutation for advancing order status
+  const advanceStatusMutation = useMutation({
+    mutationFn: ({ orderId, action }: { orderId: string; action?: string }) => {
+      return OrderApiService.advanceOrderStatus(orderId, { action });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      setOpen(false);
-      setFormData(initialFormData);
-      setSnackbar({ open: true, message: 'Order created successfully!', severity: 'success' });
+      setSnackbar({ 
+        open: true, 
+        message: `Order status updated successfully! ${data.newStatus ? `New status: ${data.newStatus}` : ''}`, 
+        severity: 'success' 
+      });
     },
     onError: (error: any) => {
-      setSnackbar({ open: true, message: `Failed to create order: ${error.response?.data?.message || error.message}`, severity: 'error' });
+      setSnackbar({ 
+        open: true, 
+        message: `Failed to update order status: ${error.response?.data?.message || error.message}`, 
+        severity: 'error' 
+      });
     },
   });
 
   const cancelMutation = useMutation({
     mutationFn: (id: number | string) => {
-      return apiClient.put(`/Orders/${id}/status`, {
-        status: 'Cancelled',
-        tag: 'order-cancellation'
-      });
+      return OrderApiService.advanceOrderStatus(String(id), { action: 'cancel' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -279,35 +323,156 @@ const OrdersList: React.FC = () => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createMutation.mutate(formData);
+
+  const handleCancel = (id: number | string, order: ApiOrder) => {
+    const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
+    const firstItemName = firstItem ? firstItem.productName : (order.items && order.items.length > 0 ? 'Multiple Items' : 'No Items');
+    
+    setConfirmDialog({
+      open: true,
+      title: 'Cancel Order',
+      message: `Are you sure you want to cancel order #${id}? This action cannot be undone.\n\nOrder Details:\n• Product: ${firstItemName}\n• Total: $${order.total?.toFixed(2) || '0.00'}\n• Current Status: ${order.status?.toUpperCase()}`,
+      action: () => {
+        cancelMutation.mutate(id);
+        setConfirmDialog(prev => ({ ...prev, open: false }));
+      },
+      actionLabel: 'Cancel Order',
+      actionColor: 'error',
+    });
   };
 
-  const handleCancel = (id: number | string) => {
-    if (window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
-      cancelMutation.mutate(id);
+  const handleAdvanceStatus = (id: number | string, order: ApiOrder) => {
+    const currentStatus = order.status?.toLowerCase() || 'unknown';
+    const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
+    const firstItemName = firstItem ? firstItem.productName : (order.items && order.items.length > 0 ? 'Multiple Items' : 'No Items');
+    
+    const getNextStatus = (status: string) => {
+      switch (status.toUpperCase()) {
+        case 'DRAFT': return 'PENDINGPAYMENT';
+        case 'PENDINGPAYMENT': return 'PAID';
+        case 'PAID': return 'SHIPPED';
+        case 'SHIPPED': return 'DELIVERED';
+        default: return 'Next Status';
+      }
+    };
+
+    setConfirmDialog({
+      open: true,
+      title: 'Advance Order Status',
+      message: `Advance order #${id} to the next status?\n\nOrder Details:\n• Product: ${firstItemName}\n• Total: $${order.total?.toFixed(2) || '0.00'}\n• Current Status: ${currentStatus.toUpperCase()}\n• Next Status: ${getNextStatus(currentStatus)}`,
+      action: () => {
+        advanceStatusMutation.mutate({ orderId: String(id) });
+        setConfirmDialog(prev => ({ ...prev, open: false }));
+      },
+      actionLabel: 'Advance Status',
+      actionColor: 'success',
+    });
+  };
+
+  const handleViewDetails = async (order: ApiOrder) => {
+    setLoadingOrderDetails(order.orderId);
+    try {
+      // Fetch the complete order details from the API
+      console.log('🔍 OrdersList: Fetching order details for ID:', order.orderId);
+      const orderResponse = await OrderApiService.getOrderById(order.orderId);
+      console.log('📦 OrdersList: API Response:', orderResponse);
+      console.log('📦 OrdersList: Response validation:', {
+        hasResponse: !!orderResponse,
+        hasSuccess: orderResponse?.success,
+        successValue: orderResponse?.success,
+        hasOrder: !!orderResponse?.order,
+        responseKeys: orderResponse ? Object.keys(orderResponse) : [],
+        orderKeys: orderResponse?.order ? Object.keys(orderResponse.order) : []
+      });
+      
+      // Check if response is the order directly or wrapped in OrderResponse
+      const orderData = orderResponse?.order || (orderResponse as any);
+      
+      if (orderData && orderData.orderId) {
+        console.log('✅ OrdersList: Order data found, navigating to details');
+        // Navigate to order details page with the orderId
+        navigate(`/order-details/${order.orderId}`, {
+          state: { orderData: orderData }
+        });
+      } else {
+        console.error('❌ OrdersList: No valid order data found:', {
+          hasOrderResponse: !!orderResponse,
+          hasOrderField: !!orderResponse?.order,
+          hasOrderId: !!((orderResponse as any)?.orderId || orderResponse?.order?.orderId),
+          responseKeys: orderResponse ? Object.keys(orderResponse) : []
+        });
+        setSnackbar({
+          open: true,
+          message: `Failed to fetch order details: No valid order data received`,
+          severity: 'error'
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching order details:', error);
+      
+      let errorMessage = 'Unknown error';
+      
+      if (error.response) {
+        // Server responded with error status
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        if (status === 401) {
+          errorMessage = 'Authentication required. Please log in again.';
+        } else if (status === 403) {
+          errorMessage = 'Access denied. You do not have permission to view this order.';
+        } else if (status === 404) {
+          errorMessage = 'Order not found. It may have been deleted or the ID is incorrect.';
+        } else if (status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (data?.message) {
+          errorMessage = data.message;
+        } else {
+          errorMessage = `Server error (${status}): ${error.response.statusText}`;
+        }
+      } else if (error.request) {
+        // Network error
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.message) {
+        // Other error
+        errorMessage = error.message;
+      }
+      
+      setSnackbar({
+        open: true,
+        message: `Failed to fetch order details: ${errorMessage}`,
+        severity: 'error'
+      });
+    } finally {
+      setLoadingOrderDetails(null);
     }
   };
 
-  const handleViewDetails = (order: Order) => {
-    const orderData = encodeURIComponent(JSON.stringify(order));
-    navigate(`/order-details?data=${orderData}`);
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialog(prev => ({ ...prev, open: false }));
   };
 
-  const handleClose = () => {
-    setOpen(false);
-    setFormData(initialFormData);
-  };
 
-  const handleInputChange = (field: keyof OrderFormData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = field === 'quantity' || field === 'unit_price' 
-      ? parseFloat(e.target.value) || 0 
-      : e.target.value;
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  // Check authentication status
+  if (!hasAccessToken()) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Authentication Required
+            </Typography>
+            <Typography variant="body2">
+              Please log in to access the orders management system.
+            </Typography>
+          </Alert>
+          <Typography variant="body2" color="text.secondary">
+            You need to be authenticated to view and manage orders.
+          </Typography>
+        </Paper>
+      </Container>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -324,7 +489,7 @@ const OrdersList: React.FC = () => {
           Failed to load orders from API: {error instanceof Error ? error.message : 'Unknown error'}
         </Alert>
         <Typography variant="body2" sx={{ mt: 2 }}>
-          API Endpoint: /api/orders/users/b85951de-169f-4b96-83fd-346740877dd5/orders
+          API Endpoint: /api/order
         </Typography>
       </Container>
     );
@@ -340,12 +505,17 @@ const OrdersList: React.FC = () => {
           </Typography>
         </Box>
         <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setOpen(true)}
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={() => {
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({ queryKey: ['orderStatuses'] });
+            setSnackbar({ open: true, message: 'Orders refreshed successfully!', severity: 'success' });
+          }}
+          disabled={isLoading}
           size="large"
         >
-          New Order
+          Refresh
         </Button>
       </Box>
 
@@ -353,6 +523,7 @@ const OrdersList: React.FC = () => {
         <DataGrid
           rows={orders}
           columns={columns}
+          getRowId={(row) => row.orderId}
           initialState={{
             pagination: {
               paginationModel: { page: 0, pageSize: 10 },
@@ -417,93 +588,11 @@ const OrdersList: React.FC = () => {
             No orders found
           </Typography>
           <Typography color="text.secondary">
-            Create your first order to get started
+            No orders available at the moment
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setOpen(true)}
-            sx={{ mt: 3 }}
-          >
-            Create Order
-          </Button>
         </Paper>
       )}
 
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <form onSubmit={handleSubmit}>
-          <DialogTitle>
-            Create New Order
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                fullWidth
-                label="Product Name"
-                value={formData.product_name}
-                onChange={handleInputChange('product_name')}
-                required
-              />
-              
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Quantity"
-                  type="number"
-                  value={formData.quantity}
-                  onChange={handleInputChange('quantity')}
-                  required
-                  inputProps={{ min: 1 }}
-                />
-                <TextField
-                  fullWidth
-                  label="Unit Price"
-                  type="number"
-                  value={formData.unit_price}
-                  onChange={handleInputChange('unit_price')}
-                  required
-                  inputProps={{ min: 0, step: 0.01 }}
-                />
-                <TextField
-                  fullWidth
-                  label="Total Amount"
-                  value={`$${(formData.quantity * formData.unit_price).toFixed(2)}`}
-                  disabled
-                />
-              </Box>
-              
-              <TextField
-                fullWidth
-                label="Shipping Address"
-                multiline
-                rows={2}
-                value={formData.shipping_address}
-                onChange={handleInputChange('shipping_address')}
-                required
-              />
-              
-              <TextField
-                fullWidth
-                label="Notes (Optional)"
-                multiline
-                rows={2}
-                value={formData.notes}
-                onChange={handleInputChange('notes')}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button 
-              type="submit" 
-              variant="contained"
-              disabled={createMutation.isPending}
-            >
-              Create Order
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
 
       <Snackbar
         open={snackbar.open}
@@ -517,6 +606,44 @@ const OrdersList: React.FC = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={handleCloseConfirmDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>
+          {confirmDialog.title}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}>
+            {confirmDialog.message}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, gap: 1 }}>
+          <Button 
+            onClick={handleCloseConfirmDialog}
+            variant="outlined"
+            size="large"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={confirmDialog.action}
+            variant="contained"
+            color={confirmDialog.actionColor}
+            size="large"
+            disabled={advanceStatusMutation.isPending || cancelMutation.isPending}
+          >
+            {advanceStatusMutation.isPending || cancelMutation.isPending 
+              ? 'Processing...' 
+              : confirmDialog.actionLabel
+            }
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
