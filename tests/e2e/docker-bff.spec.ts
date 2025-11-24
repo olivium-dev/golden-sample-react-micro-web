@@ -108,7 +108,7 @@ test.describe('E2E Tests - Docker BFF Architecture', () => {
     const crossOriginRequests: string[] = [];
     const backendDomains = [
       'dev-creamat.fds-1.com',
-      'dev-jaiker.fanusdigital.site',
+      'dev-cremat.fanusdigital.site',
     ];
 
     page.on('request', (request) => {
