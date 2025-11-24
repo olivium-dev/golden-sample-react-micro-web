@@ -11,6 +11,11 @@ on:
     paths:
       - 'frontend/container/**'
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -23,17 +28,20 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
         
     - name: Install dependencies
       run: |
-        cd frontend/container
-        npm ci
+        cd frontend/shared-ui-lib
+        npm install
+        cd ../container
+        npm install
         
     - name: Build application
       run: |
         cd frontend/container
-        npm run build
+        # Increase Node.js memory limit and add timeout
+        export NODE_OPTIONS="--max-old-space-size=4096"
+        timeout 10m npm run build
         
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
