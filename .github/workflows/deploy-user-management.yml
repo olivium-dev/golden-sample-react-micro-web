@@ -11,6 +11,11 @@ on:
     paths:
       - 'frontend/user-management-app/**'
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -23,12 +28,13 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
         
     - name: Install dependencies
       run: |
-        cd frontend/user-management-app
-        npm ci
+        cd frontend/shared-ui-lib
+        npm install
+        cd ../user-management-app
+        npm install
         
     - name: Build application
       run: |

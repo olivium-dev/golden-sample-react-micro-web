@@ -4,12 +4,17 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'frontend/orers-app/**'
+      - 'frontend/orders-app/**'
       - '.github/workflows/deploy-orders-app.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'frontend/orders-app/**'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
@@ -23,12 +28,13 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
         
     - name: Install dependencies
       run: |
-        cd frontend/orders-app
-        npm ci
+        cd frontend/shared-ui-lib
+        npm install
+        cd ../orders-app
+        npm install
         
     - name: Build application
       run: |

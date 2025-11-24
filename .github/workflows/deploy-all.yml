@@ -5,6 +5,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -26,9 +31,6 @@ jobs:
         cd frontend/shared-ui-lib && npm install
         cd ../container && npm install
         cd ../user-management-app && npm install
-        cd ../data-grid-app && npm install
-        cd ../analytics-app && npm install
-        cd ../settings-app && npm install
         cd ../catalog-app && npm install
         cd ../orders-app && npm install
       
@@ -36,9 +38,6 @@ jobs:
       run: |
         cd frontend/container && npm run build
         cd ../user-management-app && npm run build
-        cd ../data-grid-app && npm run build
-        cd ../analytics-app && npm run build
-        cd ../settings-app && npm run build
         cd ../catalog-app && npm run build
         cd ../orders-app && npm run build
       
@@ -93,9 +92,6 @@ jobs:
       matrix:
         app: 
           - { name: 'user-management-app', destination: 'user-management' }
-          - { name: 'data-grid-app', destination: 'data-grid' }
-          - { name: 'analytics-app', destination: 'analytics' }
-          - { name: 'settings-app', destination: 'settings' }
           - { name: 'catalog-app', destination: 'catalog' }
           - { name: 'orders-app', destination: 'orders' }
     
