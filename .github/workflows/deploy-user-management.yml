@@ -43,9 +43,4 @@ jobs:
         export NODE_OPTIONS="--max-old-space-size=4096"
         timeout 10m npm run build
         
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: frontend/user-management-app/build
-        destination_dir: user-management
+   
