@@ -144,8 +144,6 @@ jobs:
           DASHBOARD_PORT: ${{ inputs.dashboard_port }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
-          CF_ACCESS_CLIENT_ID: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_ID }}
-          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_SECRET }}
         run: |
           echo "🚀 Deploying to Creamati VPS..."
           
