@@ -1,36 +1,10 @@
 version: '3.8'
 
-services:
-  # Backend Service
-  backend:
-    build:
-      context: ./backend/mock-data-service
-      dockerfile: Dockerfile
-    container_name: micro-frontend-backend
-    ports:
-      - "8000:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
-      - JWT_SECRET_KEY_FILE=/run/secrets/jwt_secret_key
-      - JWT_REFRESH_SECRET_KEY_FILE=/run/secrets/jwt_refresh_secret_key
-      - JWT_ALGORITHM=HS256
-      - ACCESS_TOKEN_EXPIRE_MINUTES=15
-      - REFRESH_TOKEN_EXPIRE_DAYS=7
-    volumes:
-      - ./backend/mock-data-service:/app
-      - backend-cache:/root/.cache
-    networks:
-      - micro-frontend-network
-    secrets:
-      - jwt_secret_key
-      - jwt_refresh_secret_key
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+# Simple Docker Compose for local development
+# NO BFF - Frontends call https://dev-creamat.fds-1.com/gateway/ directly
+# NO Mock Backend - Using real backend
 
+services:
   # Container App (Main Host)
   container-app:
     build:
@@ -53,6 +27,8 @@ services:
       - data-grid-app
       - analytics-app
       - settings-app
+      - orders-app
+      - catalog-app
     command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
 
   # User Management App
@@ -66,15 +42,12 @@ services:
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
-      - REACT_APP_API_URL=http://backend:8000
     volumes:
       - ./frontend/user-management-app:/app
       - /app/node_modules
       - ./frontend/shared-ui-lib:/app/shared-ui-lib
     networks:
       - micro-frontend-network
-    depends_on:
-      - backend
     command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
 
   # Data Grid App
@@ -88,15 +61,12 @@ services:
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
-      - REACT_APP_API_URL=http://backend:8000
     volumes:
       - ./frontend/data-grid-app:/app
       - /app/node_modules
       - ./frontend/shared-ui-lib:/app/shared-ui-lib
     networks:
       - micro-frontend-network
-    depends_on:
-      - backend
     command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
 
   # Analytics App
@@ -110,15 +80,12 @@ services:
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
-      - REACT_APP_API_URL=http://backend:8000
     volumes:
       - ./frontend/analytics-app:/app
       - /app/node_modules
       - ./frontend/shared-ui-lib:/app/shared-ui-lib
     networks:
       - micro-frontend-network
-    depends_on:
-      - backend
     command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
 
   # Settings App
@@ -140,16 +107,44 @@ services:
       - micro-frontend-network
     command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
 
+  # Orders App
+  orders-app:
+    build:
+      context: ./frontend/orders-app
+      dockerfile: Dockerfile.dev
+    container_name: micro-frontend-orders
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend/orders-app:/app
+      - /app/node_modules
+      - ./frontend/shared-ui-lib:/app/shared-ui-lib
+    networks:
+      - micro-frontend-network
+    command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
+
+  # Catalog App
+  catalog-app:
+    build:
+      context: ./frontend/catalog-app
+      dockerfile: Dockerfile.dev
+    container_name: micro-frontend-catalog
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend/catalog-app:/app
+      - /app/node_modules
+      - ./frontend/shared-ui-lib:/app/shared-ui-lib
+    networks:
+      - micro-frontend-network
+    command: npx webpack serve --config webpack.minimal.js --host 0.0.0.0
+
 networks:
   micro-frontend-network:
     driver: bridge
-
-volumes:
-  backend-cache:
-
-secrets:
-  jwt_secret_key:
-    file: ./secrets/jwt_secret_key.txt
-  jwt_refresh_secret_key:
-    file: ./secrets/jwt_refresh_secret_key.txt
-

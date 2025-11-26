@@ -1,147 +1,63 @@
 version: '3.8'
 
+# DEPRECATED: This file is kept for reference only
+# The project NO LONGER uses BFF (Backend-for-Frontend) architecture
+# Frontends call https://dev-creamat.fds-1.com/gateway/ directly
+#
+# Use docker-compose.bff.traefik.prod.yml instead for production with Traefik
+
 services:
-  # Backend Service
-  backend:
+  # Container App (Main Host)
+  container-app:
     build:
-      context: ./backend/mock-data-service
+      context: ./frontend/container
       dockerfile: Dockerfile
-    container_name: micro-frontend-backend-prod-bff
+    container_name: micro-frontend-container-prod
     ports:
-      - "8000:8000"
+      - "80:80"
+      - "443:443"
     environment:
-      - PYTHONUNBUFFERED=1
-      - JWT_SECRET_KEY_FILE=/run/secrets/jwt_secret_key
-      - JWT_REFRESH_SECRET_KEY_FILE=/run/secrets/jwt_refresh_secret_key
-      - JWT_ALGORITHM=HS256
-      - ACCESS_TOKEN_EXPIRE_MINUTES=15
-      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - NODE_ENV=production
+      - DOCKER_MODE=true
     networks:
       - micro-frontend-network
-    secrets:
-      - jwt_secret_key
-      - jwt_refresh_secret_key
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+    depends_on:
+      - user-management-app
+      - catalog-app
+      - orders-app
+      - data-grid-app
+      - analytics-app
+      - settings-app
     restart: unless-stopped
     deploy:
       resources:
         limits:
           cpus: '1.0'
           memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
 
-  # User Management BFF
-  user-management-bff:
+  # User Management App
+  user-management-app:
     build:
-      context: .
-      dockerfile: frontend/user-management-app/Dockerfile.bff
-    container_name: user-management-bff-prod
+      context: ./frontend/user-management-app
+      dockerfile: Dockerfile
+    container_name: micro-frontend-user-management-prod
     ports:
-      - "4001:4001"
-    environment:
-      - NODE_ENV=production
-      - BFF_PORT=4001
-      - FRONTEND_PORT=3001
-      - BACKEND_USER_SERVICE_URL=http://backend:8000
+      - "3001:80"
     networks:
       - micro-frontend-network
-    depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
     restart: unless-stopped
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 256M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
 
-  # Catalog BFF
-  catalog-bff:
-    build:
-      context: .
-      dockerfile: frontend/catalog-app/Dockerfile.bff
-    container_name: catalog-bff-prod
-    ports:
-      - "4006:4006"
-    environment:
-      - NODE_ENV=production
-      - BFF_PORT=4006
-      - FRONTEND_PORT=3006
-      - BACKEND_CATALOG_SERVICE_URL=https://dev-creamat.fds-1.com/catalog
-      - BACKEND_CDN_SERVICE_URL=https://dev-creamat.fds-1.com/cdn
-      - ENABLE_CACHING=true
-      - CACHE_MAX_AGE=3600
-    networks:
-      - micro-frontend-network
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4006/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
-
-  # Orders BFF
-  orders-bff:
-    build:
-      context: .
-      dockerfile: frontend/orders-app/Dockerfile.bff
-    container_name: orders-bff-prod
-    ports:
-      - "4005:4005"
-    environment:
-      - NODE_ENV=production
-      - BFF_PORT=4005
-      - FRONTEND_PORT=3005
-      - BACKEND_ORDER_SERVICE_URL=https://dev-creamat.fds-1.com/order
-    networks:
-      - micro-frontend-network
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4005/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
-
-  # Other micro-frontends
+  # Data Grid App
   data-grid-app:
     build:
       context: ./frontend/data-grid-app
       dockerfile: Dockerfile
-    container_name: micro-frontend-data-grid-prod-bff
+    container_name: micro-frontend-data-grid-prod
     ports:
       - "3002:80"
     networks:
@@ -153,11 +69,12 @@ services:
           cpus: '0.5'
           memory: 256M
 
+  # Analytics App
   analytics-app:
     build:
       context: ./frontend/analytics-app
       dockerfile: Dockerfile
-    container_name: micro-frontend-analytics-prod-bff
+    container_name: micro-frontend-analytics-prod
     ports:
       - "3003:80"
     networks:
@@ -169,11 +86,12 @@ services:
           cpus: '0.5'
           memory: 256M
 
+  # Settings App
   settings-app:
     build:
       context: ./frontend/settings-app
       dockerfile: Dockerfile
-    container_name: micro-frontend-settings-prod-bff
+    container_name: micro-frontend-settings-prod
     ports:
       - "3004:80"
     networks:
@@ -185,45 +103,40 @@ services:
           cpus: '0.5'
           memory: 256M
 
-  # Container App (Main Host)
-  container-app:
+  # Orders App
+  orders-app:
     build:
-      context: ./frontend/container
+      context: ./frontend/orders-app
       dockerfile: Dockerfile
-    container_name: micro-frontend-container-prod-bff
+    container_name: micro-frontend-orders-prod
     ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - NODE_ENV=production
-      - DOCKER_MODE=true
-      - BFF_MODE=true
+      - "3005:80"
     networks:
       - micro-frontend-network
-    depends_on:
-      - user-management-bff
-      - catalog-bff
-      - orders-bff
-      - data-grid-app
-      - analytics-app
-      - settings-app
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Catalog App
+  catalog-app:
+    build:
+      context: ./frontend/catalog-app
+      dockerfile: Dockerfile
+    container_name: micro-frontend-catalog-prod
+    ports:
+      - "3006:80"
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
           cpus: '0.5'
           memory: 256M
 
 networks:
   micro-frontend-network:
     driver: bridge
-
-secrets:
-  jwt_secret_key:
-    file: ./secrets/jwt_secret_key.txt
-  jwt_refresh_secret_key:
-    file: ./secrets/jwt_refresh_secret_key.txt
-

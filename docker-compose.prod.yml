@@ -1,26 +1,10 @@
 version: '3.8'
 
-services:
-  # Backend Service
-  backend:
-    build:
-      context: ./backend/mock-data-service
-      dockerfile: Dockerfile
-    container_name: micro-frontend-backend-prod
-    ports:
-      - "8000:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
-    networks:
-      - micro-frontend-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+# Production Docker Compose without Traefik
+# NO BFF - Frontends call https://dev-creamat.fds-1.com/gateway/ directly
+# NO Mock Backend - Using real backend
 
+services:
   # Container App (Main Host)
   container-app:
     build:
@@ -29,6 +13,8 @@ services:
     container_name: micro-frontend-container-prod
     ports:
       - "80:80"
+    environment:
+      - NODE_ENV=production
     networks:
       - micro-frontend-network
     depends_on:
@@ -36,6 +22,8 @@ services:
       - data-grid-app
       - analytics-app
       - settings-app
+      - orders-app
+      - catalog-app
     restart: unless-stopped
 
   # User Management App
@@ -46,12 +34,8 @@ services:
     container_name: micro-frontend-user-management-prod
     ports:
       - "3001:80"
-    environment:
-      - REACT_APP_API_URL=http://backend:8000
     networks:
       - micro-frontend-network
-    depends_on:
-      - backend
     restart: unless-stopped
 
   # Data Grid App
@@ -62,12 +46,8 @@ services:
     container_name: micro-frontend-data-grid-prod
     ports:
       - "3002:80"
-    environment:
-      - REACT_APP_API_URL=http://backend:8000
     networks:
       - micro-frontend-network
-    depends_on:
-      - backend
     restart: unless-stopped
 
   # Analytics App
@@ -78,12 +58,8 @@ services:
     container_name: micro-frontend-analytics-prod
     ports:
       - "3003:80"
-    environment:
-      - REACT_APP_API_URL=http://backend:8000
     networks:
       - micro-frontend-network
-    depends_on:
-      - backend
     restart: unless-stopped
 
   # Settings App
@@ -98,11 +74,30 @@ services:
       - micro-frontend-network
     restart: unless-stopped
 
+  # Orders App
+  orders-app:
+    build:
+      context: ./frontend/orders-app
+      dockerfile: Dockerfile
+    container_name: micro-frontend-orders-prod
+    ports:
+      - "3005:80"
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+
+  # Catalog App
+  catalog-app:
+    build:
+      context: ./frontend/catalog-app
+      dockerfile: Dockerfile
+    container_name: micro-frontend-catalog-prod
+    ports:
+      - "3006:80"
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+
 networks:
   micro-frontend-network:
     driver: bridge
-
-
-
-
-

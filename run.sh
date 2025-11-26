@@ -33,16 +33,23 @@ echo ""
 echo "🚀 Starting all services in background..."
 
 # Navigate to project root
-PROJECT_ROOT="/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web"
+PROJECT_ROOT=$(pwd)
 cd "$PROJECT_ROOT"
 
 # Install missing Python dependency for backend
-echo "📦 Installing missing Python dependencies..."
-pip3 install -q email-validator 2>/dev/null || pip install -q email-validator 2>/dev/null || true
+# Create and activate virtual environment
+if [ ! -d "backend/venv" ]; then
+    echo "📦 Creating Python virtual environment..."
+    python3 -m venv backend/venv
+fi
+source backend/venv/bin/activate
+
+echo "📦 Installing Python dependencies..."
+"$PROJECT_ROOT/backend/venv/bin/pip" install -r backend/mock-data-service/requirements.txt
 
 # Start backend service
 echo "🐍 Starting FastAPI backend service on port 8000..."
-(cd "$PROJECT_ROOT/backend/mock-data-service" && nohup python3 main.py > backend.log 2>&1 &)
+(cd "$PROJECT_ROOT/backend/mock-data-service" && nohup "$PROJECT_ROOT/backend/venv/bin/python3" main.py > backend.log 2>&1 &)
 sleep 2
 
 # Start frontend services
@@ -50,28 +57,38 @@ echo "⚛️  Starting frontend micro-services..."
 
 # Start container app (port 3000)
 echo "Starting container app on port 3000..."
-(cd "$PROJECT_ROOT/frontend/container" && nohup npx webpack serve --config webpack.minimal.js > container.log 2>&1 &)
-sleep 1
+(cd "$PROJECT_ROOT/frontend/container" && nohup npm start > container.log 2>&1 &)
+sleep 2
 
 # Start user-management-app (port 3001)
 echo "Starting user-management-app on port 3001..."
-(cd "$PROJECT_ROOT/frontend/user-management-app" && nohup npx webpack serve --config webpack.minimal.js > user-management.log 2>&1 &)
-sleep 1
+(cd "$PROJECT_ROOT/frontend/user-management-app" && nohup npm start > user-management.log 2>&1 &)
+sleep 2
 
 # Start data-grid-app (port 3002)
 echo "Starting data-grid-app on port 3002..."
-(cd "$PROJECT_ROOT/frontend/data-grid-app" && nohup npx webpack serve --config webpack.minimal.js > data-grid.log 2>&1 &)
-sleep 1
+(cd "$PROJECT_ROOT/frontend/data-grid-app" && nohup npm start > data-grid.log 2>&1 &)
+sleep 2
 
 # Start analytics-app (port 3003)
 echo "Starting analytics-app on port 3003..."
-(cd "$PROJECT_ROOT/frontend/analytics-app" && nohup npx webpack serve --config webpack.minimal.js > analytics.log 2>&1 &)
-sleep 1
+(cd "$PROJECT_ROOT/frontend/analytics-app" && nohup npm start > analytics.log 2>&1 &)
+sleep 2
 
 # Start settings-app (port 3004)
 echo "Starting settings-app on port 3004..."
-(cd "$PROJECT_ROOT/frontend/settings-app" && nohup npx webpack serve --config webpack.minimal.js > settings.log 2>&1 &)
-sleep 1
+(cd "$PROJECT_ROOT/frontend/settings-app" && nohup npm start > settings.log 2>&1 &)
+sleep 2
+
+# Start orders-app (port 3005)
+echo "Starting orders-app on port 3005..."
+(cd "$PROJECT_ROOT/frontend/orders-app" && nohup npm start > orders.log 2>&1 &)
+sleep 2
+
+# Start catalog-app (port 3006)
+echo "Starting catalog-app on port 3006..."
+(cd "$PROJECT_ROOT/frontend/catalog-app" && nohup npm start > catalog.log 2>&1 &)
+sleep 2
 
 echo ""
 echo "🎉 All services starting in background!"
@@ -84,6 +101,8 @@ echo "User Management:          http://localhost:3001"
 echo "Data Grid:                http://localhost:3002"
 echo "Analytics:                http://localhost:3003"
 echo "Settings:                 http://localhost:3004"
+echo "Orders:                   http://localhost:3006"
+echo "Catalog:                  http://localhost:3005"
 echo ""
 echo "📝 Logs are being written to:"
 echo "Backend:                  backend/mock-data-service/backend.log"
@@ -92,6 +111,8 @@ echo "User Management:          frontend/user-management-app/user-management.log
 echo "Data Grid:                frontend/data-grid-app/data-grid.log"
 echo "Analytics:                frontend/analytics-app/analytics.log"
 echo "Settings:                 frontend/settings-app/settings.log"
+echo "Orders:                   frontend/orders-app/orders.log"
+echo "Catalog:                  frontend/catalog-app/catalog.log"
 echo ""
 echo "⏳ Services are starting up (this takes ~15-30 seconds)..."
 echo ""

@@ -6,8 +6,8 @@
 echo "🛑 Stopping all micro-frontend and backend services..."
 
 # Kill processes on specific ports
-echo "Killing processes on ports 3000-3004 and 8000..."
-for port in 3000 3001 3002 3003 3004 8000; do
+echo "Killing processes on ports 3000-3006 and 8000..."
+for port in 3000 3001 3002 3003 3004 3005 3006 8000; do
     pid=$(lsof -ti:$port)
     if [ ! -z "$pid" ]; then
         echo "Killing process $pid on port $port"

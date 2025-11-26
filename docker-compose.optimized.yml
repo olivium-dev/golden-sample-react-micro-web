@@ -1,5 +1,13 @@
 version: '3.8'
 
+# ============================================
+# Optimized Docker Compose with Traefik
+# - Uses multi-stage builds
+# - BuildKit enabled
+# - Minimal image sizes
+# - Production ready
+# ============================================
+
 services:
   # Traefik Reverse Proxy
   traefik:
@@ -13,109 +21,27 @@ services:
       - "--log.level=INFO"
       - "--accesslog=true"
     ports:
-      - "80:80"       # HTTP
-      - "8080:8080"   # Traefik Dashboard
+      - "80:80"
+      - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - micro-frontend-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
 
-  # User Management App
-  user-management-app:
-    build:
-      context: ./frontend/user-management-app
-      dockerfile: Dockerfile
-    container_name: micro-frontend-user-management
-    networks:
-      - micro-frontend-network
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.user-management.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-user.js`)"
-      - "traefik.http.routers.user-management.entrypoints=web"
-      - "traefik.http.services.user-management.loadbalancer.server.port=80"
-
-  # Data Grid App
-  data-grid-app:
-    build:
-      context: ./frontend/data-grid-app
-      dockerfile: Dockerfile
-    container_name: micro-frontend-data-grid
-    networks:
-      - micro-frontend-network
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.data-grid.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-data-grid.js`)"
-      - "traefik.http.routers.data-grid.entrypoints=web"
-      - "traefik.http.services.data-grid.loadbalancer.server.port=80"
-
-  # Analytics App
-  analytics-app:
-    build:
-      context: ./frontend/analytics-app
-      dockerfile: Dockerfile
-    container_name: micro-frontend-analytics
-    networks:
-      - micro-frontend-network
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.analytics.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-analytics.js`)"
-      - "traefik.http.routers.analytics.entrypoints=web"
-      - "traefik.http.services.analytics.loadbalancer.server.port=80"
-
-  # Settings App
-  settings-app:
-    build:
-      context: ./frontend/settings-app
-      dockerfile: Dockerfile
-    container_name: micro-frontend-settings
-    networks:
-      - micro-frontend-network
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.settings.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-settings.js`)"
-      - "traefik.http.routers.settings.entrypoints=web"
-      - "traefik.http.services.settings.loadbalancer.server.port=80"
-
-  # Orders App
-  orders-app:
-    build:
-      context: ./frontend/orders-app
-      dockerfile: Dockerfile
-    container_name: micro-frontend-orders
-    networks:
-      - micro-frontend-network
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.orders.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-orders.js`)"
-      - "traefik.http.routers.orders.entrypoints=web"
-      - "traefik.http.services.orders.loadbalancer.server.port=80"
-
-  # Catalog App
-  catalog-app:
-    build:
-      context: ./frontend/catalog-app
-      dockerfile: Dockerfile
-    container_name: micro-frontend-catalog
-    networks:
-      - micro-frontend-network
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.catalog.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-catalog.js`)"
-      - "traefik.http.routers.catalog.entrypoints=web"
-      - "traefik.http.services.catalog.loadbalancer.server.port=80"
-
-  # Container App (Main Host) - Catch-all with lowest priority
+  # Container App (Main Host)
   container-app:
     build:
       context: ./frontend/container
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.optimized
+      args:
+        - NODE_ENV=production
+    image: creamati-cms-container:latest
     container_name: micro-frontend-container
     environment:
       - NODE_ENV=production
@@ -130,6 +56,11 @@ services:
       - analytics-app
       - settings-app
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.container.rule=Host(`localhost`)"
@@ -137,6 +68,145 @@ services:
       - "traefik.http.routers.container.priority=1"
       - "traefik.http.services.container.loadbalancer.server.port=80"
 
+  # User Management App
+  user-management-app:
+    build:
+      context: ./frontend/user-management-app
+      dockerfile: Dockerfile.optimized
+      args:
+        - NODE_ENV=production
+    image: creamati-cms-user-management:latest
+    container_name: micro-frontend-user-management
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user-management.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-user.js`)"
+      - "traefik.http.routers.user-management.entrypoints=web"
+      - "traefik.http.services.user-management.loadbalancer.server.port=80"
+
+  # Data Grid App
+  data-grid-app:
+    build:
+      context: ./frontend/data-grid-app
+      dockerfile: Dockerfile.optimized
+      args:
+        - NODE_ENV=production
+    image: creamati-cms-data-grid:latest
+    container_name: micro-frontend-data-grid
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.data-grid.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-data-grid.js`)"
+      - "traefik.http.routers.data-grid.entrypoints=web"
+      - "traefik.http.services.data-grid.loadbalancer.server.port=80"
+
+  # Analytics App
+  analytics-app:
+    build:
+      context: ./frontend/analytics-app
+      dockerfile: Dockerfile.optimized
+      args:
+        - NODE_ENV=production
+    image: creamati-cms-analytics:latest
+    container_name: micro-frontend-analytics
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.analytics.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-analytics.js`)"
+      - "traefik.http.routers.analytics.entrypoints=web"
+      - "traefik.http.services.analytics.loadbalancer.server.port=80"
+
+  # Settings App
+  settings-app:
+    build:
+      context: ./frontend/settings-app
+      dockerfile: Dockerfile.optimized
+      args:
+        - NODE_ENV=production
+    image: creamati-cms-settings:latest
+    container_name: micro-frontend-settings
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.settings.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-settings.js`)"
+      - "traefik.http.routers.settings.entrypoints=web"
+      - "traefik.http.services.settings.loadbalancer.server.port=80"
+
+  # Orders App
+  orders-app:
+    build:
+      context: ./frontend/orders-app
+      dockerfile: Dockerfile.optimized
+      args:
+        - NODE_ENV=production
+    image: creamati-cms-orders:latest
+    container_name: micro-frontend-orders
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.orders.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-orders.js`)"
+      - "traefik.http.routers.orders.entrypoints=web"
+      - "traefik.http.services.orders.loadbalancer.server.port=80"
+
+  # Catalog App
+  catalog-app:
+    build:
+      context: ./frontend/catalog-app
+      dockerfile: Dockerfile.optimized
+      args:
+        - NODE_ENV=production
+    image: creamati-cms-catalog:latest
+    container_name: micro-frontend-catalog
+    networks:
+      - micro-frontend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.catalog.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-catalog.js`)"
+      - "traefik.http.routers.catalog.entrypoints=web"
+      - "traefik.http.services.catalog.loadbalancer.server.port=80"
+
 networks:
   micro-frontend-network:
     driver: bridge
+
