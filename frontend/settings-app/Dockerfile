@@ -6,15 +6,21 @@
 # Stage 1: Build
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+# Create directory structure that matches the import paths
+# Imports use '../../shared-ui-lib/src' from '/app/src'
+# So we need: /app/src -> ../../shared-ui-lib = /shared-ui-lib
+WORKDIR /
 
-# Copy shared-ui-lib first (needed for imports)
-COPY shared-ui-lib ./shared-ui-lib
+# Copy shared-ui-lib to root level (to match ../../shared-ui-lib path from /app/src)
+COPY shared-ui-lib /shared-ui-lib
+
+# Now set up the app
+WORKDIR /app
 
 # Copy app package files
 COPY settings-app/package*.json ./
 
-# Install dependencies (use npm install since package-lock.json may not exist)
+# Install dependencies
 RUN npm install --legacy-peer-deps
 
 # Copy app source code
