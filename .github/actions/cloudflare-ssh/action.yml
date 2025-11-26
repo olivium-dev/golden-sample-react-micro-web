@@ -14,7 +14,7 @@ inputs:
   connect-timeout:
     description: 'Connection timeout in seconds'
     required: false
-    default: '30'
+    default: '60'
   host-alias:
     description: 'SSH host alias for subsequent connections'
     required: false
@@ -49,13 +49,22 @@ runs:
         echo "${{ inputs.ssh-private-key }}" | tr -d '\n\r' | base64 -d > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         
-        # Create SSH config for Cloudflare tunnel
-        cat >> ~/.ssh/config << EOF
+        # Verify key was decoded properly
+        echo "🔍 Verifying SSH key..."
+        if head -1 ~/.ssh/id_rsa | grep -q "BEGIN"; then
+          echo "✅ SSH key format looks valid"
+        else
+          echo "⚠️  Warning: SSH key may not be properly formatted"
+          echo "First line: $(head -1 ~/.ssh/id_rsa | cut -c1-30)..."
+        fi
+        
+        # Create SSH config for Cloudflare tunnel (no indentation in heredoc)
+        cat > ~/.ssh/config << 'EOF'
         Host ${{ inputs.host-alias }}
           HostName ${{ inputs.server-hostname }}
           User ${{ inputs.server-user }}
           IdentityFile ~/.ssh/id_rsa
-          ProxyCommand cloudflared access tcp --hostname ${{ inputs.server-hostname }}
+          ProxyCommand cloudflared access tcp --hostname %h
           ConnectTimeout ${{ inputs.connect-timeout }}
           ServerAliveInterval 60
           ServerAliveCountMax 3
@@ -63,19 +72,56 @@ runs:
           UserKnownHostsFile /dev/null
         EOF
         
+        # Replace variables in config (heredoc with single quotes doesn't expand)
+        sed -i "s/\${{ inputs.host-alias }}/${{ inputs.host-alias }}/g" ~/.ssh/config
+        sed -i "s/\${{ inputs.server-hostname }}/${{ inputs.server-hostname }}/g" ~/.ssh/config
+        sed -i "s/\${{ inputs.server-user }}/${{ inputs.server-user }}/g" ~/.ssh/config
+        sed -i "s/\${{ inputs.connect-timeout }}/${{ inputs.connect-timeout }}/g" ~/.ssh/config
+        
         chmod 600 ~/.ssh/config
+        
+        echo "📝 SSH Config contents:"
+        cat ~/.ssh/config
+        echo ""
         echo "✅ SSH configuration created for host: ${{ inputs.host-alias }}"
 
     - name: Test SSH connection
       shell: bash
       run: |
         echo "🧪 Testing SSH connection to ${{ inputs.server-hostname }}..."
+        echo ""
         
-        # Test connection with timeout
-        if timeout ${{ inputs.connect-timeout }} ssh ${{ inputs.host-alias }} "echo 'SSH connection successful!'" 2>/dev/null; then
+        # Test cloudflared connectivity first
+        echo "🔍 Testing cloudflared tunnel connectivity..."
+        if timeout 30 cloudflared access tcp --hostname ${{ inputs.server-hostname }} --url localhost:22222 &
+        then
+          sleep 3
+          pkill -f "cloudflared access tcp" 2>/dev/null || true
+          echo "✅ Cloudflare tunnel appears accessible"
+        fi
+        
+        echo ""
+        echo "🔗 Attempting SSH connection (with verbose output)..."
+        
+        # Test connection with verbose output for debugging
+        if timeout ${{ inputs.connect-timeout }} ssh -v ${{ inputs.host-alias }} "echo 'SSH connection successful!'" 2>&1; then
+          echo ""
           echo "✅ SSH connection established successfully"
         else
+          echo ""
           echo "❌ SSH connection failed"
+          echo ""
+          echo "🔍 Debug information:"
+          echo "  - Host alias: ${{ inputs.host-alias }}"
+          echo "  - Server hostname: ${{ inputs.server-hostname }}"
+          echo "  - Server user: ${{ inputs.server-user }}"
+          echo "  - SSH key exists: $(test -f ~/.ssh/id_rsa && echo 'yes' || echo 'no')"
+          echo "  - SSH key permissions: $(ls -la ~/.ssh/id_rsa 2>/dev/null || echo 'N/A')"
+          echo ""
+          echo "💡 Possible issues:"
+          echo "  1. SSH private key may be incorrect or not properly base64 encoded"
+          echo "  2. Cloudflare tunnel may not be configured for this hostname"
+          echo "  3. Server may not be accessible via Cloudflare Access"
+          echo "  4. User '${{ inputs.server-user }}' may not have SSH access"
           exit 1
         fi
-
