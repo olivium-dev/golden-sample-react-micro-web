@@ -15,7 +15,7 @@ module.exports = {
     },
   },
   output: {
-    publicPath: 'auto',
+    publicPath: '/mf/settings/',
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },

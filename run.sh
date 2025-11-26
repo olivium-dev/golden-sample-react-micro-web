@@ -1,9 +1,16 @@
 #!/bin/bash
 
-# Script to start all micro-frontend services using Docker Compose
+# Script to start all micro-frontend services with Docker Compose
+# Uses pre-built images (build once, run many pattern)
 # Usage: ./run.sh
 
-echo "🚀 Starting all micro-frontend services with Docker Compose..."
+set -e  # Exit on any error
+
+# Navigate to project root
+cd "$(dirname "$0")"
+
+echo "🚀 Starting all micro-frontend services..."
+echo "=============================================="
 echo ""
 
 # Check if Docker is running
@@ -12,11 +19,23 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Navigate to project root
-cd "$(dirname "$0")"
+# Check if images exist
+echo "🔍 Checking for pre-built Docker images..."
+if ! docker images | grep -q "creamati-cms-container"; then
+  echo "⚠️  Docker images not found!"
+  echo ""
+  echo "Please build images first using one of these methods:"
+  echo "  1. Quick build: ./scripts/docker-build.sh"
+  echo "  2. Full rebuild: ./scripts/docker-full-rebuild.sh"
+  echo ""
+  exit 1
+fi
 
-# Start services
-echo "🐳 Starting Docker Compose services..."
+echo "✅ Pre-built images found"
+echo ""
+
+# Start Docker Compose services in detached mode (no build, just run)
+echo "🚀 Starting services (using pre-built images)..."
 docker compose up -d
 
 echo ""
@@ -27,18 +46,15 @@ echo ""
 echo "✅ All services started!"
 echo ""
 echo "📊 Service URLs:"
-echo "  Main App:              http://localhost"
+echo "  Main App:              http://localhost:3000"
 echo "  Traefik Dashboard:     http://localhost:8080"
 echo ""
-echo "📝 View logs:"
-echo "  docker compose logs -f"
+echo "📝 Useful commands:"
+echo "  View logs:             docker compose logs -f"
+echo "  Stop services:         docker compose down  (or ./stop.sh)"
+echo "  Restart services:      docker compose restart"
+echo "  Rebuild images:        ./scripts/docker-build.sh"
+echo "  Full rebuild:          ./scripts/docker-full-rebuild.sh"
 echo ""
-echo "🛑 To stop all services:"
-echo "  docker compose down"
-echo "  or"
-echo "  ./stop.sh"
+echo "💡 Tip: Images are cached. No rebuild needed on next run!"
 echo ""
-echo "🔧 To rebuild and restart:"
-echo "  scripts/docker-full-rebuild.sh"
-echo ""
-
