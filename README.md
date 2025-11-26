@@ -12,7 +12,7 @@ This project follows a **micro-frontend architecture** pattern, where multiple i
 ┌─────────────────────────────────────────────────────────────┐
 │                         Traefik                              │
 │                    (Reverse Proxy)                           │
-│                    Port 80 & 8080                            │
+│                    Port 3000 & 8080                          │
 └───────┬─────────────────────────────────────────────────────┘
         │
         ├─── / ──────────────────────► Container App (Host)
@@ -48,7 +48,7 @@ This project follows a **micro-frontend architecture** pattern, where multiple i
 ### Key Components
 
 #### 1. Container App (Host Application)
-- **Port**: 3000 (dev) / 80 (production via Traefik)
+- **Port**: 3000 (via Traefik reverse proxy)
 - **Role**: Main application shell that loads and orchestrates all micro-frontends
 - **Exposes**: Shared UI library for other MFEs
 - **Technology**: React 18, Material-UI, Webpack Module Federation
