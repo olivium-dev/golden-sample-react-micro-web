@@ -6,7 +6,7 @@
 set -e  # Exit on any error
 
 echo "🔴 Step 1: Stopping all Docker containers..."
-docker compose -f docker-compose.run.yml down 2>/dev/null || true
+docker compose -f docker-compose.yml down 2>/dev/null || true
 docker stop $(docker ps -aq) 2>/dev/null || true
 
 echo ""
@@ -59,11 +59,11 @@ cd /Users/oudaykhaled/Desktop/cremat-cms/creamati-cms
 
 echo ""
 echo "🐳 Step 5: Building Docker images in parallel..."
-docker compose -f docker-compose.run.yml build --parallel
+docker compose -f docker-compose.yml build --parallel
 
 echo ""
 echo "🚀 Step 6: Starting services with Traefik..."
-docker compose -f docker-compose.run.yml up -d
+docker compose -f docker-compose.yml up -d
 
 echo ""
 echo "⏳ Step 7: Waiting for services to initialize (30 seconds)..."
@@ -152,6 +152,6 @@ echo "🌐 Access your application:"
 echo "  - Main App: http://localhost"
 echo "  - Traefik Dashboard: http://localhost:8080"
 echo ""
-echo "📝 View logs: docker compose -f docker-compose.run.yml logs -f"
-echo "🛑 Stop services: docker compose -f docker-compose.run.yml down"
+echo "📝 View logs: docker compose -f docker-compose.yml logs -f"
+echo "🛑 Stop services: docker compose -f docker-compose.yml down"
 
