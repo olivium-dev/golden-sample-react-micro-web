@@ -4,15 +4,15 @@
 # ============================================
 
 # Stage 1: Build
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+# Install dependencies (use npm install since package-lock.json may not exist)
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
