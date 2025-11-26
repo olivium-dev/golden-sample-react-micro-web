@@ -19,6 +19,14 @@ inputs:
     description: 'SSH host alias for subsequent connections'
     required: false
     default: 'target-server'
+  cloudflare-service-token-id:
+    description: 'Cloudflare Access Service Token ID (optional)'
+    required: false
+    default: ''
+  cloudflare-service-token-secret:
+    description: 'Cloudflare Access Service Token Secret (optional)'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -38,6 +46,9 @@ runs:
 
     - name: Setup SSH key and configuration
       shell: bash
+      env:
+        CF_ACCESS_CLIENT_ID: ${{ inputs.cloudflare-service-token-id }}
+        CF_ACCESS_CLIENT_SECRET: ${{ inputs.cloudflare-service-token-secret }}
       run: |
         echo "🔑 Setting up SSH key and configuration..."
         
@@ -61,6 +72,13 @@ runs:
         fi
         chmod 600 ~/.ssh/id_rsa
         
+        # Export Cloudflare tokens if provided
+        if [ -n "$CF_ACCESS_CLIENT_ID" ]; then
+          echo "🔐 Cloudflare Access tokens detected"
+          echo "CF_ACCESS_CLIENT_ID=$CF_ACCESS_CLIENT_ID" >> $GITHUB_ENV
+          echo "CF_ACCESS_CLIENT_SECRET=$CF_ACCESS_CLIENT_SECRET" >> $GITHUB_ENV
+        fi
+        
         # Create SSH config for Cloudflare tunnel
         cat >> ~/.ssh/config << EOF
         Host ${{ inputs.host-alias }}
@@ -80,6 +98,9 @@ runs:
 
     - name: Test SSH connection
       shell: bash
+      env:
+        CF_ACCESS_CLIENT_ID: ${{ inputs.cloudflare-service-token-id }}
+        CF_ACCESS_CLIENT_SECRET: ${{ inputs.cloudflare-service-token-secret }}
       run: |
         echo "🧪 Testing SSH connection to ${{ inputs.server-hostname }}..."
         

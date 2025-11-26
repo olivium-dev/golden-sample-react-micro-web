@@ -32,13 +32,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug SSH Key Format
+        run: |
+          echo "🔍 Debugging SSH key format..."
+          echo "SSH key length: $(echo -n "${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}" | wc -c)"
+          echo "SSH key first 50 chars: $(echo -n "${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}" | head -c 50)"
+          echo "SSH key starts with -----BEGIN: $(echo "${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}" | grep -q '^-----BEGIN' && echo 'YES' || echo 'NO')"
+          echo "Testing base64 decode:"
+          echo "${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}" | base64 -d | head -1 || echo "Base64 decode failed"
+
       - name: Setup SSH Connection via Cloudflare
         uses: ./.github/actions/cloudflare-ssh
         with:
           ssh-private-key: ${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}
-          server-hostname: ${{ inputs.server }}
-          server-user: ${{ inputs.ssh_user }}
+          server-hostname: 'vps-73.fds-1.com'
+          server-user: ${{ inputs.ssh_user || 'ec2-user' }}
           host-alias: 'creamati-server'
+          cloudflare-service-token-id: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_ID || '' }}
+          cloudflare-service-token-secret: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_SECRET || '' }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
