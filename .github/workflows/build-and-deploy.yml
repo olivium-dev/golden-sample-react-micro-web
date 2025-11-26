@@ -1,0 +1,535 @@
+name: Build and Deploy to VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      server:
+        description: 'Server address for SSH (Cloudflare tunnel hostname)'
+        required: true
+        default: 'vps-73.fds-1.com'
+      ssh_user:
+        description: 'SSH username'
+        required: true
+        default: 'ec2-user'
+      app_port:
+        description: 'External port for the application (Traefik)'
+        required: true
+        default: '3000'
+      dashboard_port:
+        description: 'External port for Traefik dashboard'
+        required: true
+        default: '8080'
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # ============================================
+  # Build all MFE images in parallel
+  # ============================================
+  build-container:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/creamati-cms-container
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          file: frontend/container/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-user-management:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/creamati-cms-user-management
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          file: frontend/user-management-app/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-data-grid:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/creamati-cms-data-grid
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          file: frontend/data-grid-app/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-analytics:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/creamati-cms-analytics
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          file: frontend/analytics-app/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-settings:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/creamati-cms-settings
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          file: frontend/settings-app/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-orders:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/creamati-cms-orders
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          file: frontend/orders-app/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-catalog:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/creamati-cms-catalog
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: frontend/catalog-app
+          file: frontend/catalog-app/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================
+  # Deploy to VPS using pre-built images
+  # ============================================
+  deploy:
+    runs-on: ubuntu-22.04
+    needs:
+      - build-container
+      - build-user-management
+      - build-data-grid
+      - build-analytics
+      - build-settings
+      - build-orders
+      - build-catalog
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Connection via Cloudflare
+        uses: ./.github/actions/cloudflare-ssh
+        with:
+          ssh-private-key: ${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}
+          server-hostname: 'vps-73.fds-1.com'
+          server-user: ${{ inputs.ssh_user || 'ec2-user' }}
+          host-alias: 'creamati-server'
+
+      - name: Deploy to VPS using pre-built images
+        env:
+          APP_PORT: ${{ inputs.app_port }}
+          DASHBOARD_PORT: ${{ inputs.dashboard_port }}
+          REGISTRY: ghcr.io/${{ github.repository_owner }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          echo "🚀 Deploying Creamati CMS to VPS using pre-built images..."
+          echo ""
+          
+          # Create deployment script
+          cat > deploy-remote.sh << 'DEPLOY_SCRIPT'
+          #!/bin/bash
+          set -e
+          
+          REGISTRY="$1"
+          APP_PORT="$2"
+          DASHBOARD_PORT="$3"
+          GITHUB_TOKEN="$4"
+          GITHUB_ACTOR="$5"
+          
+          echo "🔐 Logging into GitHub Container Registry..."
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          
+          echo ""
+          echo "🔴 Step 1: Stopping existing containers..."
+          cd ~/creamati-cms 2>/dev/null || mkdir -p ~/creamati-cms
+          cd ~/creamati-cms
+          docker compose down 2>/dev/null || true
+          
+          echo ""
+          echo "🧹 Step 2: Cleaning up old images..."
+          docker system prune -af 2>/dev/null || true
+          
+          echo ""
+          echo "📥 Step 3: Pulling pre-built images from GHCR..."
+          images=(
+            "creamati-cms-container"
+            "creamati-cms-user-management"
+            "creamati-cms-data-grid"
+            "creamati-cms-analytics"
+            "creamati-cms-settings"
+            "creamati-cms-orders"
+            "creamati-cms-catalog"
+          )
+          
+          for image in "${images[@]}"; do
+            echo "  📥 Pulling ${REGISTRY}/${image}:latest..."
+            docker pull "${REGISTRY}/${image}:latest"
+            # Tag for local use in docker-compose
+            docker tag "${REGISTRY}/${image}:latest" "${image}:latest"
+          done
+          
+          echo ""
+          echo "📝 Step 4: Creating docker-compose.yml..."
+          cat > docker-compose.yml << EOF
+          # ============================================
+          # Docker Compose - Creamati CMS Production
+          # Uses pre-built images from GHCR
+          # ============================================
+          
+          services:
+            # Traefik Reverse Proxy
+            traefik:
+              image: traefik:v2.10
+              container_name: traefik
+              command:
+                - "--api.insecure=true"
+                - "--providers.docker=true"
+                - "--providers.docker.exposedbydefault=false"
+                - "--entrypoints.web.address=:80"
+                - "--log.level=INFO"
+              ports:
+                - "${APP_PORT}:80"
+                - "${DASHBOARD_PORT}:8080"
+              volumes:
+                - /var/run/docker.sock:/var/run/docker.sock:ro
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+          
+            # Container App (Main Host)
+            container-app:
+              image: creamati-cms-container:latest
+              container_name: micro-frontend-container
+              networks:
+                - micro-frontend-network
+              depends_on:
+                - user-management-app
+                - orders-app
+                - catalog-app
+                - data-grid-app
+                - analytics-app
+                - settings-app
+              restart: unless-stopped
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.container.rule=PathPrefix(\\\`/\\\`)"
+                - "traefik.http.routers.container.entrypoints=web"
+                - "traefik.http.routers.container.priority=1"
+                - "traefik.http.services.container.loadbalancer.server.port=80"
+          
+            # User Management App
+            user-management-app:
+              image: creamati-cms-user-management:latest
+              container_name: micro-frontend-user-management
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.user-management.rule=PathPrefix(\\\`/mf/user-management\\\`)"
+                - "traefik.http.routers.user-management.entrypoints=web"
+                - "traefik.http.routers.user-management.priority=100"
+                - "traefik.http.routers.user-management.middlewares=user-management-strip"
+                - "traefik.http.middlewares.user-management-strip.stripprefix.prefixes=/mf/user-management"
+                - "traefik.http.services.user-management.loadbalancer.server.port=80"
+          
+            # Data Grid App
+            data-grid-app:
+              image: creamati-cms-data-grid:latest
+              container_name: micro-frontend-data-grid
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.data-grid.rule=PathPrefix(\\\`/mf/data-grid\\\`)"
+                - "traefik.http.routers.data-grid.entrypoints=web"
+                - "traefik.http.routers.data-grid.priority=100"
+                - "traefik.http.routers.data-grid.middlewares=data-grid-strip"
+                - "traefik.http.middlewares.data-grid-strip.stripprefix.prefixes=/mf/data-grid"
+                - "traefik.http.services.data-grid.loadbalancer.server.port=80"
+          
+            # Analytics App
+            analytics-app:
+              image: creamati-cms-analytics:latest
+              container_name: micro-frontend-analytics
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.analytics.rule=PathPrefix(\\\`/mf/analytics\\\`)"
+                - "traefik.http.routers.analytics.entrypoints=web"
+                - "traefik.http.routers.analytics.priority=100"
+                - "traefik.http.routers.analytics.middlewares=analytics-strip"
+                - "traefik.http.middlewares.analytics-strip.stripprefix.prefixes=/mf/analytics"
+                - "traefik.http.services.analytics.loadbalancer.server.port=80"
+          
+            # Settings App
+            settings-app:
+              image: creamati-cms-settings:latest
+              container_name: micro-frontend-settings
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.settings.rule=PathPrefix(\\\`/mf/settings\\\`)"
+                - "traefik.http.routers.settings.entrypoints=web"
+                - "traefik.http.routers.settings.priority=100"
+                - "traefik.http.routers.settings.middlewares=settings-strip"
+                - "traefik.http.middlewares.settings-strip.stripprefix.prefixes=/mf/settings"
+                - "traefik.http.services.settings.loadbalancer.server.port=80"
+          
+            # Orders App
+            orders-app:
+              image: creamati-cms-orders:latest
+              container_name: micro-frontend-orders
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.orders.rule=PathPrefix(\\\`/mf/orders\\\`)"
+                - "traefik.http.routers.orders.entrypoints=web"
+                - "traefik.http.routers.orders.priority=100"
+                - "traefik.http.routers.orders.middlewares=orders-strip"
+                - "traefik.http.middlewares.orders-strip.stripprefix.prefixes=/mf/orders"
+                - "traefik.http.services.orders.loadbalancer.server.port=80"
+          
+            # Catalog App
+            catalog-app:
+              image: creamati-cms-catalog:latest
+              container_name: micro-frontend-catalog
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.catalog.rule=PathPrefix(\\\`/mf/catalog\\\`)"
+                - "traefik.http.routers.catalog.entrypoints=web"
+                - "traefik.http.routers.catalog.priority=100"
+                - "traefik.http.routers.catalog.middlewares=catalog-strip"
+                - "traefik.http.middlewares.catalog-strip.stripprefix.prefixes=/mf/catalog"
+                - "traefik.http.services.catalog.loadbalancer.server.port=80"
+          
+          networks:
+            micro-frontend-network:
+              driver: bridge
+          EOF
+          
+          echo ""
+          echo "🚀 Step 5: Starting services..."
+          docker compose up -d
+          
+          echo ""
+          echo "⏳ Step 6: Waiting for services to initialize (30 seconds)..."
+          sleep 30
+          
+          echo ""
+          echo "🧪 Step 7: Testing endpoints..."
+          
+          # Test Traefik dashboard
+          if curl -s -o /dev/null -w "%{http_code}" http://localhost:${DASHBOARD_PORT} | grep -q "200\|301\|302"; then
+            echo "  ✅ Traefik Dashboard: OK"
+          else
+            echo "  ⚠️  Traefik Dashboard: Not responding"
+          fi
+          
+          # Test Container App
+          if curl -s -o /dev/null -w "%{http_code}" http://localhost:${APP_PORT} | grep -q "200\|301\|302"; then
+            echo "  ✅ Container App: OK"
+          else
+            echo "  ⚠️  Container App: Not responding"
+          fi
+          
+          echo ""
+          echo "📊 Step 8: Docker Status..."
+          docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+          
+          echo ""
+          echo "💾 Step 9: Docker Disk Usage..."
+          docker system df
+          
+          echo ""
+          echo "✅ Deployment complete!"
+          DEPLOY_SCRIPT
+          
+          chmod +x deploy-remote.sh
+          
+          # Copy script to server and execute
+          scp deploy-remote.sh creamati-server:~/deploy-remote.sh
+          
+          ssh creamati-server "chmod +x ~/deploy-remote.sh && ~/deploy-remote.sh '$REGISTRY' '$APP_PORT' '$DASHBOARD_PORT' '$GITHUB_TOKEN' '$GITHUB_ACTOR'"
+
+      - name: Deployment Summary
+        run: |
+          echo ""
+          echo "=============================================="
+          echo "🎉 DEPLOYMENT SUMMARY"
+          echo "=============================================="
+          echo ""
+          echo "📦 Pre-built images pulled from GHCR:"
+          echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-container:latest"
+          echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-user-management:latest"
+          echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-data-grid:latest"
+          echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-analytics:latest"
+          echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-settings:latest"
+          echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-orders:latest"
+          echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-catalog:latest"
+          echo ""
+          echo "🌐 Access URLs:"
+          echo "  - Application: http://${{ inputs.server }}:${{ inputs.app_port }}"
+          echo "  - Traefik Dashboard: http://${{ inputs.server }}:${{ inputs.dashboard_port }}"
+          echo ""
+          echo "📝 To view logs on server:"
+          echo "  ssh ${{ inputs.ssh_user }}@${{ inputs.server }}"
+          echo "  cd ~/creamati-cms && docker compose logs -f"
+          echo ""
+
