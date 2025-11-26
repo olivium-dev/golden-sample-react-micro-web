@@ -69,27 +69,12 @@ module.exports = {
         './sharedUI': '../shared-ui-lib/src/index.ts',
       },
       remotes: {
-        // Use environment variable to determine if running in Docker
-        // In Docker: remotes are served through Traefik at /remoteEntry-{name}.js
-        // In local dev: remotes are at localhost:300X/remoteEntry.js
-        userApp: process.env.DOCKER_MODE 
-          ? 'userApp@http://localhost/remoteEntry-user.js'
-          : 'userApp@http://localhost:3001/remoteEntry.js',
-        dataApp: process.env.DOCKER_MODE
-          ? 'dataApp@http://localhost/remoteEntry-data-grid.js'
-          : 'dataApp@http://localhost:3002/remoteEntry.js',
-        analyticsApp: process.env.DOCKER_MODE
-          ? 'analyticsApp@http://localhost/remoteEntry-analytics.js'
-          : 'analyticsApp@http://localhost:3003/remoteEntry.js',
-        settingsApp: process.env.DOCKER_MODE
-          ? 'settingsApp@http://localhost/remoteEntry-settings.js'
-          : 'settingsApp@http://localhost:3004/remoteEntry.js',
-        ordersApp: process.env.DOCKER_MODE
-          ? 'ordersApp@http://localhost/remoteEntry-orders.js'
-          : 'ordersApp@http://localhost:3006/remoteEntry.js',
-        catalogApp: process.env.DOCKER_MODE
-          ? 'catalogApp@http://localhost/remoteEntry-catalog.js'
-          : 'catalogApp@http://localhost:3005/remoteEntry.js',
+        userApp: 'userApp@http://localhost:3001/remoteEntry.js',
+        dataApp: 'dataApp@http://localhost:3002/remoteEntry.js',
+        analyticsApp: 'analyticsApp@http://localhost:3003/remoteEntry.js',
+        settingsApp: 'settingsApp@http://localhost:3004/remoteEntry.js',
+        ordersApp: 'ordersApp@http://localhost:3006/remoteEntry.js',
+        catalogApp: 'catalogApp@http://localhost:3005/remoteEntry.js',
       },
       shared: {
         react: {

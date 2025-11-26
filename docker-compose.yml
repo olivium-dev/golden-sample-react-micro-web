@@ -79,11 +79,8 @@ services:
           memory: 256M
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.user-management.rule=Host(`localhost`) && Path(`/remoteEntry-user.js`)"
+      - "traefik.http.routers.user-management.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-user.js`)"
       - "traefik.http.routers.user-management.entrypoints=web"
-      - "traefik.http.routers.user-management.middlewares=user-management-stripprefix"
-      - "traefik.http.middlewares.user-management-stripprefix.replacepathregex.regex=^/remoteEntry-user.js"
-      - "traefik.http.middlewares.user-management-stripprefix.replacepathregex.replacement=/remoteEntry.js"
       - "traefik.http.services.user-management.loadbalancer.server.port=80"
 
   # Data Grid App
@@ -103,11 +100,8 @@ services:
           memory: 256M
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.data-grid.rule=Host(`localhost`) && Path(`/remoteEntry-data-grid.js`)"
+      - "traefik.http.routers.data-grid.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-data-grid.js`)"
       - "traefik.http.routers.data-grid.entrypoints=web"
-      - "traefik.http.routers.data-grid.middlewares=data-grid-stripprefix"
-      - "traefik.http.middlewares.data-grid-stripprefix.replacepathregex.regex=^/remoteEntry-data-grid.js"
-      - "traefik.http.middlewares.data-grid-stripprefix.replacepathregex.replacement=/remoteEntry.js"
       - "traefik.http.services.data-grid.loadbalancer.server.port=80"
 
   # Analytics App
@@ -127,11 +121,8 @@ services:
           memory: 256M
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.analytics.rule=Host(`localhost`) && Path(`/remoteEntry-analytics.js`)"
+      - "traefik.http.routers.analytics.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-analytics.js`)"
       - "traefik.http.routers.analytics.entrypoints=web"
-      - "traefik.http.routers.analytics.middlewares=analytics-stripprefix"
-      - "traefik.http.middlewares.analytics-stripprefix.replacepathregex.regex=^/remoteEntry-analytics.js"
-      - "traefik.http.middlewares.analytics-stripprefix.replacepathregex.replacement=/remoteEntry.js"
       - "traefik.http.services.analytics.loadbalancer.server.port=80"
 
   # Settings App
@@ -151,11 +142,8 @@ services:
           memory: 256M
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.settings.rule=Host(`localhost`) && Path(`/remoteEntry-settings.js`)"
+      - "traefik.http.routers.settings.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-settings.js`)"
       - "traefik.http.routers.settings.entrypoints=web"
-      - "traefik.http.routers.settings.middlewares=settings-stripprefix"
-      - "traefik.http.middlewares.settings-stripprefix.replacepathregex.regex=^/remoteEntry-settings.js"
-      - "traefik.http.middlewares.settings-stripprefix.replacepathregex.replacement=/remoteEntry.js"
       - "traefik.http.services.settings.loadbalancer.server.port=80"
 
   # Orders App
@@ -175,11 +163,8 @@ services:
           memory: 256M
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.orders.rule=Host(`localhost`) && Path(`/remoteEntry-orders.js`)"
+      - "traefik.http.routers.orders.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-orders.js`)"
       - "traefik.http.routers.orders.entrypoints=web"
-      - "traefik.http.routers.orders.middlewares=orders-stripprefix"
-      - "traefik.http.middlewares.orders-stripprefix.replacepathregex.regex=^/remoteEntry-orders.js"
-      - "traefik.http.middlewares.orders-stripprefix.replacepathregex.replacement=/remoteEntry.js"
       - "traefik.http.services.orders.loadbalancer.server.port=80"
 
   # Catalog App
@@ -199,11 +184,8 @@ services:
           memory: 256M
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.catalog.rule=Host(`localhost`) && Path(`/remoteEntry-catalog.js`)"
+      - "traefik.http.routers.catalog.rule=Host(`localhost`) && PathPrefix(`/remoteEntry-catalog.js`)"
       - "traefik.http.routers.catalog.entrypoints=web"
-      - "traefik.http.routers.catalog.middlewares=catalog-stripprefix"
-      - "traefik.http.middlewares.catalog-stripprefix.replacepathregex.regex=^/remoteEntry-catalog.js"
-      - "traefik.http.middlewares.catalog-stripprefix.replacepathregex.replacement=/remoteEntry.js"
       - "traefik.http.services.catalog.loadbalancer.server.port=80"
 
 networks:
