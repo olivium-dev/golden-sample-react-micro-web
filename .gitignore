@@ -145,3 +145,7 @@ develop-eggs/
 lib/
 lib64/
 
+# Temporary cloned repositories
+/tmp/server-cremati/
+server-cremati/
+

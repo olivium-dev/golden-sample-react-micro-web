@@ -271,7 +271,7 @@ jobs:
           echo "🚀 Deploying Creamati CMS to VPS using pre-built images..."
           echo ""
           
-          # Create deployment script
+          # Create deployment script - using base64 encoding to avoid escaping issues
           cat > deploy-remote.sh << 'DEPLOY_SCRIPT'
           #!/bin/bash
           set -e
@@ -316,14 +316,10 @@ jobs:
           
           echo ""
           echo "📝 Step 4: Creating docker-compose.yml..."
-          cat > docker-compose.yml << EOF
-          # ============================================
-          # Docker Compose - Creamati CMS Production
-          # Uses pre-built images from GHCR
-          # ============================================
           
+          # Create docker-compose.yml with proper YAML formatting
+          cat > docker-compose.yml << 'COMPOSE_EOF'
           services:
-            # Traefik Reverse Proxy
             traefik:
               image: traefik:v2.10
               container_name: traefik
@@ -334,15 +330,14 @@ jobs:
                 - "--entrypoints.web.address=:80"
                 - "--log.level=INFO"
               ports:
-                - "${APP_PORT}:80"
-                - "${DASHBOARD_PORT}:8080"
+                - "APP_PORT_PLACEHOLDER:80"
+                - "DASHBOARD_PORT_PLACEHOLDER:8080"
               volumes:
                 - /var/run/docker.sock:/var/run/docker.sock:ro
               networks:
                 - micro-frontend-network
               restart: unless-stopped
           
-            # Container App (Main Host)
             container-app:
               image: creamati-cms-container:latest
               container_name: micro-frontend-container
@@ -358,12 +353,11 @@ jobs:
               restart: unless-stopped
               labels:
                 - "traefik.enable=true"
-                - "traefik.http.routers.container.rule=PathPrefix(\\\`/\\\`)"
+                - "traefik.http.routers.container.rule=PathPrefix(`/`)"
                 - "traefik.http.routers.container.entrypoints=web"
                 - "traefik.http.routers.container.priority=1"
                 - "traefik.http.services.container.loadbalancer.server.port=80"
           
-            # User Management App
             user-management-app:
               image: creamati-cms-user-management:latest
               container_name: micro-frontend-user-management
@@ -372,14 +366,13 @@ jobs:
               restart: unless-stopped
               labels:
                 - "traefik.enable=true"
-                - "traefik.http.routers.user-management.rule=PathPrefix(\\\`/mf/user-management\\\`)"
+                - "traefik.http.routers.user-management.rule=PathPrefix(`/mf/user-management`)"
                 - "traefik.http.routers.user-management.entrypoints=web"
                 - "traefik.http.routers.user-management.priority=100"
                 - "traefik.http.routers.user-management.middlewares=user-management-strip"
                 - "traefik.http.middlewares.user-management-strip.stripprefix.prefixes=/mf/user-management"
                 - "traefik.http.services.user-management.loadbalancer.server.port=80"
           
-            # Data Grid App
             data-grid-app:
               image: creamati-cms-data-grid:latest
               container_name: micro-frontend-data-grid
@@ -388,14 +381,13 @@ jobs:
               restart: unless-stopped
               labels:
                 - "traefik.enable=true"
-                - "traefik.http.routers.data-grid.rule=PathPrefix(\\\`/mf/data-grid\\\`)"
+                - "traefik.http.routers.data-grid.rule=PathPrefix(`/mf/data-grid`)"
                 - "traefik.http.routers.data-grid.entrypoints=web"
                 - "traefik.http.routers.data-grid.priority=100"
                 - "traefik.http.routers.data-grid.middlewares=data-grid-strip"
                 - "traefik.http.middlewares.data-grid-strip.stripprefix.prefixes=/mf/data-grid"
                 - "traefik.http.services.data-grid.loadbalancer.server.port=80"
           
-            # Analytics App
             analytics-app:
               image: creamati-cms-analytics:latest
               container_name: micro-frontend-analytics
@@ -404,14 +396,13 @@ jobs:
               restart: unless-stopped
               labels:
                 - "traefik.enable=true"
-                - "traefik.http.routers.analytics.rule=PathPrefix(\\\`/mf/analytics\\\`)"
+                - "traefik.http.routers.analytics.rule=PathPrefix(`/mf/analytics`)"
                 - "traefik.http.routers.analytics.entrypoints=web"
                 - "traefik.http.routers.analytics.priority=100"
                 - "traefik.http.routers.analytics.middlewares=analytics-strip"
                 - "traefik.http.middlewares.analytics-strip.stripprefix.prefixes=/mf/analytics"
                 - "traefik.http.services.analytics.loadbalancer.server.port=80"
           
-            # Settings App
             settings-app:
               image: creamati-cms-settings:latest
               container_name: micro-frontend-settings
@@ -420,14 +411,13 @@ jobs:
               restart: unless-stopped
               labels:
                 - "traefik.enable=true"
-                - "traefik.http.routers.settings.rule=PathPrefix(\\\`/mf/settings\\\`)"
+                - "traefik.http.routers.settings.rule=PathPrefix(`/mf/settings`)"
                 - "traefik.http.routers.settings.entrypoints=web"
                 - "traefik.http.routers.settings.priority=100"
                 - "traefik.http.routers.settings.middlewares=settings-strip"
                 - "traefik.http.middlewares.settings-strip.stripprefix.prefixes=/mf/settings"
                 - "traefik.http.services.settings.loadbalancer.server.port=80"
           
-            # Orders App
             orders-app:
               image: creamati-cms-orders:latest
               container_name: micro-frontend-orders
@@ -436,14 +426,13 @@ jobs:
               restart: unless-stopped
               labels:
                 - "traefik.enable=true"
-                - "traefik.http.routers.orders.rule=PathPrefix(\\\`/mf/orders\\\`)"
+                - "traefik.http.routers.orders.rule=PathPrefix(`/mf/orders`)"
                 - "traefik.http.routers.orders.entrypoints=web"
                 - "traefik.http.routers.orders.priority=100"
                 - "traefik.http.routers.orders.middlewares=orders-strip"
                 - "traefik.http.middlewares.orders-strip.stripprefix.prefixes=/mf/orders"
                 - "traefik.http.services.orders.loadbalancer.server.port=80"
           
-            # Catalog App
             catalog-app:
               image: creamati-cms-catalog:latest
               container_name: micro-frontend-catalog
@@ -452,7 +441,7 @@ jobs:
               restart: unless-stopped
               labels:
                 - "traefik.enable=true"
-                - "traefik.http.routers.catalog.rule=PathPrefix(\\\`/mf/catalog\\\`)"
+                - "traefik.http.routers.catalog.rule=PathPrefix(`/mf/catalog`)"
                 - "traefik.http.routers.catalog.entrypoints=web"
                 - "traefik.http.routers.catalog.priority=100"
                 - "traefik.http.routers.catalog.middlewares=catalog-strip"
@@ -462,7 +451,11 @@ jobs:
           networks:
             micro-frontend-network:
               driver: bridge
-          EOF
+          COMPOSE_EOF
+          
+          # Replace port placeholders with actual values
+          sed -i "s/APP_PORT_PLACEHOLDER/${APP_PORT}/g" docker-compose.yml
+          sed -i "s/DASHBOARD_PORT_PLACEHOLDER/${DASHBOARD_PORT}/g" docker-compose.yml
           
           echo ""
           echo "🚀 Step 5: Starting services..."
