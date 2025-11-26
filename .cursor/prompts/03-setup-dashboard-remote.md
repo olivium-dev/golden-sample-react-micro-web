@@ -1,20 +1,21 @@
-# Phase 3: Setup Dashboard Remote Application
+# Phase 3: Setup Analytics Dashboard Remote Application
 
 ## Prompt Template
 ```
-Create a React TypeScript remote application for dashboard using Webpack Module Federation.
+Create a React TypeScript remote application for analytics dashboard using Webpack Module Federation and MUI Charts.
 
 Requirements:
 - Use create-react-app with TypeScript template
 - Configure Webpack Module Federation as remote
-- Expose DashboardPage component via "./DashboardPage"
-- Create dashboard with widgets/cards
-- Include sample data visualization
-- Configure to run on port 3002
+- Expose AnalyticsPage component via "./AnalyticsPage"
+- Create dashboard with MUI Charts and widgets
+- Include real-time data visualization
+- Configure to run on port 3003
 - Match shared dependencies with container
+- **NO BFF**: Call backend API directly at https://dev-creamat.fds-1.com/gateway/api/analytics
 
 Create the following structure:
-/dashboard-app
+/analytics-app
   /src
     /components
       - DashboardCard.tsx
@@ -22,22 +23,22 @@ Create the following structure:
       - ChartWidget.tsx
       - StatsGrid.tsx
     /pages
-      - DashboardPage.tsx
+      - AnalyticsPage.tsx
     /hooks
-      - useDashboardData.ts
+      - useAnalyticsData.ts
     /types
-      - dashboard.types.ts
-    /utils
-      - chartHelpers.ts
+      - analytics.types.ts
+    /services
+      - api.ts (calls backend directly)
     - App.tsx
     - index.tsx
   - webpack.config.js
   - package.json
 
-DashboardPage should include:
-- Grid layout with responsive cards
-- Sample metrics (users, revenue, growth, etc.)
-- Simple chart/graph visualization
+AnalyticsPage should include:
+- Grid layout with responsive MUI cards
+- Real-time metrics (users, revenue, growth, etc.)
+- MUI Charts for data visualization
 - Loading states for data fetching
 - Responsive design for mobile/desktop
 - Accessibility features
@@ -46,14 +47,14 @@ DashboardPage should include:
 ## Validation Checklist
 
 ### After Running the Prompt
-- [ ] Dashboard app project created with TypeScript
+- [ ] Analytics app project created with TypeScript
 - [ ] webpack.config.js configured as Module Federation remote
-- [ ] App starts on port 3002 without errors
-- [ ] DashboardPage component exports properly
-- [ ] remoteEntry.js accessible at http://localhost:3002/remoteEntry.js
+- [ ] App starts on port 3003 without errors
+- [ ] AnalyticsPage component exports properly
+- [ ] remoteEntry.js accessible at http://localhost:3003/remoteEntry.js
 - [ ] Dashboard cards render in responsive grid
-- [ ] Sample data displays correctly
-- [ ] Charts/visualizations render properly
+- [ ] Real-time data displays correctly
+- [ ] MUI Charts render properly
 
 ### Code Quality Checks
 - [ ] TypeScript interfaces for all data types and props
@@ -64,18 +65,18 @@ DashboardPage should include:
 - [ ] No console errors or warnings
 
 ### Module Federation Specific
-- [ ] webpack config exposes "./DashboardPage" correctly
-- [ ] shared dependencies match container (React, ReactDOM as singletons)
-- [ ] Module Federation name is "dashboard"
+- [ ] webpack config exposes "./AnalyticsPage" correctly
+- [ ] shared dependencies match container (React, ReactDOM, MUI as singletons)
+- [ ] Module Federation name is "analyticsApp"
 - [ ] filename is "remoteEntry.js"
-- [ ] App can run independently on port 3002
+- [ ] App can run independently on port 3003
 
 ### Testing Commands
 ```bash
-cd dashboard-app
-npm start  # Should start on port 3002
-# Visit http://localhost:3002 - should show dashboard
-# Visit http://localhost:3002/remoteEntry.js - should download file
+cd analytics-app
+npm start  # Should start on port 3003
+# Visit http://localhost:3003 - should show analytics dashboard
+# Visit http://localhost:3003/remoteEntry.js - should download file
 # Test responsive layout on different screen sizes
 # Verify all widgets display data correctly
 ```
@@ -89,124 +90,154 @@ const { ModuleFederationPlugin } = require("webpack").container;
 module.exports = {
   mode: "development",
   devServer: {
-    port: 3002,
+    port: 3003,
     historyApiFallback: true,
+    // NO PROXY - Call https://dev-creamat.fds-1.com/gateway/ directly
   },
   plugins: [
     new ModuleFederationPlugin({
-      name: "dashboard",
+      name: "analyticsApp",
       filename: "remoteEntry.js",
       exposes: {
-        "./DashboardPage": "./src/pages/DashboardPage",
+        "./AnalyticsPage": "./src/pages/AnalyticsPage",
       },
       shared: {
         react: { singleton: true },
         "react-dom": { singleton: true },
+        "@mui/material": { singleton: true },
+        "@mui/x-charts": { singleton: true },
       },
     }),
   ],
 };
 ```
 
-### DashboardPage.tsx Structure
+### API Service (src/services/api.ts)
+```typescript
+import axios from 'axios';
+
+const API_BASE_URL = 'https://dev-creamat.fds-1.com/gateway/api/analytics';
+
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add auth token interceptor
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export const analyticsApi = {
+  getMetrics: () => apiClient.get('/metrics'),
+  getRevenue: (period: string) => apiClient.get(`/revenue?period=${period}`),
+  getUserGrowth: () => apiClient.get('/user-growth'),
+  getOrderStats: () => apiClient.get('/order-stats'),
+};
+```
+
+### AnalyticsPage.tsx Structure
 ```typescript
 import React, { useEffect, useState } from "react";
+import { Box, Grid, Typography, Card, CardContent } from "@mui/material";
+import { LineChart, BarChart, PieChart } from "@mui/x-charts";
+import { useAnalyticsData } from "../hooks/useAnalyticsData";
 import StatsGrid from "../components/StatsGrid";
 import ChartWidget from "../components/ChartWidget";
 import MetricWidget from "../components/MetricWidget";
-import { DashboardData } from "../types/dashboard.types";
-import { useDashboardData } from "../hooks/useDashboardData";
 
-const DashboardPage: React.FC = () => {
-  const { data, loading, error } = useDashboardData();
+const AnalyticsPage: React.FC = () => {
+  const { data, loading, error } = useAnalyticsData();
 
   if (loading) {
-    return <div className="dashboard-loading">Loading dashboard...</div>;
+    return <Box sx={{ p: 3 }}>Loading analytics...</Box>;
   }
 
   if (error) {
-    return <div className="dashboard-error">Error loading dashboard data</div>;
+    return <Box sx={{ p: 3 }}>Error loading analytics data</Box>;
   }
 
   return (
-    <div className="dashboard-page">
-      <header className="dashboard-header">
-        <h1>Dashboard</h1>
-        <p>Overview of your key metrics</p>
-      </header>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Analytics Dashboard
+      </Typography>
+      <Typography variant="body1" color="text.secondary" gutterBottom>
+        Overview of your key metrics and performance
+      </Typography>
       
-      <div className="dashboard-content">
-        <StatsGrid stats={data?.stats} />
-        
-        <div className="dashboard-widgets">
-          <MetricWidget 
+      <StatsGrid stats={data?.stats} />
+      
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid item xs={12} md={6}>
+          <ChartWidget 
             title="Revenue Trend"
             data={data?.revenue}
-            type="currency"
+            chartType="line"
           />
+        </Grid>
+        <Grid item xs={12} md={6}>
           <ChartWidget 
             title="User Growth"
             data={data?.userGrowth}
-            chartType="line"
+            chartType="bar"
           />
-        </div>
-      </div>
-    </div>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
-export default DashboardPage;
+export default AnalyticsPage;
 ```
 
-### Required Widget Types
-1. **StatsGrid**: 2x2 or 3x2 grid of key metrics
-2. **MetricWidget**: Single metric with trend indicator
-3. **ChartWidget**: Simple line/bar chart visualization
-4. **DashboardCard**: Reusable card container
+## Backend Integration
 
-### Sample Data Structure
-```typescript
-interface DashboardData {
-  stats: {
-    totalUsers: number;
-    revenue: number;
-    growth: number;
-    orders: number;
-  };
-  revenue: Array<{ date: string; amount: number }>;
-  userGrowth: Array<{ month: string; users: number }>;
-}
-```
+### API Endpoints
+- **Base URL**: https://dev-creamat.fds-1.com/gateway/api/analytics
+- **Authentication**: JWT tokens from Firebase
+- **Endpoints**:
+  - `GET /metrics` - Get current metrics
+  - `GET /revenue?period=30d` - Get revenue data
+  - `GET /user-growth` - Get user growth data
+  - `GET /order-stats` - Get order statistics
 
 ## Common Issues & Solutions
 
-### Issue: Chart library not rendering
-**Solution**: Use simple CSS-based charts or lightweight libraries like Chart.js
+### Issue: MUI Charts not rendering
+**Solution**: Ensure @mui/x-charts is installed and properly shared in webpack config
 
 ### Issue: Responsive layout breaking
-**Solution**: Use CSS Grid with proper media queries and flexible units
+**Solution**: Use MUI Grid with proper breakpoints (xs, sm, md, lg, xl)
 
 ### Issue: Data loading states not working
 **Solution**: Implement proper loading/error states with useEffect and useState
 
-### Issue: TypeScript errors with chart data
-**Solution**: Define proper interfaces for all data structures
+### Issue: CORS errors when calling backend
+**Solution**: Backend should have proper CORS headers configured
 
 ## Integration Test with Container
 
-After dashboard app is working:
-1. Start dashboard app: `cd dashboard-app && npm start`
+After analytics app is working:
+1. Start analytics-app: `cd analytics-app && npm start`
 2. Start container: `cd container && npm start`
-3. Navigate to http://localhost:3000/dashboard
-4. Verify dashboard loads within container
+3. Navigate to http://localhost:3000/analytics
+4. Verify analytics dashboard loads within container
 5. Test responsive behavior
-6. Check all widgets display correctly
+6. Check all widgets and charts display correctly
 
 ## Performance Considerations
 - [ ] Implement React.memo for expensive chart components
 - [ ] Use proper loading states to prevent layout shifts
 - [ ] Optimize chart rendering for large datasets
-- [ ] Consider virtualization for large data lists
+- [ ] Consider data caching for frequently accessed metrics
 
 ## Next Steps
-After validation passes, proceed to Phase 4: Setup Profile Remote App.
+After validation passes, proceed to Phase 4: Setup Orders Remote App.

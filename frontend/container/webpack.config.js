@@ -69,12 +69,12 @@ module.exports = {
         './sharedUI': '../shared-ui-lib/src/index.ts',
       },
       remotes: {
-        userApp: 'userApp@http://localhost:3001/remoteEntry.js',
-        dataApp: 'dataApp@http://localhost:3002/remoteEntry.js',
-        analyticsApp: 'analyticsApp@http://localhost:3003/remoteEntry.js',
-        settingsApp: 'settingsApp@http://localhost:3004/remoteEntry.js',
-        ordersApp: 'ordersApp@http://localhost:3006/remoteEntry.js',
-        catalogApp: 'catalogApp@http://localhost:3005/remoteEntry.js',
+        userApp: 'userApp@/mf/user-management/remoteEntry.js',
+        dataApp: 'dataApp@/mf/data-grid/remoteEntry.js',
+        analyticsApp: 'analyticsApp@/mf/analytics/remoteEntry.js',
+        settingsApp: 'settingsApp@/mf/settings/remoteEntry.js',
+        ordersApp: 'ordersApp@/mf/orders/remoteEntry.js',
+        catalogApp: 'catalogApp@/mf/catalog/remoteEntry.js',
       },
       shared: {
         react: {

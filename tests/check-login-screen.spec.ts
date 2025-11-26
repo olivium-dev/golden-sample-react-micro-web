@@ -27,7 +27,7 @@ test.describe('Login Screen Test', () => {
     // Check body text
     const bodyText = await page.locator('body').textContent();
     console.log(`\nPage contains "Sign In": ${bodyText?.includes('Sign In') ? '✅' : '❌'}`);
-    console.log(`Page contains "JAIKER": ${bodyText?.includes('JAIKER') ? '✅' : '❌'}`);
+    console.log(`Page contains "Cremat": ${bodyText?.includes('Cremat') ? '✅' : '❌'}`);
 
     // List all visible text
     console.log(`\nVisible text: ${bodyText?.substring(0, 200)}`);

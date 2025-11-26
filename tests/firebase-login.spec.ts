@@ -13,9 +13,9 @@ test.describe('Firebase Authentication Integration', () => {
     console.log('✅ Page loaded');
 
     // Check login screen is visible
-    const jakierPlatformTitle = page.locator('text=JAIKER Platform');
+    const crematPlatformTitle = page.locator('text=Cremat Platform');
     await expect(jakierPlatformTitle).toBeVisible({ timeout: 10000 });
-    console.log('✅ JAIKER Platform title visible');
+    console.log('✅ Cremat Platform title visible');
 
     // Check Google Sign-In button
     const googleButton = page.locator('button:has-text("Continue with Google")');
@@ -213,7 +213,7 @@ test.describe('Firebase Authentication Integration', () => {
     await page.waitForTimeout(2000);
 
     // Check elements are still visible on mobile
-    await expect(page.locator('text=JAIKER Platform')).toBeVisible();
+    await expect(page.locator('text=Cremat Platform')).toBeVisible();
     await expect(page.locator('button:has-text("Continue with Google")')).toBeVisible();
     await expect(page.locator('input[type="email"]')).toBeVisible();
     

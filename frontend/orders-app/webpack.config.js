@@ -15,12 +15,33 @@ module.exports = {
     },
   },
   output: {
-    publicPath: 'auto',
+    publicPath: '/mf/orders/',
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+    modules: [
+      path.resolve(__dirname, 'node_modules'),
+      path.resolve(__dirname, '../shared-ui-lib/node_modules'),
+      'node_modules'
+    ],
+    fallback: {
+      "process": require.resolve("process/browser"),
+      "buffer": require.resolve("buffer"),
+      "util": require.resolve("util"),
+      "stream": require.resolve("stream-browserify"),
+      "crypto": require.resolve("crypto-browserify"),
+      "path": require.resolve("path-browserify"),
+      "os": require.resolve("os-browserify/browser"),
+      "fs": false,
+      "net": false,
+      "tls": false,
+    },
+    alias: {
+      'process/browser': require.resolve('process/browser'),
+      'buffer': require.resolve('buffer'),
+    },
   },
   module: {
     rules: [
@@ -119,7 +140,23 @@ module.exports = {
     // Define environment variables for browser
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000')
+      'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000'),
+      // Firebase environment variables
+      'process.env.REACT_APP_FIREBASE_API_KEY': JSON.stringify(process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyA3Hy9lztHYQXqkViAONm9UXIWHq2OGscA"),
+      'process.env.REACT_APP_FIREBASE_AUTH_DOMAIN': JSON.stringify(process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "creamati.firebaseapp.com"),
+      'process.env.REACT_APP_FIREBASE_PROJECT_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_PROJECT_ID || "creamati"),
+      'process.env.REACT_APP_FIREBASE_STORAGE_BUCKET': JSON.stringify(process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "creamati.firebasestorage.app"),
+      'process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "84649081999"),
+      'process.env.REACT_APP_FIREBASE_APP_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_APP_ID || "1:84649081999:android:b7f05dc7d0e702c833c4fa")
+    }),
+    // Provide Node.js globals for browser
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
+    // Additional DefinePlugin to ensure process is available globally
+    new webpack.DefinePlugin({
+      global: 'globalThis',
     }),
   ],
 };

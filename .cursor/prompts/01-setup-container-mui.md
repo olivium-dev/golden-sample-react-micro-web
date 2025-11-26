@@ -13,12 +13,15 @@ Requirements:
 - Implement lazy loading for remote components
 - Add error boundaries and Suspense with MUI components
 - Configure to run on port 3000
+- **NO BFF ARCHITECTURE**: Frontend calls backend API directly at https://dev-creamat.fds-1.com/gateway/
 
 Remote apps to integrate:
-- userManagement: http://localhost:3001/remoteEntry.js (exposes ./UserManagementPage)
-- dataGrid: http://localhost:3002/remoteEntry.js (exposes ./DataGridPage)  
-- analytics: http://localhost:3003/remoteEntry.js (exposes ./AnalyticsPage)
-- settings: http://localhost:3004/remoteEntry.js (exposes ./SettingsPage)
+- userApp: http://localhost:3001/remoteEntry.js (exposes ./UserManagementPage)
+- dataApp: http://localhost:3002/remoteEntry.js (exposes ./DataGridPage)  
+- analyticsApp: http://localhost:3003/remoteEntry.js (exposes ./AnalyticsPage)
+- settingsApp: http://localhost:3004/remoteEntry.js (exposes ./SettingsPage)
+- ordersApp: http://localhost:3005/remoteEntry.js (exposes ./OrdersPage)
+- catalogApp: http://localhost:3006/remoteEntry.js (exposes ./CatalogPage)
 
 Create the following structure:
 /container
@@ -121,16 +124,19 @@ module.exports = {
     historyApiFallback: true,
     headers: {
       "Access-Control-Allow-Origin": "*",
-    }
+    },
+    // NO PROXY - Frontend calls https://dev-creamat.fds-1.com/gateway/ directly
   },
   plugins: [
     new ModuleFederationPlugin({
       name: "container",
       remotes: {
-        userManagement: "userManagement@http://localhost:3001/remoteEntry.js",
-        dataGrid: "dataGrid@http://localhost:3002/remoteEntry.js",
-        analytics: "analytics@http://localhost:3003/remoteEntry.js",
-        settings: "settings@http://localhost:3004/remoteEntry.js",
+        userApp: "userApp@http://localhost:3001/remoteEntry.js",
+        dataApp: "dataApp@http://localhost:3002/remoteEntry.js",
+        analyticsApp: "analyticsApp@http://localhost:3003/remoteEntry.js",
+        settingsApp: "settingsApp@http://localhost:3004/remoteEntry.js",
+        ordersApp: "ordersApp@http://localhost:3005/remoteEntry.js",
+        catalogApp: "catalogApp@http://localhost:3006/remoteEntry.js",
       },
       shared: {
         react: { singleton: true, requiredVersion: "^18.2.0" },
@@ -213,10 +219,12 @@ import LoadingSpinner from "./components/LoadingSpinner";
 import HomePage from "./pages/HomePage";
 
 // Lazy load remote components
-const UserManagementPage = lazy(() => import("userManagement/UserManagementPage"));
-const DataGridPage = lazy(() => import("dataGrid/DataGridPage"));
-const AnalyticsPage = lazy(() => import("analytics/AnalyticsPage"));
-const SettingsPage = lazy(() => import("settings/SettingsPage"));
+const UserManagementPage = lazy(() => import("userApp/UserManagementPage"));
+const DataGridPage = lazy(() => import("dataApp/DataGridPage"));
+const AnalyticsPage = lazy(() => import("analyticsApp/AnalyticsPage"));
+const SettingsPage = lazy(() => import("settingsApp/SettingsPage"));
+const OrdersPage = lazy(() => import("ordersApp/OrdersPage"));
+const CatalogPage = lazy(() => import("catalogApp/CatalogPage"));
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -252,6 +260,8 @@ function App() {
                   <Route path="/data" element={<DataGridPage />} />
                   <Route path="/analytics" element={<AnalyticsPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/orders" element={<OrdersPage />} />
+                  <Route path="/catalog" element={<CatalogPage />} />
                 </Routes>
               </Suspense>
             </ErrorBoundary>
@@ -286,10 +296,12 @@ export default App;
 ### Issue: TypeScript errors for remote imports
 **Solution**: Add type declarations:
 ```typescript
-declare module "userManagement/UserManagementPage";
-declare module "dataGrid/DataGridPage";  
-declare module "analytics/AnalyticsPage";
-declare module "settings/SettingsPage";
+declare module "userApp/UserManagementPage";
+declare module "dataApp/DataGridPage";  
+declare module "analyticsApp/AnalyticsPage";
+declare module "settingsApp/SettingsPage";
+declare module "ordersApp/OrdersPage";
+declare module "catalogApp/CatalogPage";
 ```
 
 ## MUI Best Practices
@@ -306,6 +318,40 @@ declare module "settings/SettingsPage";
 - Use Paper/Card for content grouping
 - Use Typography for all text content
 - Use proper semantic HTML with MUI components
+
+## Backend Integration
+
+### API Configuration
+- **Backend URL**: https://dev-creamat.fds-1.com/gateway/
+- **NO BFF**: Frontend calls backend directly (no Backend-for-Frontend layer)
+- **Authentication**: Firebase Authentication + JWT tokens
+- **API Client**: Shared axios instance in `shared-ui-lib/src/api/apiClient.ts`
+
+### API Client Setup
+```typescript
+import axios from 'axios';
+
+const API_URL = 'https://dev-creamat.fds-1.com/gateway/';
+
+export const apiClient = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials: false,
+  timeout: 30000,
+});
+
+// Add auth token interceptor
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+```
 
 ## Next Steps
 After validation passes, proceed to Phase 2: Setup User Management Remote App with MUI Data Grid.

@@ -1,580 +1,343 @@
-# Phase 6: Python Microservices Backend Architecture
+# Phase 6: Backend Integration (Real Backend - No Mock Services)
 
-## Prompt Template
+## Overview
+
+**IMPORTANT**: This project uses a **real production backend** at `https://dev-creamat.fds-1.com/gateway/`. 
+
+**NO BFF ARCHITECTURE**: Frontends call the backend API directly without a Backend-for-Frontend layer.
+
+**NO MOCK SERVICES**: The mock backend services in `/backend/mock-data-service` are deprecated and should not be used.
+
+## Backend Architecture
+
+### Real Backend Services
+The production backend is hosted at `https://dev-creamat.fds-1.com` with the following structure:
+
 ```
-Create a comprehensive Python microservices backend architecture using FastAPI with an API Gateway pattern.
-
-Requirements:
-- Create 5 FastAPI services (1 gateway + 4 domain services)
-- Use PostgreSQL for relational data, MongoDB for settings, Redis for caching
-- Implement JWT authentication and authorization
-- Setup service discovery and health checks
-- Configure CORS for frontend integration
-- Add comprehensive error handling and logging
-- Use Docker for containerization
-
-Services Architecture:
-1. API Gateway (port 8000) - Request routing, authentication, rate limiting
-2. User Service (port 8001) - User management, authentication, RBAC
-3. Data Service (port 8002) - Data processing, CRUD operations, file handling
-4. Analytics Service (port 8003) - Metrics, reporting, real-time analytics
-5. Settings Service (port 8004) - Configuration management, preferences
-
-Create the following structure:
-/backend
-  /gateway-service
-    /app
-      - main.py
-      - auth.py
-      - routing.py
-      - middleware.py
-    - requirements.txt
-    - Dockerfile
-  /user-service
-    /app
-      - main.py
-      - models.py
-      - schemas.py
-      - crud.py
-      - auth.py
-    - requirements.txt
-    - Dockerfile
-  /data-service
-    /app
-      - main.py
-      - models.py
-      - processing.py
-      - file_handler.py
-    - requirements.txt
-    - Dockerfile
-  /analytics-service
-    /app
-      - main.py
-      - analytics.py
-      - websocket.py
-      - metrics.py
-    - requirements.txt
-    - Dockerfile
-  /settings-service
-    /app
-      - main.py
-      - models.py
-      - config.py
-    - requirements.txt
-    - Dockerfile
-  /shared
-    - database.py
-    - auth_utils.py
-    - logging_config.py
-    - exceptions.py
-  - docker-compose.yml
-  - run_all_services.py
+https://dev-creamat.fds-1.com/gateway/
+├── api/
+│   ├── user/          # User management endpoints
+│   ├── Order/         # Order management endpoints  
+│   ├── Catalog/       # Catalog and product endpoints
+│   ├── cdn/           # CDN and media endpoints
+│   └── analytics/     # Analytics endpoints (if available)
 ```
 
-## Validation Checklist
+### Authentication
+- **Provider**: Firebase Authentication
+- **Token Type**: JWT (JSON Web Tokens)
+- **Token Storage**: localStorage (`access_token`, `refresh_token`)
+- **Token Refresh**: Automatic via axios interceptors
 
-### After Running the Prompt
-- [ ] All 5 FastAPI services created with proper structure
-- [ ] Gateway service routes requests to appropriate services
-- [ ] User service handles authentication and user management
-- [ ] Data service processes and stores data correctly
-- [ ] Analytics service provides metrics and real-time updates
-- [ ] Settings service manages configuration
-- [ ] Docker containers build and run successfully
-- [ ] Database connections work for all services
-- [ ] CORS configured for frontend integration
+## Frontend Integration
 
-### Code Quality Checks
-- [ ] All services follow FastAPI best practices
-- [ ] Proper error handling with custom exceptions
-- [ ] Comprehensive logging implemented
-- [ ] Input validation with Pydantic schemas
-- [ ] Database models properly defined
-- [ ] JWT authentication working across services
-- [ ] API documentation auto-generated with Swagger
-- [ ] Health check endpoints for all services
+### API Client Configuration
 
-### Integration Testing
-- [ ] Gateway routes requests correctly
-- [ ] Service-to-service communication works
-- [ ] Authentication flow end-to-end
-- [ ] Database operations successful
-- [ ] WebSocket connections for real-time features
-- [ ] File upload/download functionality
-- [ ] Error responses properly formatted
+All frontends use a shared API client from `shared-ui-lib/src/api/apiClient.ts`:
 
-### Testing Commands
-```bash
-cd backend
-docker-compose up -d  # Start databases
-python run_all_services.py  # Start all services
+```typescript
+import axios, { AxiosInstance } from 'axios';
 
-# Test endpoints
-curl http://localhost:8000/health
-curl http://localhost:8001/health
-curl http://localhost:8002/health
-curl http://localhost:8003/health
-curl http://localhost:8004/health
+const API_URL = 'https://dev-creamat.fds-1.com/gateway/';
 
-# Test authentication
-curl -X POST http://localhost:8000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com", "password": "password"}'
+export const apiClient: AxiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials: false,
+  timeout: 30000,
+});
+
+// Request interceptor - attach access token
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Response interceptor - handle 401 and token refresh
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const refreshToken = localStorage.getItem('refresh_token');
+        const response = await axios.post('/api/users/refresh', {
+          refresh_token: refreshToken,
+        });
+        
+        const { access_token, refresh_token: new_refresh_token } = response.data;
+        
+        localStorage.setItem('access_token', access_token);
+        localStorage.setItem('refresh_token', new_refresh_token);
+        
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
 ```
 
-## Expected File Contents
+### Service-Specific API Clients
 
-### Gateway Service (main.py)
-```python
-from fastapi import FastAPI, HTTPException, Depends, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer
-import httpx
-import logging
-from typing import Dict, Any
-import os
+Each micro-frontend has its own API service that extends the shared client:
 
-app = FastAPI(
-    title="API Gateway",
-    description="Central gateway for micro-frontend services",
-    version="1.0.0"
-)
+#### User Management API (`user-management-app/src/api.ts`)
+```typescript
+import { apiClient } from 'shared-ui-lib/src/api/apiClient';
 
-# CORS configuration for frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", 
-                   "http://localhost:3002", "http://localhost:3003", 
-                   "http://localhost:3004"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+const API_BASE_URL = 'https://dev-creamat.fds-1.com/gateway/api/user';
 
-# Service URLs
-SERVICES = {
-    "user": "http://localhost:8001",
-    "data": "http://localhost:8002", 
-    "analytics": "http://localhost:8003",
-    "settings": "http://localhost:8004"
+export const userApi = {
+  getUsers: () => apiClient.get(`${API_BASE_URL}/users`),
+  getUser: (id: string) => apiClient.get(`${API_BASE_URL}/users/${id}`),
+  createUser: (data: any) => apiClient.post(`${API_BASE_URL}/users`, data),
+  updateUser: (id: string, data: any) => apiClient.put(`${API_BASE_URL}/users/${id}`, data),
+  deleteUser: (id: string) => apiClient.delete(`${API_BASE_URL}/users/${id}`),
+};
+```
+
+#### Orders API (`orders-app/src/services/apiClient.ts`)
+```typescript
+import axios from 'axios';
+
+const API_BASE_URL = 'https://dev-creamat.fds-1.com/gateway/api/Order';
+
+export const ordersApi = {
+  getUserOrders: (userId: string) => axios.get(`${API_BASE_URL}/User/${userId}`),
+  getOrderById: (id: string) => axios.get(`${API_BASE_URL}/${id}`),
+  createOrder: (data: any) => axios.post(API_BASE_URL, data),
+  updateOrder: (id: string, data: any) => axios.put(`${API_BASE_URL}/${id}`, data),
+  deleteOrder: (id: string) => axios.delete(`${API_BASE_URL}/${id}`),
+};
+```
+
+#### Catalog API (`catalog-app/src/config/apiConfig.ts`)
+```typescript
+export const apiConfig = {
+  development: {
+    baseUrl: 'https://dev-creamat.fds-1.com',
+    catalogApi: 'https://dev-creamat.fds-1.com/gateway/api/Catalog',
+    cdnApi: 'https://dev-creamat.fds-1.com/gateway',
+    timeout: 30000,
+  },
+  production: {
+    baseUrl: 'https://dev-creamat.fds-1.com',
+    catalogApi: 'https://dev-creamat.fds-1.com/gateway/api/Catalog',
+    cdnApi: 'https://dev-creamat.fds-1.com/gateway',
+    timeout: 30000,
+  }
+};
+```
+
+## API Endpoints Reference
+
+### User Service
+- **Base URL**: `/gateway/api/user`
+- **Endpoints**:
+  - `GET /users` - List all users
+  - `GET /users/:id` - Get user by ID
+  - `POST /users` - Create user
+  - `PUT /users/:id` - Update user
+  - `DELETE /users/:id` - Delete user
+  - `POST /auth/login` - Login
+  - `POST /auth/register` - Register
+  - `POST /auth/refresh` - Refresh token
+
+### Order Service
+- **Base URL**: `/gateway/api/Order`
+- **Endpoints**:
+  - `GET /User/:userId` - Get orders for user
+  - `GET /:id` - Get order by ID
+  - `POST /` - Create order
+  - `PUT /:id` - Update order
+  - `DELETE /:id` - Delete order
+
+### Catalog Service
+- **Base URL**: `/gateway/api/Catalog`
+- **Endpoints**:
+  - `GET /Category/All/:pageSize/:pageNumber` - Get all categories
+  - `GET /Product/:id` - Get product by ID
+  - `GET /Products/:categoryId/:pageSize/:pageNumber` - Get products by category
+  - `POST /Product` - Create product
+  - `PUT /Product/:id` - Update product
+  - `DELETE /Product/:id` - Delete product
+
+### CDN Service
+- **Base URL**: `/gateway/cdn` or `/gateway`
+- **Endpoints**:
+  - `GET /media/:path` - Get media file
+  - `POST /upload` - Upload media file
+
+## CORS Configuration
+
+The backend at `https://dev-creamat.fds-1.com` must have CORS configured to allow requests from:
+- `http://localhost:3000` (container)
+- `http://localhost:3001` (user-management)
+- `http://localhost:3002` (data-grid)
+- `http://localhost:3003` (analytics)
+- `http://localhost:3004` (settings)
+- `http://localhost:3005` (orders)
+- `http://localhost:3006` (catalog)
+- Production domains
+
+## Error Handling
+
+### Common Error Responses
+
+```typescript
+interface ApiError {
+  message: string;
+  code?: string;
+  status: number;
+  details?: any;
 }
 
-security = HTTPBearer()
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "gateway"}
-
-@app.api_route("/users/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def proxy_user_service(request: Request, path: str):
-    return await proxy_request(request, "user", path)
-
-@app.api_route("/data/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def proxy_data_service(request: Request, path: str):
-    return await proxy_request(request, "data", path)
-
-@app.api_route("/analytics/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def proxy_analytics_service(request: Request, path: str):
-    return await proxy_request(request, "analytics", path)
-
-@app.api_route("/settings/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def proxy_settings_service(request: Request, path: str):
-    return await proxy_request(request, "settings", path)
-
-async def proxy_request(request: Request, service: str, path: str):
-    service_url = SERVICES.get(service)
-    if not service_url:
-        raise HTTPException(status_code=404, detail="Service not found")
-    
-    url = f"{service_url}/{path}"
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.request(
-            method=request.method,
-            url=url,
-            headers=dict(request.headers),
-            content=await request.body(),
-            params=request.query_params
-        )
-        
-        return response.json() if response.headers.get("content-type", "").startswith("application/json") else response.text
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+// Handle errors consistently
+try {
+  const response = await apiClient.get('/endpoint');
+  return response.data;
+} catch (error) {
+  if (axios.isAxiosError(error)) {
+    if (error.response) {
+      // Server responded with error
+      console.error('API Error:', error.response.data);
+      throw new Error(error.response.data.message || 'Server error');
+    } else if (error.request) {
+      // No response received
+      console.error('Network Error:', error.request);
+      throw new Error('Network error - please check your connection');
+    }
+  }
+  throw error;
+}
 ```
 
-### User Service (main.py)
-```python
-from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
-from passlib.context import CryptContext
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
-import os
-from typing import Optional
+## Testing Backend Integration
 
-from .database import get_db, engine
-from .models import User, Base
-from .schemas import UserCreate, UserResponse, Token, UserLogin
-from .crud import create_user, get_user_by_email, get_users, get_user_by_id
+### Manual Testing
+```bash
+# Test health endpoint
+curl https://dev-creamat.fds-1.com/gateway/health
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+# Test authentication
+curl -X POST https://dev-creamat.fds-1.com/gateway/api/user/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "password"}'
 
-app = FastAPI(
-    title="User Service",
-    description="User management and authentication service",
-    version="1.0.0"
-)
-
-# Security
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer()
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "user"}
-
-@app.post("/auth/register", response_model=UserResponse)
-async def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = get_user_by_email(db, email=user.email)
-    if db_user:
-        raise HTTPException(
-            status_code=400,
-            detail="Email already registered"
-        )
-    
-    hashed_password = get_password_hash(user.password)
-    user_data = user.dict()
-    user_data["hashed_password"] = hashed_password
-    del user_data["password"]
-    
-    return create_user(db=db, user=user_data)
-
-@app.post("/auth/login", response_model=Token)
-async def login_user(user_credentials: UserLogin, db: Session = Depends(get_db)):
-    user = get_user_by_email(db, email=user_credentials.email)
-    if not user or not verify_password(user_credentials.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
-
-@app.get("/users", response_model=list[UserResponse])
-async def list_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = get_users(db, skip=skip, limit=limit)
-    return users
-
-@app.get("/users/{user_id}", response_model=UserResponse)
-async def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = get_user_by_id(db, user_id=user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+# Test with authentication
+curl https://dev-creamat.fds-1.com/gateway/api/user/users \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### Data Service (main.py)
-```python
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
-from sqlalchemy.orm import Session
-import pandas as pd
-import io
-from typing import List, Optional
+### Automated Testing
+Use the test scripts in `/tests` directory:
+```bash
+# Test backend APIs
+./scripts/test-backend-apis.sh
 
-from .database import get_db, engine
-from .models import DataRecord, Base
-from .schemas import DataRecordCreate, DataRecordResponse, DataFilter
-from .processing import process_data, validate_data
+# Test CORS
+npm run test:backend-cors
 
-# Create tables
-Base.metadata.create_all(bind=engine)
-
-app = FastAPI(
-    title="Data Service",
-    description="Data processing and management service",
-    version="1.0.0"
-)
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "data"}
-
-@app.get("/data", response_model=List[DataRecordResponse])
-async def get_data(
-    skip: int = 0, 
-    limit: int = 100, 
-    db: Session = Depends(get_db)
-):
-    data = db.query(DataRecord).offset(skip).limit(limit).all()
-    return data
-
-@app.post("/data", response_model=DataRecordResponse)
-async def create_data_record(
-    record: DataRecordCreate, 
-    db: Session = Depends(get_db)
-):
-    db_record = DataRecord(**record.dict())
-    db.add(db_record)
-    db.commit()
-    db.refresh(db_record)
-    return db_record
-
-@app.post("/data/import")
-async def import_data(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    if not file.filename.endswith(('.csv', '.xlsx')):
-        raise HTTPException(status_code=400, detail="Only CSV and Excel files supported")
-    
-    contents = await file.read()
-    
-    try:
-        if file.filename.endswith('.csv'):
-            df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
-        else:
-            df = pd.read_excel(io.BytesIO(contents))
-        
-        # Process and validate data
-        processed_data = process_data(df)
-        
-        # Save to database
-        records_created = 0
-        for _, row in processed_data.iterrows():
-            record = DataRecord(**row.to_dict())
-            db.add(record)
-            records_created += 1
-        
-        db.commit()
-        
-        return {
-            "message": f"Successfully imported {records_created} records",
-            "records_created": records_created
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
-
-@app.get("/data/export")
-async def export_data(format: str = "csv", db: Session = Depends(get_db)):
-    data = db.query(DataRecord).all()
-    
-    # Convert to DataFrame
-    df = pd.DataFrame([{
-        "id": record.id,
-        "name": record.name,
-        "value": record.value,
-        "category": record.category,
-        "created_at": record.created_at
-    } for record in data])
-    
-    if format == "csv":
-        output = io.StringIO()
-        df.to_csv(output, index=False)
-        return {"data": output.getvalue(), "format": "csv"}
-    elif format == "json":
-        return {"data": df.to_json(orient="records"), "format": "json"}
-    else:
-        raise HTTPException(status_code=400, detail="Unsupported format")
-
-@app.post("/data/filter", response_model=List[DataRecordResponse])
-async def filter_data(filter_params: DataFilter, db: Session = Depends(get_db)):
-    query = db.query(DataRecord)
-    
-    if filter_params.category:
-        query = query.filter(DataRecord.category == filter_params.category)
-    if filter_params.min_value:
-        query = query.filter(DataRecord.value >= filter_params.min_value)
-    if filter_params.max_value:
-        query = query.filter(DataRecord.value <= filter_params.max_value)
-    
-    return query.all()
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+# E2E tests
+npm run test:all
 ```
 
-### docker-compose.yml
-```yaml
-version: '3.8'
+## Environment Configuration
 
-services:
-  # Databases
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: microservices_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-  mongodb:
-    image: mongo:6
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-
-  # Services
-  gateway-service:
-    build: ./gateway-service
-    ports:
-      - "8000:8000"
-    depends_on:
-      - user-service
-      - data-service
-      - analytics-service
-      - settings-service
-    environment:
-      - USER_SERVICE_URL=http://user-service:8001
-      - DATA_SERVICE_URL=http://data-service:8002
-      - ANALYTICS_SERVICE_URL=http://analytics-service:8003
-      - SETTINGS_SERVICE_URL=http://settings-service:8004
-
-  user-service:
-    build: ./user-service
-    ports:
-      - "8001:8001"
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/microservices_db
-      - REDIS_URL=redis://redis:6379
-
-  data-service:
-    build: ./data-service
-    ports:
-      - "8002:8002"
-    depends_on:
-      - postgres
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/microservices_db
-
-  analytics-service:
-    build: ./analytics-service
-    ports:
-      - "8003:8003"
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/microservices_db
-      - REDIS_URL=redis://redis:6379
-
-  settings-service:
-    build: ./settings-service
-    ports:
-      - "8004:8004"
-    depends_on:
-      - mongodb
-    environment:
-      - MONGODB_URL=mongodb://admin:password@mongodb:27017
-
-volumes:
-  postgres_data:
-  mongodb_data:
+### Development (.env.development)
+```env
+REACT_APP_API_URL=https://dev-creamat.fds-1.com/gateway/
+REACT_APP_FIREBASE_API_KEY=your-dev-api-key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your-dev-auth-domain
+REACT_APP_FIREBASE_PROJECT_ID=your-project-id
 ```
 
-## Common Issues & Solutions
+### Production (.env.production)
+```env
+REACT_APP_API_URL=https://dev-creamat.fds-1.com/gateway/
+REACT_APP_FIREBASE_API_KEY=your-prod-api-key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your-prod-auth-domain
+REACT_APP_FIREBASE_PROJECT_ID=your-project-id
+```
 
-### Issue: Service discovery not working
-**Solution**: Use Docker networking or implement service registry with Consul
+## Migration from Mock Backend
 
-### Issue: Database connection errors
-**Solution**: Ensure proper connection strings and database initialization
+If you have code using the mock backend at `http://localhost:8000`, update it to use the real backend:
 
-### Issue: CORS errors from frontend
-**Solution**: Configure CORS middleware with correct origins
+### Before (Mock Backend)
+```typescript
+const API_URL = 'http://localhost:8000';
+```
 
-### Issue: JWT authentication failing
-**Solution**: Ensure consistent secret keys and token validation
+### After (Real Backend)
+```typescript
+const API_URL = 'https://dev-creamat.fds-1.com/gateway/';
+```
 
-## Security Best Practices
+## Deprecated: Mock Backend Services
 
-### Authentication & Authorization
-- [ ] JWT tokens with proper expiration
-- [ ] Password hashing with bcrypt
-- [ ] Role-based access control (RBAC)
-- [ ] API rate limiting
-- [ ] Input validation and sanitization
+The following directories contain deprecated mock services and should not be used:
+- `/backend/mock-data-service` - Deprecated mock FastAPI service
+- `/backend/gateway-mock` - Deprecated mock gateway
 
-### Data Protection
-- [ ] SQL injection prevention with ORM
-- [ ] XSS protection with input validation
-- [ ] Secure file upload handling
-- [ ] Environment variable for secrets
-- [ ] HTTPS in production
+These were used for initial development but are no longer maintained. All development and production should use the real backend at `https://dev-creamat.fds-1.com`.
 
-## Performance Optimization
+## Security Considerations
 
-### Caching Strategy
-- [ ] Redis for session storage
-- [ ] Database query caching
-- [ ] API response caching
-- [ ] Static asset caching
+### Authentication
+- [ ] JWT tokens stored securely in localStorage
+- [ ] Automatic token refresh implemented
+- [ ] Logout clears all tokens
+- [ ] Protected routes check for valid tokens
 
-### Database Optimization
-- [ ] Proper indexing
-- [ ] Connection pooling
-- [ ] Query optimization
-- [ ] Database migrations
+### API Security
+- [ ] HTTPS enforced for all API calls
+- [ ] CORS properly configured on backend
+- [ ] Input validation on frontend
+- [ ] Error messages don't expose sensitive data
+- [ ] Rate limiting handled gracefully
 
-## Monitoring & Logging
+## Monitoring & Debugging
 
-### Health Checks
-- [ ] Service health endpoints
-- [ ] Database connectivity checks
-- [ ] External service dependency checks
-- [ ] Resource utilization monitoring
+### Network Debugging
+Use browser DevTools Network tab to inspect:
+- Request/response headers
+- Status codes
+- Response times
+- CORS headers
+- Authentication tokens
 
-### Logging
-- [ ] Structured logging with JSON
-- [ ] Request/response logging
-- [ ] Error tracking and alerting
-- [ ] Performance metrics collection
+### Console Logging
+The API client logs all requests:
+```
+🌐 API Request: GET /api/user/users
+✅ API Response: 200 /api/user/users
+❌ API Error: 401 /api/user/users
+```
 
 ## Next Steps
-After validation passes, proceed to Phase 7: Frontend-Backend Integration and Real-time Communication.
+
+1. Ensure all micro-frontends use the shared API client
+2. Test all API integrations with the real backend
+3. Verify Firebase authentication works end-to-end
+4. Test error handling and token refresh
+5. Remove any references to mock backend
+6. Update documentation with actual API endpoints
+7. Deploy to production with proper environment variables

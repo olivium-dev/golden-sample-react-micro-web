@@ -75,7 +75,7 @@ test.describe('Firebase Runtime Error Testing', () => {
     console.log(`   Page has content: ${hasContent ? '✅ YES' : '❌ NO'}`);
 
     // Check if login screen is visible
-    const loginScreenVisible = await page.locator('text=JAIKER Platform').isVisible().catch(() => false);
+    const loginScreenVisible = await page.locator('text=Cremat Platform').isVisible().catch(() => false);
     console.log(`   Login screen visible: ${loginScreenVisible ? '✅ YES' : '❌ NO'}`);
 
     // Check if Google button is visible
@@ -159,7 +159,7 @@ test.describe('Firebase Runtime Error Testing', () => {
     await page.waitForTimeout(2000);
 
     const checks = [
-      { name: 'JAIKER Platform title', locator: 'text=JAIKER Platform' },
+      { name: 'Cremat Platform title', locator: 'text=Cremat Platform' },
       { name: 'Sign In heading', locator: 'text=Sign In' },
       { name: 'Google Sign-In button', locator: 'button:has-text("Continue with Google")' },
       { name: 'OR divider', locator: 'text=OR' },

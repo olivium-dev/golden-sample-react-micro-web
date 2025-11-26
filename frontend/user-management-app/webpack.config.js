@@ -15,7 +15,7 @@ module.exports = {
     },
   },
   output: {
-    publicPath: 'auto',
+    publicPath: '/mf/user-management/',
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },

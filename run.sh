@@ -1,105 +1,68 @@
 #!/bin/bash
 
-# Script to stop and restart all micro-frontend and backend services
+# Script to start all micro-frontend services with Docker Compose
+# Uses pre-built images (build once, run many pattern)
 # Usage: ./run.sh
 
-echo "🛑 Stopping all running services..."
-
-# Kill processes on specific ports
-echo "Killing processes on ports 3000-3004 and 8000..."
-for port in 3000 3001 3002 3003 3004 8000; do
-    pid=$(lsof -ti:$port)
-    if [ ! -z "$pid" ]; then
-        echo "Killing process $pid on port $port"
-        kill -9 $pid 2>/dev/null || true
-    fi
-done
-
-# Kill any remaining webpack-dev-server processes
-echo "Killing any remaining webpack-dev-server processes..."
-pkill -f "webpack-dev-server" 2>/dev/null || true
-pkill -f "webpack serve" 2>/dev/null || true
-
-# Kill any remaining python processes for the backend
-echo "Killing any remaining FastAPI processes..."
-pkill -f "main.py" 2>/dev/null || true
-pkill -f "uvicorn" 2>/dev/null || true
-
-# Wait a moment for processes to terminate
-sleep 2
-
-echo "✅ All services stopped"
-echo ""
-echo "🚀 Starting all services in background..."
+set -e  # Exit on any error
 
 # Navigate to project root
-PROJECT_ROOT="/Users/oudaykhaled/Desktop/golden-sample-react-micro-web /golden-sample-react-micro-web"
-cd "$PROJECT_ROOT"
+cd "$(dirname "$0")"
 
-# Install missing Python dependency for backend
-echo "📦 Installing missing Python dependencies..."
-pip3 install -q email-validator 2>/dev/null || pip install -q email-validator 2>/dev/null || true
+echo "🚀 Starting all micro-frontend services..."
+echo "=============================================="
+echo ""
 
-# Start backend service
-echo "🐍 Starting FastAPI backend service on port 8000..."
-(cd "$PROJECT_ROOT/backend/mock-data-service" && nohup python3 main.py > backend.log 2>&1 &)
-sleep 2
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+    echo "❌ Docker is not running. Please start Docker Desktop first."
+    exit 1
+fi
 
-# Start frontend services
-echo "⚛️  Starting frontend micro-services..."
+# Check if images exist
+echo "🔍 Checking for pre-built Docker images..."
+if ! docker images | grep -q "creamati-cms-container"; then
+  echo "⚠️  Docker images not found!"
+  echo ""
+  echo "Please build images first using one of these methods:"
+  echo "  1. Quick build: ./scripts/docker-build.sh"
+  echo "  2. Full rebuild: ./scripts/docker-full-rebuild.sh"
+  echo ""
+  exit 1
+fi
 
-# Start container app (port 3000)
-echo "Starting container app on port 3000..."
-(cd "$PROJECT_ROOT/frontend/container" && nohup npx webpack serve --config webpack.minimal.js > container.log 2>&1 &)
-sleep 1
+echo "✅ Pre-built images found"
+echo ""
 
-# Start user-management-app (port 3001)
-echo "Starting user-management-app on port 3001..."
-(cd "$PROJECT_ROOT/frontend/user-management-app" && nohup npx webpack serve --config webpack.minimal.js > user-management.log 2>&1 &)
-sleep 1
+# Stop any existing containers first
+echo "🛑 Stopping any existing containers..."
+docker compose down 2>/dev/null || true
 
-# Start data-grid-app (port 3002)
-echo "Starting data-grid-app on port 3002..."
-(cd "$PROJECT_ROOT/frontend/data-grid-app" && nohup npx webpack serve --config webpack.minimal.js > data-grid.log 2>&1 &)
-sleep 1
+# Kill any process using port 3000 (required for Traefik)
+echo "🔌 Freeing port 3000..."
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 
-# Start analytics-app (port 3003)
-echo "Starting analytics-app on port 3003..."
-(cd "$PROJECT_ROOT/frontend/analytics-app" && nohup npx webpack serve --config webpack.minimal.js > analytics.log 2>&1 &)
-sleep 1
-
-# Start settings-app (port 3004)
-echo "Starting settings-app on port 3004..."
-(cd "$PROJECT_ROOT/frontend/settings-app" && nohup npx webpack serve --config webpack.minimal.js > settings.log 2>&1 &)
-sleep 1
+# Start Docker Compose services in detached mode (no build, just run)
+echo "🚀 Starting services (using pre-built images)..."
+docker compose up -d
 
 echo ""
-echo "🎉 All services starting in background!"
+echo "⏳ Waiting for services to initialize (15 seconds)..."
+sleep 15
+
+echo ""
+echo "✅ All services started!"
 echo ""
 echo "📊 Service URLs:"
-echo "Backend (FastAPI):        http://localhost:8000"
-echo "API Documentation:        http://localhost:8000/docs"
-echo "Container App:            http://localhost:3000"
-echo "User Management:          http://localhost:3001"
-echo "Data Grid:                http://localhost:3002"
-echo "Analytics:                http://localhost:3003"
-echo "Settings:                 http://localhost:3004"
+echo "  Main App:              http://localhost:3000"
+echo "  Traefik Dashboard:     http://localhost:8080"
 echo ""
-echo "📝 Logs are being written to:"
-echo "Backend:                  backend/mock-data-service/backend.log"
-echo "Container:                frontend/container/container.log"
-echo "User Management:          frontend/user-management-app/user-management.log"
-echo "Data Grid:                frontend/data-grid-app/data-grid.log"
-echo "Analytics:                frontend/analytics-app/analytics.log"
-echo "Settings:                 frontend/settings-app/settings.log"
+echo "📝 Useful commands:"
+echo "  View logs:             docker compose logs -f"
+echo "  Stop services:         docker compose down  (or ./stop.sh)"
+echo "  Restart services:      docker compose restart"
+echo "  Rebuild images:        ./scripts/docker-build.sh"
+echo "  Full rebuild:          ./scripts/docker-full-rebuild.sh"
 echo ""
-echo "⏳ Services are starting up (this takes ~15-30 seconds)..."
+echo "💡 Tip: Images are cached. No rebuild needed on next run!"
 echo ""
-echo "🔍 To check logs:"
-echo "tail -f backend/mock-data-service/backend.log"
-echo "tail -f frontend/container/container.log"
-echo ""
-echo "🛑 To stop all services:"
-echo "./stop.sh"
-echo ""
-echo "✅ Script completed. Services are running in background!"

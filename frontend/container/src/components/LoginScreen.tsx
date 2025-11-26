@@ -106,7 +106,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, loading = false, err
               <LockIcon sx={{ fontSize: 40, color: 'white' }} />
             </Avatar>
             <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-              JAIKER Platform
+              Cremat Platform
             </Typography>
             <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', mt: 1 }}>
               Micro-Frontend Management System

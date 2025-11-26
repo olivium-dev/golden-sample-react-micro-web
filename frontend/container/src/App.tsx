@@ -77,27 +77,6 @@ const menuItems: MenuItem[] = [
     description: 'Manage users, roles, and permissions',
   },
   {
-    id: 'data',
-    icon: <DashboardIcon />,
-    label: 'Data Grid',
-    color: '#ff6b6b',
-    description: 'View and manage data with advanced filtering',
-  },
-  {
-    id: 'analytics',
-    icon: <AnalyticsIcon />,
-    label: 'Analytics',
-    color: '#4ecdc4',
-    description: 'Real-time analytics and reporting',
-  },
-  {
-    id: 'settings',
-    icon: <SettingsIcon />,
-    label: 'Settings',
-    color: '#ffa726',
-    description: 'System configuration and preferences',
-  },
-  {
     id: 'orders',
     icon: <ShoppingCartIcon />,
     label: 'Orders',
@@ -111,13 +90,35 @@ const menuItems: MenuItem[] = [
     color: '#00bcd4',
     description: 'Manage catalog items and categories',
   },
-  {
-    id: 'error-monitor',
-    icon: <BugReportIcon />,
-    label: 'Error Monitor',
-    color: '#f44336',
-    description: 'Real-time error monitoring and analysis',
-  },
+  // Hidden menu items - analytics, data grid, settings, error monitor
+  // {
+  //   id: 'data',
+  //   icon: <DashboardIcon />,
+  //   label: 'Data Grid',
+  //   color: '#ff6b6b',
+  //   description: 'View and manage data with advanced filtering',
+  // },
+  // {
+  //   id: 'analytics',
+  //   icon: <AnalyticsIcon />,
+  //   label: 'Analytics',
+  //   color: '#4ecdc4',
+  //   description: 'Real-time analytics and reporting',
+  // },
+  // {
+  //   id: 'settings',
+  //   icon: <SettingsIcon />,
+  //   label: 'Settings',
+  //   color: '#ffa726',
+  //   description: 'System configuration and preferences',
+  // },
+  // {
+  //   id: 'error-monitor',
+  //   icon: <BugReportIcon />,
+  //   label: 'Error Monitor',
+  //   color: '#f44336',
+  //   description: 'Real-time error monitoring and analysis',
+  // },
 ];
 
 function App() {
