@@ -45,8 +45,20 @@ runs:
         mkdir -p ~/.ssh
         chmod 700 ~/.ssh
         
-        # Decode and save SSH private key (robust handling)
-        echo "${{ inputs.ssh-private-key }}" | tr -d '\n\r' | base64 -d > ~/.ssh/id_rsa
+        # Handle SSH private key (try base64 decode first, fallback to raw)
+        echo "🔍 Processing SSH private key..."
+        if echo "${{ inputs.ssh-private-key }}" | grep -q "^-----BEGIN"; then
+          echo "✅ Detected raw SSH private key format"
+          echo "${{ inputs.ssh-private-key }}" > ~/.ssh/id_rsa
+        else
+          echo "🔍 Attempting to decode base64 SSH private key..."
+          if echo "${{ inputs.ssh-private-key }}" | tr -d '\n\r' | base64 -d > ~/.ssh/id_rsa 2>/dev/null && [ -s ~/.ssh/id_rsa ]; then
+            echo "✅ Successfully decoded base64 SSH key"
+          else
+            echo "❌ Base64 decode failed, treating as raw key"
+            echo "${{ inputs.ssh-private-key }}" > ~/.ssh/id_rsa
+          fi
+        fi
         chmod 600 ~/.ssh/id_rsa
         
         # Create SSH config for Cloudflare tunnel
@@ -71,10 +83,25 @@ runs:
       run: |
         echo "🧪 Testing SSH connection to ${{ inputs.server-hostname }}..."
         
-        # Test connection with timeout
-        if timeout ${{ inputs.connect-timeout }} ssh ${{ inputs.host-alias }} "echo 'SSH connection successful!'" 2>/dev/null; then
+        # Test connection with detailed debugging
+        echo "🔍 SSH config contents:"
+        cat ~/.ssh/config
+        echo "🔍 SSH key file info:"
+        ls -la ~/.ssh/id_rsa
+        echo "🔍 SSH key validation:"
+        ssh-keygen -l -f ~/.ssh/id_rsa || echo "SSH key validation failed"
+        
+        echo "🔍 Testing SSH connection with verbose output..."
+        if timeout ${{ inputs.connect-timeout }} ssh -v ${{ inputs.host-alias }} "echo 'SSH connection successful!'" 2>&1; then
           echo "✅ SSH connection established successfully"
         else
-          echo "❌ SSH connection failed"
+          echo "❌ SSH connection failed, trying alternative approaches..."
+          echo "🔍 Testing cloudflared directly:"
+          timeout 10 cloudflared access tcp --hostname ${{ inputs.server-hostname }} &
+          CF_PID=$!
+          sleep 3
+          kill $CF_PID 2>/dev/null || true
+          echo "🔍 Testing SSH without ProxyCommand:"
+          timeout 30 ssh -o ProxyCommand=none -o ConnectTimeout=10 ${{ inputs.server-user }}@${{ inputs.server-hostname }} "echo 'Direct SSH test'" 2>&1 || echo "Direct SSH failed (expected if behind Cloudflare)"
           exit 1
         fi
