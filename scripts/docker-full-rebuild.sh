@@ -14,9 +14,14 @@ echo "🏗️  Docker Full Rebuild - Optimized Pattern"
 echo "=============================================="
 echo ""
 
-echo "🔴 Step 1: Stopping all Docker containers..."
+echo "🔴 Step 1: Stopping all Docker containers and freeing port 3000..."
 docker compose down 2>/dev/null || true
 docker stop $(docker ps -aq) 2>/dev/null || true
+
+# Kill any process using port 3000 (required for Traefik)
+echo "  - Checking for processes using port 3000..."
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+echo "  - Port 3000 is now free"
 
 echo ""
 echo "🧹 Step 2: Automatic cleanup (no manual intervention needed)..."

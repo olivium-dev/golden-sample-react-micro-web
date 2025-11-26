@@ -34,6 +34,14 @@ fi
 echo "✅ Pre-built images found"
 echo ""
 
+# Stop any existing containers first
+echo "🛑 Stopping any existing containers..."
+docker compose down 2>/dev/null || true
+
+# Kill any process using port 3000 (required for Traefik)
+echo "🔌 Freeing port 3000..."
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+
 # Start Docker Compose services in detached mode (no build, just run)
 echo "🚀 Starting services (using pre-built images)..."
 docker compose up -d
