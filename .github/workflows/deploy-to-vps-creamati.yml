@@ -38,8 +38,6 @@ jobs:
           ssh-private-key: ${{ secrets.CREAMAT_SSH_PRIVATE_KEY }}
           server-hostname: ${{ inputs.server }}
           server-user: ${{ inputs.ssh_user }}
-          cloudflare-service-token-id: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_ID }}
-          cloudflare-service-token-secret: ${{ secrets.CREAMAT_CLOUDFLARE_SERVICE_TOKEN_SECRET }}
           host-alias: 'creamati-server'
 
       - name: Setup Node.js

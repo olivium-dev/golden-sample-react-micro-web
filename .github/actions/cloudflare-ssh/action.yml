@@ -1,5 +1,5 @@
 name: 'Cloudflare SSH Connection'
-description: 'Establishes SSH connection through Cloudflare tunnel with service token authentication'
+description: 'Establishes SSH connection through Cloudflare tunnel'
 inputs:
   ssh-private-key:
     description: 'Base64 encoded SSH private key'
@@ -11,16 +11,10 @@ inputs:
     description: 'SSH username'
     required: true
     default: 'ec2-user'
-  cloudflare-service-token-id:
-    description: 'Cloudflare Access Service Token ID'
-    required: true
-  cloudflare-service-token-secret:
-    description: 'Cloudflare Access Service Token Secret'
-    required: true
   connect-timeout:
     description: 'Connection timeout in seconds'
     required: false
-    default: '60'
+    default: '30'
   host-alias:
     description: 'SSH host alias for subsequent connections'
     required: false
@@ -44,9 +38,6 @@ runs:
 
     - name: Setup SSH key and configuration
       shell: bash
-      env:
-        CF_ACCESS_CLIENT_ID: ${{ inputs.cloudflare-service-token-id }}
-        CF_ACCESS_CLIENT_SECRET: ${{ inputs.cloudflare-service-token-secret }}
       run: |
         echo "🔑 Setting up SSH key and configuration..."
         
@@ -58,22 +49,13 @@ runs:
         echo "${{ inputs.ssh-private-key }}" | tr -d '\n\r' | base64 -d > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         
-        # Verify key was decoded properly
-        echo "🔍 Verifying SSH key..."
-        if head -1 ~/.ssh/id_rsa | grep -q "BEGIN"; then
-          echo "✅ SSH key format looks valid"
-        else
-          echo "⚠️  Warning: SSH key may not be properly formatted"
-          echo "First line: $(head -1 ~/.ssh/id_rsa | cut -c1-30)..."
-        fi
-        
-        # Create SSH config with Cloudflare Access authentication
-        cat > ~/.ssh/config << EOF
+        # Create SSH config for Cloudflare tunnel
+        cat >> ~/.ssh/config << EOF
         Host ${{ inputs.host-alias }}
           HostName ${{ inputs.server-hostname }}
           User ${{ inputs.server-user }}
           IdentityFile ~/.ssh/id_rsa
-          ProxyCommand cloudflared access ssh --hostname %h
+          ProxyCommand cloudflared access tcp --hostname ${{ inputs.server-hostname }}
           ConnectTimeout ${{ inputs.connect-timeout }}
           ServerAliveInterval 60
           ServerAliveCountMax 3
@@ -82,45 +64,17 @@ runs:
         EOF
         
         chmod 600 ~/.ssh/config
-        
-        echo "📝 SSH Config contents:"
-        cat ~/.ssh/config
-        echo ""
         echo "✅ SSH configuration created for host: ${{ inputs.host-alias }}"
 
     - name: Test SSH connection
       shell: bash
-      env:
-        CF_ACCESS_CLIENT_ID: ${{ inputs.cloudflare-service-token-id }}
-        CF_ACCESS_CLIENT_SECRET: ${{ inputs.cloudflare-service-token-secret }}
       run: |
         echo "🧪 Testing SSH connection to ${{ inputs.server-hostname }}..."
-        echo ""
-        echo "🔐 Using Cloudflare Access Service Token for authentication"
-        echo "   Token ID: ${CF_ACCESS_CLIENT_ID:0:8}..."
-        echo ""
         
-        # Test connection with verbose output for debugging
-        echo "🔗 Attempting SSH connection..."
-        if timeout ${{ inputs.connect-timeout }} ssh -v ${{ inputs.host-alias }} "echo 'SSH connection successful!'" 2>&1; then
-          echo ""
+        # Test connection with timeout
+        if timeout ${{ inputs.connect-timeout }} ssh ${{ inputs.host-alias }} "echo 'SSH connection successful!'" 2>/dev/null; then
           echo "✅ SSH connection established successfully"
         else
-          echo ""
           echo "❌ SSH connection failed"
-          echo ""
-          echo "🔍 Debug information:"
-          echo "  - Host alias: ${{ inputs.host-alias }}"
-          echo "  - Server hostname: ${{ inputs.server-hostname }}"
-          echo "  - Server user: ${{ inputs.server-user }}"
-          echo "  - SSH key exists: $(test -f ~/.ssh/id_rsa && echo 'yes' || echo 'no')"
-          echo "  - CF_ACCESS_CLIENT_ID set: $(test -n "$CF_ACCESS_CLIENT_ID" && echo 'yes' || echo 'no')"
-          echo "  - CF_ACCESS_CLIENT_SECRET set: $(test -n "$CF_ACCESS_CLIENT_SECRET" && echo 'yes' || echo 'no')"
-          echo ""
-          echo "💡 Possible issues:"
-          echo "  1. Cloudflare Service Token may be invalid or expired"
-          echo "  2. Service Token may not have access to this application"
-          echo "  3. SSH private key may be incorrect"
-          echo "  4. User '${{ inputs.server-user }}' may not have SSH access"
           exit 1
         fi
