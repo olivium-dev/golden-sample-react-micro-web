@@ -1,15 +1,6 @@
 name: Build Data Grid App
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'frontend/data-grid-app/**'
-      - '.github/workflows/build-data-grid.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'frontend/data-grid-app/**'
   workflow_dispatch:
 
 env:

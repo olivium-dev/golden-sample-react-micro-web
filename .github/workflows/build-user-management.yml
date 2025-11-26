@@ -1,15 +1,6 @@
 name: Build User Management App
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'frontend/user-management-app/**'
-      - '.github/workflows/build-user-management.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'frontend/user-management-app/**'
   workflow_dispatch:
 
 env:

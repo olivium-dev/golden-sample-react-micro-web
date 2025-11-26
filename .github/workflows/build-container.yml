@@ -1,15 +1,6 @@
 name: Build Container App
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'frontend/container/**'
-      - '.github/workflows/build-container.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'frontend/container/**'
   workflow_dispatch:
 
 env:

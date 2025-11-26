@@ -1,15 +1,6 @@
 name: Build Analytics App
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'frontend/analytics-app/**'
-      - '.github/workflows/build-analytics.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'frontend/analytics-app/**'
   workflow_dispatch:
 
 env:

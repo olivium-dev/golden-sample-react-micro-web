@@ -1,15 +1,6 @@
 name: Build Catalog App
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'frontend/catalog-app/**'
-      - '.github/workflows/build-catalog.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'frontend/catalog-app/**'
   workflow_dispatch:
 
 env:

@@ -1,15 +1,6 @@
 name: Build Orders App
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'frontend/orders-app/**'
-      - '.github/workflows/build-orders.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'frontend/orders-app/**'
   workflow_dispatch:
 
 env:

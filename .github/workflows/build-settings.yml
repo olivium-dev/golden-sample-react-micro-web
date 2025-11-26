@@ -1,15 +1,6 @@
 name: Build Settings App
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'frontend/settings-app/**'
-      - '.github/workflows/build-settings.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'frontend/settings-app/**'
   workflow_dispatch:
 
 env:
