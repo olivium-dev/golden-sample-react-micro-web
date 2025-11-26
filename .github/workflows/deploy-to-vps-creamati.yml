@@ -46,7 +46,7 @@ jobs:
           DASHBOARD_PORT: ${{ inputs.dashboard_port }}
         run: |
           echo "🚀 Deploying Creamati CMS to VPS..."
-          echo "   Running docker-full-rebuild.sh on server"
+          echo "   Running docker-deploy-server.sh on server"
           echo ""
           
           # First, sync the repository to the server
@@ -55,8 +55,8 @@ jobs:
           rsync -avz --exclude 'node_modules' --exclude '.git' --exclude 'dist' ./ creamati-server:~/creamati-cms-deploy/
           
           echo ""
-          echo "🏗️  Step 2: Running docker-full-rebuild.sh on server..."
-          ssh creamati-server "cd ~/creamati-cms-deploy && chmod +x scripts/docker-full-rebuild.sh && ./scripts/docker-full-rebuild.sh"
+          echo "🏗️  Step 2: Running docker-deploy-server.sh on server..."
+          ssh creamati-server "cd ~/creamati-cms-deploy && chmod +x scripts/docker-deploy-server.sh && ./scripts/docker-deploy-server.sh"
           
           echo ""
           echo "✅ Deployment complete!"
