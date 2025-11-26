@@ -29,7 +29,7 @@ jobs:
             type=raw,value=latest
       - uses: docker/build-push-action@v5
         with:
-          context: frontend/container
+          context: frontend
           file: frontend/container/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -58,7 +58,7 @@ jobs:
             type=raw,value=latest
       - uses: docker/build-push-action@v5
         with:
-          context: frontend/user-management-app
+          context: frontend
           file: frontend/user-management-app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -87,7 +87,7 @@ jobs:
             type=raw,value=latest
       - uses: docker/build-push-action@v5
         with:
-          context: frontend/data-grid-app
+          context: frontend
           file: frontend/data-grid-app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -116,7 +116,7 @@ jobs:
             type=raw,value=latest
       - uses: docker/build-push-action@v5
         with:
-          context: frontend/analytics-app
+          context: frontend
           file: frontend/analytics-app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -145,7 +145,7 @@ jobs:
             type=raw,value=latest
       - uses: docker/build-push-action@v5
         with:
-          context: frontend/settings-app
+          context: frontend
           file: frontend/settings-app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -174,7 +174,7 @@ jobs:
             type=raw,value=latest
       - uses: docker/build-push-action@v5
         with:
-          context: frontend/orders-app
+          context: frontend
           file: frontend/orders-app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}

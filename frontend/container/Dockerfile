@@ -8,14 +8,17 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy shared-ui-lib first (needed for imports)
+COPY shared-ui-lib ./shared-ui-lib
+
+# Copy app package files
+COPY container/package*.json ./
 
 # Install dependencies (use npm install since package-lock.json may not exist)
 RUN npm install --legacy-peer-deps
 
-# Copy source code
-COPY . .
+# Copy app source code
+COPY container/ ./
 
 # Build the application
 RUN npm run build
@@ -30,7 +33,7 @@ RUN apk add --no-cache curl
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY container/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
