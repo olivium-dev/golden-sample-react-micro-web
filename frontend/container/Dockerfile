@@ -11,8 +11,10 @@ FROM node:20-alpine AS builder
 # So we need: /app/src -> ../../shared-ui-lib = /shared-ui-lib
 WORKDIR /
 
-# Copy shared-ui-lib to root level (to match ../../shared-ui-lib path from /app/src)
+# Copy shared-ui-lib and install its dependencies
 COPY shared-ui-lib /shared-ui-lib
+WORKDIR /shared-ui-lib
+RUN npm install --legacy-peer-deps
 
 # Now set up the app
 WORKDIR /app
