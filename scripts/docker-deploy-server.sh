@@ -24,9 +24,22 @@ lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 echo "  - Port 3000 is now free"
 
 echo ""
-echo "🧹 Step 2: Automatic cleanup..."
-docker system prune -af --volumes 2>/dev/null || true
+echo "🧹 Step 2: Aggressive cleanup (freeing ALL Docker space)..."
+# Remove ALL containers (running and stopped)
+docker rm -f $(docker ps -aq) 2>/dev/null || true
+# Remove ALL images
+docker rmi -f $(docker images -aq) 2>/dev/null || true
+# Remove ALL volumes
+docker volume rm -f $(docker volume ls -q) 2>/dev/null || true
+# Remove ALL networks (except default ones)
+docker network prune -f 2>/dev/null || true
+# Clean build cache
 docker builder prune -af 2>/dev/null || true
+# Final system prune
+docker system prune -af --volumes 2>/dev/null || true
+# Show disk usage
+echo "  - Disk space after cleanup:"
+df -h / | tail -1
 
 echo ""
 echo "🐳 Step 3: Building Docker images (npm install happens inside Docker)..."
@@ -42,35 +55,23 @@ apps=(
   "catalog-app:creamati-cms-catalog:latest"
 )
 
-# Build all images in parallel using background processes
-pids=()
+# Build images sequentially (to avoid disk space issues)
 for app_info in "${apps[@]}"; do
   IFS=':' read -r app_dir image_name <<< "$app_info"
-  (
-    echo "  📦 Building $image_name..."
-    cd "$PROJECT_ROOT/frontend/$app_dir"
-    docker build -t "$image_name" -f Dockerfile . || {
-      echo "  ❌ Failed to build $image_name"
-      exit 1
-    }
+  echo "  📦 Building $image_name..."
+  cd "$PROJECT_ROOT/frontend/$app_dir"
+  
+  # Build the image
+  if docker build -t "$image_name" -f Dockerfile . ; then
     echo "  ✅ $image_name built successfully"
-  ) &
-  pids+=($!)
-done
-
-# Wait for all builds to complete
-failed=0
-for pid in "${pids[@]}"; do
-  if ! wait "$pid"; then
-    failed=1
+  else
+    echo "  ❌ Failed to build $image_name"
+    exit 1
   fi
+  
+  # Clean up intermediate build cache after each build to save space
+  docker builder prune -f 2>/dev/null || true
 done
-
-if [ $failed -eq 1 ]; then
-  echo ""
-  echo "❌ Some images failed to build!"
-  exit 1
-fi
 
 echo ""
 echo "✅ All Docker images built successfully!"
