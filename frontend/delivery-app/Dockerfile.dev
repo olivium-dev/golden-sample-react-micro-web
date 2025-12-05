@@ -1,0 +1,17 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies first (for caching)
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+
+# Copy application code
+COPY . .
+
+EXPOSE 3007
+
+CMD ["npx", "webpack", "serve", "--config", "webpack.config.js", "--host", "0.0.0.0"]
+
+
+
