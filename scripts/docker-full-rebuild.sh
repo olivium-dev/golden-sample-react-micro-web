@@ -51,6 +51,7 @@ apps=(
   "settings-app"
   "orders-app"
   "catalog-app"
+  "delivery-app"
 )
 
 for app in "${apps[@]}"; do
@@ -85,6 +86,7 @@ apps=(
   "settings-app:creamati-cms-settings:latest"
   "orders-app:creamati-cms-orders:latest"
   "catalog-app:creamati-cms-catalog:latest"
+  "delivery-app:creamati-cms-delivery:latest"
 )
 
 # Build all images in parallel using background processes
@@ -194,6 +196,14 @@ if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/catalog | grep -
   echo "  ✅ Catalog: OK"
 else
   echo "  ⚠️  Catalog: Not responding"
+fi
+
+# Test Delivery
+echo "Testing Delivery App..."
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/mf/delivery | grep -q "200\|301\|302"; then
+  echo "  ✅ Delivery: OK"
+else
+  echo "  ⚠️  Delivery: Not responding"
 fi
 
 echo ""
