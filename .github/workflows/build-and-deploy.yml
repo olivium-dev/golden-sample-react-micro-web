@@ -335,6 +335,7 @@ jobs:
             "creamati-cms-settings"
             "creamati-cms-orders"
             "creamati-cms-catalog"
+            "creamati-cms-delivery"
           )
           
           for image in "${images[@]}"; do
@@ -377,6 +378,7 @@ jobs:
                 - user-management-app
                 - orders-app
                 - catalog-app
+                - delivery-app
                 - data-grid-app
                 - analytics-app
                 - settings-app
@@ -478,6 +480,21 @@ jobs:
                 - "traefik.http.middlewares.catalog-strip.stripprefix.prefixes=/mf/catalog"
                 - "traefik.http.services.catalog.loadbalancer.server.port=80"
           
+            delivery-app:
+              image: creamati-cms-delivery:latest
+              container_name: micro-frontend-delivery
+              networks:
+                - micro-frontend-network
+              restart: unless-stopped
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.delivery.rule=PathPrefix(`/mf/delivery`)"
+                - "traefik.http.routers.delivery.entrypoints=web"
+                - "traefik.http.routers.delivery.priority=100"
+                - "traefik.http.routers.delivery.middlewares=delivery-strip"
+                - "traefik.http.middlewares.delivery-strip.stripprefix.prefixes=/mf/delivery"
+                - "traefik.http.services.delivery.loadbalancer.server.port=80"
+          
           networks:
             micro-frontend-network:
               driver: bridge
@@ -546,6 +563,7 @@ jobs:
           echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-settings:latest"
           echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-orders:latest"
           echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-catalog:latest"
+          echo "  - ghcr.io/${{ github.repository_owner }}/creamati-cms-delivery:latest"
           echo ""
           echo "🌐 Access URLs:"
           echo "  - Application: http://${{ inputs.server }}:${{ inputs.app_port }}"
