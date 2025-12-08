@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Delivery Management Microservice - Golden Sample React Micro Frontend"
+    />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Delivery Management</title>
+    <script>
+      // Debug: Check auth token on page load
+      window.addEventListener('DOMContentLoaded', function() {
+        const accessToken = localStorage.getItem('access_token');
+        const refreshToken = localStorage.getItem('refresh_token');
+        
+        console.log('🔍 AUTH DEBUG:');
+        console.log('access_token:', accessToken ? '✅ EXISTS (' + accessToken.substring(0, 20) + '...)' : '❌ MISSING');
+        console.log('refresh_token:', refreshToken ? '✅ EXISTS' : '❌ MISSING');
+        
+        if (!accessToken) {
+          console.error('⚠️ NO ACCESS TOKEN FOUND! Please login first.');
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <div id="delivery-dev-root"></div>
+  </body>
+</html>

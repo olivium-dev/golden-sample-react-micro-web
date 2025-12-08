@@ -68,14 +68,15 @@ module.exports = {
       exposes: {
         './sharedUI': '../shared-ui-lib/src/index.ts',
       },
+      // DEVELOPMENT REMOTES - Direct localhost URLs for selective loading
       remotes: {
-        userApp: 'userApp@/mf/user-management/remoteEntry.js',
-        dataApp: 'dataApp@/mf/data-grid/remoteEntry.js',
-        analyticsApp: 'analyticsApp@/mf/analytics/remoteEntry.js',
-        settingsApp: 'settingsApp@/mf/settings/remoteEntry.js',
-        ordersApp: 'ordersApp@/mf/orders/remoteEntry.js',
-        catalogApp: 'catalogApp@/mf/catalog/remoteEntry.js',
-        deliveryApp: 'deliveryApp@/mf/delivery/remoteEntry.js',
+        userApp: 'userApp@http://localhost:3001/remoteEntry.js',
+        dataApp: 'dataApp@http://localhost:3002/remoteEntry.js',
+        analyticsApp: 'analyticsApp@http://localhost:3003/remoteEntry.js',
+        settingsApp: 'settingsApp@http://localhost:3004/remoteEntry.js',
+        ordersApp: 'ordersApp@http://localhost:3006/remoteEntry.js',
+        catalogApp: 'catalogApp@http://localhost:3005/remoteEntry.js',
+        deliveryApp: 'deliveryApp@http://localhost:3007/remoteEntry.js',
       },
       shared: {
         react: {
@@ -132,7 +133,7 @@ module.exports = {
     }),
     // Define environment variables for browser
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:8000'),
       // Firebase configuration - Using saawt-app to match backend Admin SDK
       'process.env.REACT_APP_FIREBASE_API_KEY': JSON.stringify(process.env.REACT_APP_FIREBASE_API_KEY || 'AIzaSyA3Hy9lztHYQXqkViAONm9UXIWHq2OGscA'),
@@ -144,4 +145,3 @@ module.exports = {
     }),
   ],
 };
-
