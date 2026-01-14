@@ -325,15 +325,15 @@ const ItemList: React.FC = () => {
         sessionStorage.setItem('inventoryItemName', item.name);
       }
       
-      // Check if we're in standalone catalog app (port 3005) or in container (port 3000)
+      // Check if we're in standalone catalog app (port 3005)
       const isStandalone = window.location.port === '3005';
       
       if (isStandalone) {
         // Standalone catalog app - navigate to standalone inventory
-        window.location.href = `http://localhost:3008/`;
+        window.location.href = 'http://localhost:3008/';
       } else {
-        // Running in container - navigate to inventory tab with clean URL
-        window.location.href = `http://localhost:3000/?tab=inventory`;
+        // Running in container (dev or prod) - use relative URL
+        window.location.href = '/?tab=inventory';
       }
     }
     // Add other action button types here as needed
