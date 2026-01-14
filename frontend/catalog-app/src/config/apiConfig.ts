@@ -5,6 +5,8 @@ export interface ApiConfig {
   baseUrl: string;
   catalogApi: string;
   cdnApi: string;
+  inventoryApi: string;
+  warehouseId: string;
   timeout: number;
   retryAttempts: number;
 }
@@ -15,20 +17,26 @@ const configurations: Record<string, ApiConfig> = {
     baseUrl: 'https://dev-creamat.fds-1.com', //, 'https://localhost:44355'
     catalogApi: 'https://dev-creamat.fds-1.com/gateway/api/Catalog', //https://localhost:7254/api/Catalog', //'https://localhost:44355', // ,
     cdnApi: 'https://dev-creamat.fds-1.com/gateway', //'https://localhost:7126', //'https://dev-creamat.fds-1.com/cdn', CDN API endpoint
+    inventoryApi: 'https://dev-creamat.fds-1.com/gateway/api/Inventory',
+    warehouseId: '00000000-0000-0000-0000-000000000001',
     timeout: 30000, // 30 seconds
     retryAttempts: 3,
   },
   staging: {
     baseUrl: 'https://dev-creamat.fds-1.com',
     catalogApi: 'https://dev-creamat.fds-1.com/gateway/api/Catalog', //'https://localhost:44355', // ,
-    cdnApi: 'https://dev-creamat.fds-1.com/gateway', 
+    cdnApi: 'https://dev-creamat.fds-1.com/gateway',
+    inventoryApi: 'https://dev-creamat.fds-1.com/gateway/api/Inventory',
+    warehouseId: '00000000-0000-0000-0000-000000000001',
     timeout: 30000,
     retryAttempts: 3,
   },
   production: {
     baseUrl: 'https://dev-creamat.fds-1.com',
     catalogApi: 'https://dev-creamat.fds-1.com/gateway/api/Catalog', //'https://localhost:44355', // ,
-    cdnApi: 'https://dev-creamat.fds-1.com/gateway', 
+    cdnApi: 'https://dev-creamat.fds-1.com/gateway',
+    inventoryApi: 'https://dev-creamat.fds-1.com/gateway/api/Inventory',
+    warehouseId: '00000000-0000-0000-0000-000000000001',
     timeout: 30000,
     retryAttempts: 3,
   },
@@ -70,6 +78,8 @@ export const apiConfig = getApiConfig();
 export const API_BASE_URL = apiConfig.baseUrl;
 export const CATALOG_API_URL = apiConfig.catalogApi;
 export const CDN_API_URL = apiConfig.cdnApi;
+export const INVENTORY_API_URL = apiConfig.inventoryApi;
+export const WAREHOUSE_ID = apiConfig.warehouseId;
 export const API_TIMEOUT = apiConfig.timeout;
 export const API_RETRY_ATTEMPTS = apiConfig.retryAttempts;
 

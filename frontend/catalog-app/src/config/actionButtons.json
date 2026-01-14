@@ -1,0 +1,13 @@
+{
+  "actionButtons": [
+    {
+      "id": "inventory",
+      "label": "Manage Inventory",
+      "icon": "Inventory",
+      "color": "primary",
+      "enabled": true,
+      "type": "inventory"
+    }
+  ]
+}
+

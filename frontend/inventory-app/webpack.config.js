@@ -1,13 +1,13 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const webpack = require('webpack');
 const { ModuleFederationPlugin } = require('webpack').container;
+const webpack = require('webpack');
 const path = require('path');
 
 module.exports = {
   entry: './src/index.tsx',
   mode: 'development',
   devServer: {
-    port: 3005, // Using port 3005 for catalog-app
+    port: 3008,
     historyApiFallback: true,
     hot: true,
     headers: {
@@ -15,27 +15,12 @@ module.exports = {
     },
   },
   output: {
-    publicPath: 'auto', // Use 'auto' for local development (webpack-dev-server), '/mf/catalog/' for production
+    publicPath: 'auto',
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-    alias: {
-      '../../shared-ui-lib/src': path.resolve(__dirname, '../shared-ui-lib/src')
-    },
-    fallback: {
-      "https": false,
-      "http": false,
-      "crypto": false,
-      "os": false,
-      "stream": false,
-      "path": false,
-      "fs": false,
-      "net": false,
-      "zlib": false,
-      "tls": false
-    }
   },
   module: {
     rules: [
@@ -45,7 +30,7 @@ module.exports = {
         use: {
           loader: 'ts-loader',
           options: {
-            transpileOnly: true, // Skip type checking for faster builds
+            transpileOnly: true,
             compilerOptions: {
               noEmit: false,
             },
@@ -63,11 +48,17 @@ module.exports = {
     ],
   },
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
+        REACT_APP_API_URL: JSON.stringify(process.env.REACT_APP_API_URL || 'https://dev-creamat.fds-1.com'),
+      },
+    }),
     new ModuleFederationPlugin({
-      name: 'catalogApp',
+      name: 'inventoryApp',
       filename: 'remoteEntry.js',
       exposes: {
-        './Catalog': './src/Catalog.tsx',
+        './Inventory': './src/bootstrap.tsx',
       },
       remotes: {
         sharedUI: 'container@http://localhost:3000/remoteEntry.js',
@@ -85,9 +76,9 @@ module.exports = {
           strictVersion: false,
           eager: false,
         },
-        'react-router-dom': {
+        '@tanstack/react-query': {
           singleton: true,
-          requiredVersion: '^6.21.0',
+          requiredVersion: '^5.0.0',
           eager: false,
         },
         '@mui/material': {
@@ -100,11 +91,6 @@ module.exports = {
           requiredVersion: '^5.15.0',
           eager: false,
         },
-        '@mui/x-data-grid': {
-          singleton: true,
-          requiredVersion: '^6.18.0',
-          eager: false,
-        },
         '@emotion/react': {
           singleton: true,
           requiredVersion: '^11.11.0',
@@ -115,34 +101,27 @@ module.exports = {
           requiredVersion: '^11.11.0',
           eager: false,
         },
+        'react-router-dom': {
+          singleton: true,
+          requiredVersion: '^6.21.0',
+          eager: false,
+        },
         axios: {
           singleton: true,
           requiredVersion: '^1.6.0',
-          eager: false,
-        },
-        uuid: {
-          singleton: true,
-          requiredVersion: '^9.0.1',
           eager: false,
         },
       },
     }),
     new HtmlWebpackPlugin({
       template: './public/index.html',
-      favicon: './public/favicon.ico',
-      // Replace %PUBLIC_URL% with empty string
-      templateParameters: {
-        PUBLIC_URL: ''
-      }
-    }),
-    // Define environment variables
-    new webpack.DefinePlugin({
-      'process.env': JSON.stringify({
-        NODE_ENV: process.env.NODE_ENV || 'development',
-        REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'https://localhost:44355'
-      }),
-      // For direct access in code
-      'API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || 'https://localhost:44355')
+      inject: true,
     }),
   ],
 };
+
+
+
+
+
+

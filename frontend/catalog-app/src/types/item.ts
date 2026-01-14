@@ -136,3 +136,41 @@ export interface UnlinkItemResponse {
   itemId: string;
   success: boolean;
 }
+
+// Stock API interfaces
+export interface StockLevelRequest {
+  itemIds: string[];
+  includeReserved: boolean;
+}
+
+// API response structure for a single stock item
+export interface StockLevelApiItem {
+  itemId: string;
+  locationId: string;
+  uomCode: string;
+  quantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+  lastUpdated: string;
+  stockByUoms?: StockByUom[];
+}
+
+export interface StockByUom {
+  uomId: string;
+  uomCode: string;
+  uomName: string;
+  quantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+}
+
+// Simplified stock level for internal use
+export interface StockLevel {
+  itemId: string;
+  availableQuantity: number;
+  reservedQuantity: number;
+  totalQuantity: number;
+}
+
+// API returns an array directly
+export type StockLevelsApiResponse = StockLevelApiItem[];

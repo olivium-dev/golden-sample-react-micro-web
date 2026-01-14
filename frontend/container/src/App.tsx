@@ -33,6 +33,7 @@ import {
   ShoppingCart as ShoppingCartIcon,
   Category as CategoryIcon,
   LocalShipping as DeliveryIcon,
+  Inventory as InventoryIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { 
@@ -54,6 +55,7 @@ const Settings = React.lazy(() => import('settingsApp/Settings'));
 const Orders = React.lazy(() => import('ordersApp/Orders'));
 const Catalog = React.lazy(() => import('catalogApp/Catalog'));
 const Delivery = React.lazy(() => import('deliveryApp/Delivery'));
+const Inventory = React.lazy(() => import('inventoryApp/Inventory'));
 
 interface MenuItem {
   id: string;
@@ -98,6 +100,13 @@ const menuItems: MenuItem[] = [
     label: 'Delivery',
     color: '#ff9800',
     description: 'Manage deliveries and shipment tracking',
+  },
+  {
+    id: 'inventory',
+    icon: <InventoryIcon />,
+    label: 'Inventory',
+    color: '#4caf50',
+    description: 'Manage inventory stock and warehouse operations',
   },
   // Hidden menu items - analytics, data grid, settings, error monitor
   // {
@@ -144,7 +153,7 @@ function App() {
   // Error monitoring
   const { errors, stats, clearErrors } = useErrorMonitor();
 
-  // Check authentication on mount
+  // Check authentication on mount and handle URL params
   useEffect(() => {
     const checkAuth = async () => {
       const isAuth = authService.isAuthenticated();
@@ -152,6 +161,21 @@ function App() {
       setAuthLoading(false);
     };
     checkAuth();
+
+    // Check for URL params to navigate to tabs (without itemId/itemName - using sessionStorage instead)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    if (tabParam) {
+      setActiveTab(tabParam);
+      // Clean URL - remove any itemId/itemName params if they exist
+      if (urlParams.has('itemId') || urlParams.has('itemName')) {
+        urlParams.delete('itemId');
+        urlParams.delete('itemName');
+        const cleanUrl = urlParams.toString() ? `/?${urlParams.toString()}` : '/';
+        window.history.replaceState({}, '', cleanUrl);
+      }
+    }
   }, []);
 
   // Handle login with Firebase Email/Password
@@ -367,6 +391,18 @@ function App() {
                     }}
                   >
                     <Delivery />
+                  </ErrorBoundary>
+                );
+              case 'inventory':
+                return (
+                  <ErrorBoundary 
+                    componentName="Inventory App" 
+                    fallback={ErrorFallback}
+                    onError={(error: Error, errorInfo: React.ErrorInfo) => {
+                      ErrorCapture.captureModuleFederationError('inventoryApp/Inventory', error);
+                    }}
+                  >
+                    <Inventory />
                   </ErrorBoundary>
                 );
               default:

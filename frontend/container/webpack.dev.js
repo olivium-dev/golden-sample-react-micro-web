@@ -35,6 +35,11 @@ module.exports = {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+    modules: [
+      path.resolve(__dirname, '../shared-ui-lib/node_modules'),
+      path.resolve(__dirname, 'node_modules'),
+      'node_modules'
+    ],
   },
   module: {
     rules: [
@@ -77,6 +82,7 @@ module.exports = {
         ordersApp: 'ordersApp@http://localhost:3006/remoteEntry.js',
         catalogApp: 'catalogApp@http://localhost:3005/remoteEntry.js',
         deliveryApp: 'deliveryApp@http://localhost:3007/remoteEntry.js',
+        inventoryApp: 'inventoryApp@http://localhost:3008/remoteEntry.js',
       },
       shared: {
         react: {

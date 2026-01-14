@@ -1,4 +1,4 @@
-import axios, { InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig, AxiosProgressEvent } from 'axios';
 import { 
   CategoryCmsResponse,
   CmsCreateCategoryRequest, 
@@ -27,7 +27,9 @@ import {
   LinkItemsRequest,
   LinkItemsResponse,
   UnlinkItemRequest,
-  UnlinkItemResponse
+  UnlinkItemResponse,
+  StockLevelRequest,
+  StockLevelsApiResponse
 } from '../types/item';
 import {
   FileUploadResponse,
@@ -39,7 +41,7 @@ import {
 } from '../types/cdn';
 
 // Import API configuration
-import { CATALOG_API_URL, CDN_API_URL, API_TIMEOUT } from '../config/apiConfig';
+import { CATALOG_API_URL, CDN_API_URL, INVENTORY_API_URL, WAREHOUSE_ID, API_TIMEOUT } from '../config/apiConfig';
 
 // Create axios instance with default config for catalog API
 const apiClient = axios.create({
@@ -63,7 +65,17 @@ const cdnApiClient = axios.create({
   //withCredentials: false,
 });
 
-// Add auth token and service headers to requests for both API clients
+// Create separate axios instance for Inventory API
+const inventoryApiClient = axios.create({
+  baseURL: INVENTORY_API_URL,
+  timeout: API_TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+});
+
+// Add auth token and service headers to requests for catalog API client
 const addAuthHeaders = (config: InternalAxiosRequestConfig) => {
   if (config.headers) {
     // Add Bearer token authorization
@@ -80,8 +92,25 @@ const addAuthHeaders = (config: InternalAxiosRequestConfig) => {
   return config;
 };
 
+// Add auth token and service headers for inventory API client (different service keys)
+const addInventoryAuthHeaders = (config: InternalAxiosRequestConfig) => {
+  if (config.headers) {
+    // Add Bearer token authorization
+    //const token = localStorage.getItem('access_token');
+   // if (token) {
+    // config.headers.Authorization = `Bearer ${token}`;
+    //}
+    
+    // Inventory service uses different API keys (note: Api-Key not API-Key)
+    config.headers['X-Service-Api-Key'] = 'inventory-service-api-key-2024-secure';
+    config.headers['X-Service-Token-Key'] = 'inventory-service-token-key-jkl012';
+  }
+  return config;
+};
+
 apiClient.interceptors.request.use(addAuthHeaders);
 //cdnApiClient.interceptors.request.use(addAuthHeaders);
+inventoryApiClient.interceptors.request.use(addInventoryAuthHeaders);
 
 // Category API functions
 export const categoryApi = {
@@ -392,6 +421,29 @@ export const cdnApi = {
   getDiagnosticConfig: async (): Promise<any> => {
     const response = await cdnApiClient.get('/api/CDN/diagnose-config');
     return response.data;
+  },
+};
+
+// Inventory API functions
+export const inventoryApi = {
+  // Get stock levels for items
+  getStockLevels: async (itemIds: string[], includeReserved: boolean = true): Promise<StockLevelsApiResponse> => {
+    try {
+      const request: StockLevelRequest = {
+        itemIds,
+        includeReserved,
+      };
+      const response = await inventoryApiClient.post<StockLevelsApiResponse>(`/stock/${WAREHOUSE_ID}/levels`, request);
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      console.error('Error fetching stock levels:', axiosError.message);
+      if (axiosError.response) {
+        console.error('Response data:', axiosError.response.data);
+        console.error('Response status:', axiosError.response.status);
+      }
+      throw error;
+    }
   },
 };
 
