@@ -4,7 +4,6 @@ import { UOM, CreateUOMRequest, CreateUOMResponse, ApiErrorResponse } from '../t
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://dev-creamat.fds-1.com';
 const INVENTORY_API_URL = `${API_BASE_URL}/gateway/api/Inventory`;
 
-// Create axios instance for Inventory API
 const inventoryApiClient = axios.create({
   baseURL: INVENTORY_API_URL,
   timeout: 30000,
@@ -14,7 +13,6 @@ const inventoryApiClient = axios.create({
   },
 });
 
-// Add service headers to all requests
 inventoryApiClient.interceptors.request.use((config) => {
   if (config.headers) {
     config.headers['X-Service-Api-Key'] = 'inventory-service-api-key-2024-secure';
@@ -23,18 +21,14 @@ inventoryApiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// UOM API functions
 export const uomApi = {
-  // Get all UOMs
   getAll: async (): Promise<UOM[]> => {
     try {
       const response = await inventoryApiClient.get<UOM[]>('/uoms');
-      // Handle different response formats
       const data = response.data;
       if (Array.isArray(data)) {
         return data;
       }
-      // If response is wrapped in an object
       const responseObj = data as unknown as { data?: UOM[]; uoms?: UOM[] };
       return responseObj.data || responseObj.uoms || [];
     } catch (error) {
@@ -44,7 +38,6 @@ export const uomApi = {
     }
   },
 
-  // Create a new UOM
   create: async (uom: CreateUOMRequest): Promise<CreateUOMResponse> => {
     try {
       const response = await inventoryApiClient.post<CreateUOMResponse>('/uoms', uom);
@@ -60,7 +53,6 @@ export const uomApi = {
     }
   },
 
-  // Delete a UOM (if API supports it)
   delete: async (code: string): Promise<void> => {
     try {
       await inventoryApiClient.delete(`/uoms/${code}`);
@@ -73,4 +65,3 @@ export const uomApi = {
 };
 
 export default inventoryApiClient;
-

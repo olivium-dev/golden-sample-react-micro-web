@@ -51,30 +51,8 @@ function a11yProps(index: number) {
 function App() {
   const [tabValue, setTabValue] = useState(0);
 
-  // Check URL parameters on component mount (only in standalone mode)
-  React.useEffect(() => {
-    const isStandalone = window.location.port === '3008';
-    if (isStandalone) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const tabParam = urlParams.get('tab');
-      if (tabParam === 'uom') {
-        setTabValue(1);
-      } else if (tabParam === 'stock') {
-        setTabValue(0);
-      }
-    }
-  }, []);
-
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-    // Only update URL parameter if running in standalone mode (port 3008)
-    // When embedded in container, don't modify the URL
-    const isStandalone = window.location.port === '3008';
-    if (isStandalone) {
-      const url = new URL(window.location.href);
-      url.searchParams.set('tab', newValue === 0 ? 'stock' : 'uom');
-      window.history.replaceState({}, '', url.toString());
-    }
   };
 
   return (
@@ -148,4 +126,3 @@ function App() {
 }
 
 export default App;
-

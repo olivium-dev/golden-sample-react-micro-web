@@ -114,7 +114,7 @@ const InventoryForm: React.FC = () => {
         reason: formData.reason,
       };
 
-      const response = await axios.post(
+      await axios.post(
         `${API_BASE_URL}/gateway/api/Inventory/stock/string/add`,
         requestData,
         {

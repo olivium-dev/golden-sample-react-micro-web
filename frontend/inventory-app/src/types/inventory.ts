@@ -27,20 +27,9 @@ export interface InventoryStockRequest {
   reason: string;
 }
 
-export interface StockLevel {
-  itemId: string;
-  locationId: string;
-  uomCode: string;
-  quantity: number;
-  reservedQuantity: number;
-  availableQuantity: number;
-  lastUpdated: string;
-}
-
 // API Error response
 export interface ApiErrorResponse {
   detail?: string;
   title?: string;
   message?: string;
 }
-

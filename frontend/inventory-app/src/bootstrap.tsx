@@ -4,18 +4,16 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Create QueryClient for React Query with proper defaults
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     },
   },
 });
 
-// Create a local theme
 const theme = createTheme({
   palette: {
     primary: {
@@ -27,7 +25,6 @@ const theme = createTheme({
   },
 });
 
-// Export the component for Module Federation (not render to DOM)
 const Inventory: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -40,9 +37,3 @@ const Inventory: React.FC = () => {
 };
 
 export default Inventory;
-
-
-
-
-
-

@@ -11,9 +11,3 @@ root.render(
     <Inventory />
   </React.StrictMode>
 );
-
-
-
-
-
-

@@ -15,7 +15,7 @@ module.exports = {
     },
   },
   output: {
-    publicPath: 'auto', // Use 'auto' for local development (webpack-dev-server), '/mf/inventory/' for production
+    publicPath: 'auto',
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },
@@ -60,19 +60,16 @@ module.exports = {
       exposes: {
         './Inventory': './src/bootstrap.tsx',
       },
-      remotes: {
-        sharedUI: 'container@http://localhost:3000/remoteEntry.js',
-      },
       shared: {
         react: {
           singleton: true,
-          requiredVersion: "18.2.0",
+          requiredVersion: '18.2.0',
           strictVersion: false,
           eager: false,
         },
         'react-dom': {
           singleton: true,
-          requiredVersion: "18.2.0",
+          requiredVersion: '18.2.0',
           strictVersion: false,
           eager: false,
         },
@@ -101,11 +98,6 @@ module.exports = {
           requiredVersion: '^11.11.0',
           eager: false,
         },
-        'react-router-dom': {
-          singleton: true,
-          requiredVersion: '^6.21.0',
-          eager: false,
-        },
         axios: {
           singleton: true,
           requiredVersion: '^1.6.0',
@@ -119,9 +111,3 @@ module.exports = {
     }),
   ],
 };
-
-
-
-
-
-
