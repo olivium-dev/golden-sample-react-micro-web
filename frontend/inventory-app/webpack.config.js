@@ -15,7 +15,7 @@ module.exports = {
     },
   },
   output: {
-    publicPath: 'auto',
+    publicPath: 'auto', // Use 'auto' for local development (webpack-dev-server), '/mf/inventory/' for production
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },

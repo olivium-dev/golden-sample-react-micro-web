@@ -54,6 +54,7 @@ apps=(
   "orders-app:creamati-cms-orders:latest"
   "catalog-app:creamati-cms-catalog:latest"
   "delivery-app:creamati-cms-delivery:latest"
+  "inventory-app:creamati-cms-inventory:latest"
 )
 
 # Build images sequentially (to avoid disk space issues)
@@ -159,6 +160,14 @@ if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/delivery | grep 
   echo "  ✅ Delivery: OK"
 else
   echo "  ⚠️  Delivery: Not responding"
+fi
+
+# Test Inventory
+echo "Testing Inventory App..."
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/mf/inventory | grep -q "200\|301\|302"; then
+  echo "  ✅ Inventory: OK"
+else
+  echo "  ⚠️  Inventory: Not responding"
 fi
 
 echo ""
