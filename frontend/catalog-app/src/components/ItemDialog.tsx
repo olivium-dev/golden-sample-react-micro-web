@@ -21,7 +21,7 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { GetItemForCmsResponse, ItemDetailsRequest, ItemResponse } from '../types/item';
 import { categoryApi, tagApi } from '../services/api';
-import { CategoryCmsResponse } from '../types/category';
+import { CategoryResponse } from '../types/category';
 import { DynamicAdditionalParam } from '../types/additionalParams';
 import { AdditionalParamsService } from '../services/additionalParamsService';
 import DynamicAdditionalParamField from './DynamicAdditionalParamField';
@@ -60,7 +60,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({ open, item, onClose, onSave }) 
   
   // Available options
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<CategoryCmsResponse[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<CategoryResponse[]>([]);
 
   useEffect(() => {
     if (open) {
