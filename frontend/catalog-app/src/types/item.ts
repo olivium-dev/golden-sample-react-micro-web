@@ -170,6 +170,7 @@ export interface StockLevel {
   availableQuantity: number;
   reservedQuantity: number;
   totalQuantity: number;
+  stockByUoms?: StockByUom[];
 }
 
 // API returns an array directly

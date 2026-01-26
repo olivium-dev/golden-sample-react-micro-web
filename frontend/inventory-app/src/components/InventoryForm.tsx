@@ -12,10 +12,11 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
+  Chip,
 } from '@mui/material';
 import { AxiosError } from 'axios';
-import { UOM, InventoryStockRequest, ApiErrorResponse } from '../types/inventory';
-import { uomApi } from '../services/api';
+import { UOM, InventoryStockRequest, ApiErrorResponse, StockLevelApiItem, StockByUom } from '../types/inventory';
+import { uomApi, inventoryApi } from '../services/api';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://dev-creamat.fds-1.com';
@@ -25,11 +26,12 @@ const InventoryForm: React.FC = () => {
   const itemId = sessionStorage.getItem('inventoryItemId') || '';
   const itemName = sessionStorage.getItem('inventoryItemName') || '';
 
-  const [formData, setFormData] = useState<Omit<InventoryStockRequest, 'locationId' | 'itemId'>>({
+  const [formData, setFormData] = useState<{
+    uomCode: string;
+    quantity: number | '';
+  }>({
     uomCode: '',
-    quantity: 0,
-    clientRef: '',
-    reason: '',
+    quantity: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,12 +39,47 @@ const InventoryForm: React.FC = () => {
   const [uoms, setUoms] = useState<UOM[]>([]);
   const [loadingUoms, setLoadingUoms] = useState(false);
   const [uomError, setUomError] = useState<string | null>(null);
+  const [currentQuantity, setCurrentQuantity] = useState<number | StockByUom[] | null>(null);
+  const [loadingQuantity, setLoadingQuantity] = useState(false);
 
   useEffect(() => {
     if (!itemId) {
       setError('Item ID is required. Please navigate from the catalog.');
+    } else {
+      // Fetch current inventory quantity for this item
+      fetchCurrentQuantity();
     }
   }, [itemId]);
+
+  // Fetch current inventory quantity
+  const fetchCurrentQuantity = async () => {
+    if (!itemId) return;
+    
+    setLoadingQuantity(true);
+    try {
+      const response = await inventoryApi.getStockLevels([itemId], true);
+      if (Array.isArray(response) && response.length > 0) {
+        const stock = response[0] as StockLevelApiItem;
+        // Use stockByUoms if available, otherwise fallback to main availableQuantity
+        if (stock.stockByUoms && stock.stockByUoms.length > 0) {
+          // Store the full stockByUoms data for display
+          setCurrentQuantity(stock.stockByUoms);
+        } else {
+          // Fallback to single value
+          setCurrentQuantity(Math.floor(stock.availableQuantity ?? 0));
+        }
+      } else {
+        setCurrentQuantity(0);
+      }
+    } catch (err) {
+      const axiosError = err as AxiosError<ApiErrorResponse>;
+      console.error('Error fetching current quantity:', axiosError.message);
+      // Don't show error to user, just set to 0
+      setCurrentQuantity(0);
+    } finally {
+      setLoadingQuantity(false);
+    }
+  };
 
   // Fetch UOMs when component mounts or when UOM field is focused
   const fetchUOMs = async () => {
@@ -77,8 +114,14 @@ const InventoryForm: React.FC = () => {
   const handleChange = (field: keyof typeof formData) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { target: { value: string } }
   ) => {
-    const value = field === 'quantity' ? parseFloat(e.target.value) || 0 : e.target.value;
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === 'quantity') {
+      const inputValue = e.target.value;
+      // Allow empty string for placeholder behavior
+      const value = inputValue === '' ? '' : parseFloat(inputValue) || '';
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    }
     setError(null);
   };
 
@@ -92,12 +135,8 @@ const InventoryForm: React.FC = () => {
       setError('UOM Code is required');
       return;
     }
-    if (formData.quantity <= 0) {
+    if (!formData.quantity || formData.quantity <= 0) {
       setError('Quantity must be greater than 0');
-      return;
-    }
-    if (!formData.reason.trim()) {
-      setError('Reason is required');
       return;
     }
 
@@ -109,9 +148,7 @@ const InventoryForm: React.FC = () => {
         locationId: '00000000-0000-0000-0000-000000000001',
         itemId: itemId,
         uomCode: formData.uomCode,
-        quantity: formData.quantity,
-        clientRef: formData.clientRef || 'string',
-        reason: formData.reason,
+        quantity: typeof formData.quantity === 'number' ? formData.quantity : 0,
       };
 
       await axios.post(
@@ -128,6 +165,8 @@ const InventoryForm: React.FC = () => {
       );
 
       setSuccess(true);
+      // Refresh current quantity after successful add
+      await fetchCurrentQuantity();
       setTimeout(() => {
         // Navigate back to catalog or home
         if (window.location.port === '3008') {
@@ -153,10 +192,13 @@ const InventoryForm: React.FC = () => {
   };
 
   const handleBack = () => {
+    // Check if running in standalone mode (port 3008)
     if (window.location.port === '3008') {
+      // Standalone inventory app - navigate to standalone catalog
       window.location.href = 'http://localhost:3000/?tab=catalog';
     } else {
-      window.history.back();
+      // Running in container - use relative URL with tab parameter (same pattern as catalog)
+      window.location.href = '/?tab=catalog';
     }
   };
 
@@ -167,9 +209,40 @@ const InventoryForm: React.FC = () => {
       </Typography>
         
         {itemName && (
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
             Item: <strong>{itemName}</strong>
           </Typography>
+        )}
+
+        {loadingQuantity ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <CircularProgress size={16} />
+            <Typography variant="body2" color="text.secondary">
+              Loading current stock...
+            </Typography>
+          </Box>
+        ) : currentQuantity !== null && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="primary" sx={{ fontWeight: 500, mb: 1 }}>
+              Current Stock:
+            </Typography>
+            {Array.isArray(currentQuantity) ? (
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {currentQuantity.map((uomStock, index) => (
+                  <Chip
+                    key={index}
+                    label={`${uomStock.uomCode}: ${Math.floor(uomStock.availableQuantity).toLocaleString()}`}
+                    size="small"
+                    color={uomStock.availableQuantity === 0 ? 'error' : uomStock.availableQuantity < 10 ? 'warning' : 'success'}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
+                <strong>{typeof currentQuantity === 'number' ? currentQuantity.toLocaleString() : 'N/A'}</strong>
+              </Typography>
+            )}
+          </Box>
         )}
 
         {error && (
@@ -232,40 +305,15 @@ const InventoryForm: React.FC = () => {
           <TextField
             label="Quantity"
             type="number"
-            value={formData.quantity}
+            value={formData.quantity || ''}
             onChange={handleChange('quantity')}
             fullWidth
             required
             disabled={loading || success || !itemId}
             inputProps={{ min: 0, step: 'any' }}
+            placeholder="0"
             helperText="Stock quantity to add"
           />
-
-          <TextField
-            label="Client Reference"
-            value={formData.clientRef}
-            onChange={handleChange('clientRef')}
-            fullWidth
-            disabled={loading || success || !itemId}
-            helperText="Optional client reference"
-            placeholder="string"
-          />
-
-          <TextField
-            label="Reason"
-            value={formData.reason}
-            onChange={handleChange('reason')}
-            fullWidth
-            required
-            disabled={loading || success || !itemId}
-            multiline
-            rows={3}
-            helperText="Reason for this inventory change"
-          />
-
-          <Typography variant="caption" color="text.secondary">
-            Location ID: 00000000-0000-0000-0000-000000000001 (Fixed)
-          </Typography>
 
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
             <Button

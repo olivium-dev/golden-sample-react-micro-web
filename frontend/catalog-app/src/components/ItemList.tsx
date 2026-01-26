@@ -143,6 +143,7 @@ const ItemList: React.FC = () => {
               availableQuantity: stock.availableQuantity,
               reservedQuantity: stock.reservedQuantity,
               totalQuantity: stock.quantity,
+              stockByUoms: stock.stockByUoms,
             });
           }
         });
@@ -427,7 +428,7 @@ const ItemList: React.FC = () => {
     {
       field: 'stock',
       headerName: 'Stock',
-      width: 150,
+      width: 250,
       renderCell: (params) => {
         const itemId = params.row.guid;
         const stock = stockLevels.get(itemId);
@@ -440,10 +441,36 @@ const ItemList: React.FC = () => {
           return <Typography variant="body2" color="text.secondary">N/A</Typography>;
         }
         
-        // Extract availableQuantity and convert to integer
-        const available = Math.floor(stock.availableQuantity ?? 0);
+        // If stockByUoms exists and has items, display all UOMs
+        if (stock.stockByUoms && stock.stockByUoms.length > 0) {
+          return (
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {stock.stockByUoms.map((uomStock, index) => {
+                const available = Math.floor(uomStock.availableQuantity ?? 0);
+                let color: 'default' | 'success' | 'warning' | 'error' = 'default';
+                if (available === 0) {
+                  color = 'error';
+                } else if (available < 10) {
+                  color = 'warning';
+                } else {
+                  color = 'success';
+                }
+                
+                return (
+                  <Chip
+                    key={index}
+                    label={`${uomStock.uomCode}: ${available}`}
+                    size="small"
+                    color={color}
+                  />
+                );
+              })}
+            </Box>
+          );
+        }
         
-        // Color coding based on stock level
+        // Fallback to main availableQuantity if stockByUoms is not available
+        const available = Math.floor(stock.availableQuantity ?? 0);
         let color: 'default' | 'success' | 'warning' | 'error' = 'default';
         if (available === 0) {
           color = 'error';

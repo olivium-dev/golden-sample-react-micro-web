@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { UOM, CreateUOMRequest, CreateUOMResponse, ApiErrorResponse } from '../types/inventory';
+import { UOM, CreateUOMRequest, UpdateUOMRequest, CreateUOMResponse, ApiErrorResponse, StockLevelRequest, StockLevelsApiResponse } from '../types/inventory';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://dev-creamat.fds-1.com';
 const INVENTORY_API_URL = `${API_BASE_URL}/gateway/api/Inventory`;
@@ -53,12 +53,45 @@ export const uomApi = {
     }
   },
 
-  delete: async (code: string): Promise<void> => {
+  update: async (id: string, uom: UpdateUOMRequest): Promise<CreateUOMResponse> => {
     try {
-      await inventoryApiClient.delete(`/uoms/${code}`);
+      const response = await inventoryApiClient.put<CreateUOMResponse>(`/uoms/${id}`, uom);
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      console.error('Error updating UOM:', axiosError.message);
+      if (axiosError.response) {
+        console.error('Response data:', axiosError.response.data);
+        console.error('Response status:', axiosError.response.status);
+      }
+      throw error;
+    }
+  },
+
+  delete: async (id: string): Promise<void> => {
+    try {
+      await inventoryApiClient.delete(`/uoms/${id}`);
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
       console.error('Error deleting UOM:', axiosError.message);
+      throw error;
+    }
+  },
+};
+
+export const inventoryApi = {
+  getStockLevels: async (itemIds: string[], includeReserved: boolean = true): Promise<StockLevelsApiResponse> => {
+    try {
+      const WAREHOUSE_ID = '00000000-0000-0000-0000-000000000001';
+      const request: StockLevelRequest = {
+        itemIds,
+        includeReserved,
+      };
+      const response = await inventoryApiClient.post<StockLevelsApiResponse>(`/stock/${WAREHOUSE_ID}/levels`, request);
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      console.error('Error fetching stock levels:', axiosError.message);
       throw error;
     }
   },

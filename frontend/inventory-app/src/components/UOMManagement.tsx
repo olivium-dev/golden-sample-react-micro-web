@@ -24,9 +24,10 @@ import {
   Add as AddIcon,
   Refresh as RefreshIcon,
   Delete as DeleteIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { AxiosError } from 'axios';
-import { UOM, CreateUOMRequest, ApiErrorResponse } from '../types/inventory';
+import { UOM, CreateUOMRequest, UpdateUOMRequest, ApiErrorResponse } from '../types/inventory';
 import { uomApi } from '../services/api';
 
 const UOMManagement: React.FC = () => {
@@ -34,12 +35,18 @@ const UOMManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Create dialog state
+  // Create/Edit dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [formData, setFormData] = useState<CreateUOMRequest>({
+  const [editingUOM, setEditingUOM] = useState<UOM | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState<{
+    code: string;
+    name: string;
+    baseQuantity: number | '';
+  }>({
     code: '',
     name: '',
+    baseQuantity: '',
   });
   const [formError, setFormError] = useState<string | null>(null);
   
@@ -52,6 +59,17 @@ const UOMManagement: React.FC = () => {
     open: false,
     message: '',
     severity: 'success',
+  });
+
+  // Error dialog state for detailed error messages
+  const [errorDialog, setErrorDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+  }>({
+    open: false,
+    title: '',
+    message: '',
   });
 
   // Fetch UOMs on component mount
@@ -78,28 +96,50 @@ const UOMManagement: React.FC = () => {
     }
   };
 
-  const handleOpenDialog = () => {
-    setFormData({ code: '', name: '' });
+  const handleOpenDialog = (uom?: UOM) => {
+    // Always reset error first
     setFormError(null);
+    
+    if (uom && uom.id) {
+      // Edit mode - use API value exactly as returned, including 0
+      setEditingUOM(uom);
+      setFormData({ 
+        code: uom.code, 
+        name: uom.name,
+        baseQuantity: uom.baseQuantity !== undefined && uom.baseQuantity !== null ? uom.baseQuantity : '',
+      });
+    } else {
+      // Create mode - explicitly reset everything to ensure clean state
+      setEditingUOM(null);
+      setFormData({ code: '', name: '', baseQuantity: '' });
+    }
     setDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
-    if (!creating) {
+    if (!saving) {
       setDialogOpen(false);
-      setFormData({ code: '', name: '' });
+      setEditingUOM(null);
+      setFormData({ code: '', name: '', baseQuantity: '' });
       setFormError(null);
     }
   };
 
-  const handleInputChange = (field: keyof CreateUOMRequest) => (
+  const handleInputChange = (field: keyof typeof formData) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    if (field === 'baseQuantity') {
+      const inputValue = e.target.value;
+      // Allow empty string for placeholder behavior
+      const value = inputValue === '' ? '' : parseFloat(inputValue) || '';
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    }
     setFormError(null);
   };
 
-  const handleCreateUOM = async () => {
+  const handleSaveUOM = async () => {
     // Validation
     if (!formData.code.trim()) {
       setFormError('Code is required');
@@ -109,21 +149,48 @@ const UOMManagement: React.FC = () => {
       setFormError('Name is required');
       return;
     }
+    const baseQty = typeof formData.baseQuantity === 'number' ? formData.baseQuantity : 0;
+    if (baseQty < 0) {
+      setFormError('Base quantity must be 0 or greater');
+      return;
+    }
+    if (baseQty === 0) {
+      setFormError('Base quantity cannot be 0. Please enter a value greater than 0.');
+      return;
+    }
 
-    setCreating(true);
+    setSaving(true);
     setFormError(null);
 
     try {
-      await uomApi.create({
-        code: formData.code.trim(),
-        name: formData.name.trim(),
-      });
       
-      setSnackbar({
-        open: true,
-        message: `UOM "${formData.code}" created successfully!`,
-        severity: 'success',
-      });
+      if (editingUOM && editingUOM.id) {
+        // Update existing UOM
+        await uomApi.update(editingUOM.id, {
+          code: formData.code.trim(),
+          name: formData.name.trim(),
+          baseQuantity: baseQty,
+        });
+        
+        setSnackbar({
+          open: true,
+          message: `UOM "${formData.code}" updated successfully!`,
+          severity: 'success',
+        });
+      } else {
+        // Create new UOM
+        await uomApi.create({
+          code: formData.code.trim(),
+          name: formData.name.trim(),
+          baseQuantity: baseQty,
+        });
+        
+        setSnackbar({
+          open: true,
+          message: `UOM "${formData.code}" created successfully!`,
+          severity: 'success',
+        });
+      }
       
       handleCloseDialog();
       fetchUOMs(); // Refresh the list
@@ -133,38 +200,67 @@ const UOMManagement: React.FC = () => {
         axiosError.response?.data?.detail ||
         axiosError.response?.data?.title ||
         axiosError.message ||
-        'Failed to create UOM'
+        `Failed to ${editingUOM ? 'update' : 'create'} UOM`
       );
     } finally {
-      setCreating(false);
+      setSaving(false);
     }
   };
 
-  const handleDeleteUOM = async (code: string) => {
-    if (!window.confirm(`Are you sure you want to delete UOM "${code}"?`)) {
+  const handleDeleteUOM = async (uom: UOM) => {
+    if (!uom.id) {
+      setSnackbar({
+        open: true,
+        message: 'Cannot delete UOM: ID is missing',
+        severity: 'error',
+      });
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete UOM "${uom.code}"?`)) {
       return;
     }
 
     try {
-      await uomApi.delete(code);
+      await uomApi.delete(uom.id);
       setSnackbar({
         open: true,
-        message: `UOM "${code}" deleted successfully!`,
+        message: `UOM "${uom.code}" deleted successfully!`,
         severity: 'success',
       });
       fetchUOMs();
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
-      setSnackbar({
+      const errorData = axiosError.response?.data;
+      
+      // Handle the specific error format for UOM in use - only show message, not errorDetails
+      let errorMessage = 'Failed to delete UOM';
+      if (errorData?.message) {
+        // Use message if available (this is the main message, not the detailed one)
+        errorMessage = errorData.message;
+      } else if (errorData?.detail) {
+        // Fallback to detail
+        errorMessage = errorData.detail;
+      } else if (axiosError.message) {
+        // Fallback to axios error message
+        errorMessage = axiosError.message;
+      }
+      
+      // Show error in dialog for better visibility
+      setErrorDialog({
         open: true,
-        message: axiosError.response?.data?.detail || 'Failed to delete UOM',
-        severity: 'error',
+        title: `Cannot Delete UOM "${uom.code}"`,
+        message: errorMessage,
       });
     }
   };
 
   const handleCloseSnackbar = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleCloseErrorDialog = () => {
+    setErrorDialog({ open: false, title: '', message: '' });
   };
 
   return (
@@ -185,7 +281,7 @@ const UOMManagement: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={handleOpenDialog}
+            onClick={() => handleOpenDialog()}
             sx={{
               backgroundColor: '#61dafb',
               color: '#000',
@@ -214,7 +310,7 @@ const UOMManagement: React.FC = () => {
               <TableRow>
                 <TableCell><strong>Code</strong></TableCell>
                 <TableCell><strong>Name</strong></TableCell>
-                <TableCell><strong>Description</strong></TableCell>
+                <TableCell><strong>Base Quantity</strong></TableCell>
                 <TableCell align="right"><strong>Actions</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -229,16 +325,27 @@ const UOMManagement: React.FC = () => {
                 </TableRow>
               ) : (
                 uoms.map((uom) => (
-                  <TableRow key={uom.code} hover>
+                  <TableRow key={uom.id || uom.code} hover>
                     <TableCell>{uom.code}</TableCell>
                     <TableCell>{uom.name}</TableCell>
-                    <TableCell>{uom.description || '-'}</TableCell>
+                    <TableCell>{uom.baseQuantity ?? 0}</TableCell>
                     <TableCell align="right">
                       <IconButton
                         size="small"
+                        color="primary"
+                        onClick={() => handleOpenDialog(uom)}
+                        title="Edit UOM"
+                        disabled={!uom.id}
+                        sx={{ mr: 1 }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
                         color="error"
-                        onClick={() => handleDeleteUOM(uom.code)}
+                        onClick={() => handleDeleteUOM(uom)}
                         title="Delete UOM"
+                        disabled={!uom.id}
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
@@ -251,9 +358,9 @@ const UOMManagement: React.FC = () => {
         </TableContainer>
       )}
 
-      {/* Create UOM Dialog */}
+      {/* Create/Edit UOM Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New UOM</DialogTitle>
+        <DialogTitle>{editingUOM ? 'Edit UOM' : 'Create New UOM'}</DialogTitle>
         <DialogContent>
           {formError && (
             <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
@@ -267,7 +374,7 @@ const UOMManagement: React.FC = () => {
               onChange={handleInputChange('code')}
               fullWidth
               required
-              disabled={creating}
+              disabled={saving || !!editingUOM}
               placeholder="e.g., PCS, KG, LTR"
               helperText="Unique identifier for the UOM"
               autoFocus
@@ -278,28 +385,45 @@ const UOMManagement: React.FC = () => {
               onChange={handleInputChange('name')}
               fullWidth
               required
-              disabled={creating}
+              disabled={saving}
               placeholder="e.g., Pieces, Kilograms, Liters"
               helperText="Display name for the UOM"
+            />
+            <TextField
+              label="Base Quantity"
+              type="number"
+              value={formData.baseQuantity === 0 ? 0 : (formData.baseQuantity || '')}
+              onChange={handleInputChange('baseQuantity')}
+              onFocus={(e) => {
+                if (formData.baseQuantity === 0) {
+                  e.target.select();
+                }
+              }}
+              fullWidth
+              required
+              disabled={saving}
+              inputProps={{ min: 0, step: 'any' }}
+              placeholder="0"
+              helperText="Base quantity for the UOM"
             />
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCloseDialog} disabled={creating}>
+          <Button onClick={handleCloseDialog} disabled={saving}>
             Cancel
           </Button>
           <Button
-            onClick={handleCreateUOM}
+            onClick={handleSaveUOM}
             variant="contained"
-            disabled={creating}
-            startIcon={creating && <CircularProgress size={20} />}
+            disabled={saving}
+            startIcon={saving && <CircularProgress size={20} />}
             sx={{
               backgroundColor: '#61dafb',
               color: '#000',
               '&:hover': { backgroundColor: '#4fb3d4' },
             }}
           >
-            {creating ? 'Creating...' : 'Create'}
+            {saving ? (editingUOM ? 'Updating...' : 'Creating...') : (editingUOM ? 'Update' : 'Create')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -319,6 +443,42 @@ const UOMManagement: React.FC = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Error Dialog for detailed error messages */}
+      <Dialog 
+        open={errorDialog.open} 
+        onClose={handleCloseErrorDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ 
+          color: 'error.main',
+          fontWeight: 600,
+          fontSize: '1.25rem'
+        }}>
+          {errorDialog.title}
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            <Typography variant="body2" fontWeight={500}>
+              This UOM cannot be deleted because it is currently in use.
+            </Typography>
+          </Alert>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: 'text.primary' }}>
+            {errorDialog.message}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={handleCloseErrorDialog} 
+            variant="contained"
+            color="error"
+            autoFocus
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 };
